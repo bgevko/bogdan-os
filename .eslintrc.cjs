@@ -10,9 +10,10 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:jsx-a11y/recommended',
     'plugin:import/recommended',
+    'plugin:unicorn/recommended',
     'prettier',
   ],
-  plugins: ['react', 'react-hooks', 'react-refresh', 'import'],
+  plugins: ['react', 'react-hooks', 'react-refresh', 'import', 'unicorn'],
   settings: {
     react: {
       reactVersion: 'detect',
@@ -29,6 +30,8 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
+    ecmaVersion: 'latest',
+    sourceType: 'module',
   },
   rules: {
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
