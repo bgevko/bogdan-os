@@ -1,6 +1,7 @@
+/* eslint-disable no-relative-import-paths/no-relative-import-paths */
 import { Theme } from './theme';
 
-export const theme: Theme = {
+const theme: Theme = {
   colors: {
     accent: {
       50: '#eefffd',
@@ -93,3 +94,5 @@ export const theme: Theme = {
     },
   },
 };
+
+export default theme;

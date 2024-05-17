@@ -1,4 +1,5 @@
-import { theme } from './curiosities';
+/* eslint-disable no-relative-import-paths/no-relative-import-paths */
+import theme from './curiosities';
 
 type Color = string | Record<string, string>;
 export interface Theme {

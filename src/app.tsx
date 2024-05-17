@@ -1,12 +1,5 @@
-import { useStore } from '@/stores/use-store';
+import ProcessLoader from '@/components/system/process-loader';
 
-export function App() {
-  const { count, inc } = useStore();
-  return (
-    <>
-      <h1 className="text-2xl">Hello, world!</h1>
-      <span>{count}</span>
-      <button onClick={inc}>one up</button>
-    </>
-  );
-}
+const App = (): React.ReactElement => <ProcessLoader />;
+
+export default App;
