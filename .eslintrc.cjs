@@ -2,10 +2,10 @@ module.exports = {
   root: true,
   env: { browser: true, es2020: true },
   extends: [
+    'airbnb',
     'eslint:recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'plugin:@typescript-eslint/strict-type-checked',
+    'plugin:@typescript-eslint/stylistic-type-checked',
     'plugin:react-hooks/recommended',
     'plugin:react/jsx-runtime',
     'plugin:jsx-a11y/recommended',
@@ -23,14 +23,14 @@ module.exports = {
   ],
   settings: {
     react: {
-      reactVersion: 'detect',
+      version: 'detect',
     },
     'import/resolver': {
       node: true,
       typescript: true,
     },
   },
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'vite.config.ts'],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'vite.config.ts', 'tailwind.config.ts'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: './tsconfig.json',
@@ -41,8 +41,14 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'react/jsx-no-useless-fragment': 'off',
+    'react/jsx-filename-extension': [1, { extensions: ['.tsx'] }],
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    'react/function-component-definition': ['error', { namedComponents: 'arrow-function' }],
+    'react/jsx-key': 'error',
+    'import/no-cycle': 'off',
     'import/consistent-type-specifier-style': ['error', 'prefer-inline'],
+    'import/extensions': ['error', 'ignorePackages', { ts: 'never', tsx: 'never' }],
     'import/order': [
       'error',
       {
@@ -61,9 +67,10 @@ module.exports = {
         },
       },
     ],
-    'import/no-default-export': 'error',
+
     'import/no-extraneous-dependencies': 'error',
     'no-relative-import-paths/no-relative-import-paths': 'error',
+    '@typescript-eslint/explicit-module-boundary-types': 'error',
   },
   overrides: [
     {
