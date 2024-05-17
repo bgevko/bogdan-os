@@ -1,4 +1,6 @@
 {
+  "include": ["**/*.ts", "**/*.tsx", "tests/app.test.jsx"],
+  "references": [{ "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "allowJs": true,
@@ -20,7 +22,5 @@
       "@/*": ["./src/*"],
       "/*": ["./public/*"]
     }
-  },
-  "include": ["**/*.ts", "**/*.tsx", "tests/app.test.jsx"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  }
 }
