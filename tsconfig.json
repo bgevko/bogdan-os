@@ -21,6 +21,6 @@
       "/*": ["./public/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "tests/app.test.jsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
