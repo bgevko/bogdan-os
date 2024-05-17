@@ -13,7 +13,14 @@ module.exports = {
     'plugin:unicorn/recommended',
     'prettier',
   ],
-  plugins: ['react', 'react-hooks', 'react-refresh', 'import', 'unicorn'],
+  plugins: [
+    'react',
+    'react-hooks',
+    'react-refresh',
+    'import',
+    'unicorn',
+    'no-relative-import-paths',
+  ],
   settings: {
     react: {
       reactVersion: 'detect',
@@ -35,6 +42,7 @@ module.exports = {
   },
   rules: {
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    'import/consistent-type-specifier-style': ['error', 'prefer-inline'],
     'import/order': [
       'error',
       {
@@ -55,6 +63,7 @@ module.exports = {
     ],
     'import/no-default-export': 'error',
     'import/no-extraneous-dependencies': 'error',
+    'no-relative-import-paths/no-relative-import-paths': 'error',
   },
   overrides: [
     {
