@@ -2,82 +2,74 @@ module.exports = {
   root: true,
   env: { browser: true, es2020: true },
   extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "plugin:react-hooks/recommended",
-    "plugin:react/jsx-runtime",
-    "plugin:jsx-a11y/recommended",
-    "plugin:import/recommended",
-    "prettier",
+    'eslint:recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'plugin:react-hooks/recommended',
+    'plugin:react/jsx-runtime',
+    'plugin:jsx-a11y/recommended',
+    'plugin:import/recommended',
+    'prettier',
   ],
-  plugins: ["react", "react-hooks", "react-refresh", "import"],
+  plugins: ['react', 'react-hooks', 'react-refresh', 'import'],
   settings: {
     react: {
-      reactVersion: "detect",
+      reactVersion: 'detect',
     },
-    "import/resolver": {
+    'import/resolver': {
       node: true,
       typescript: true,
     },
   },
-  ignorePatterns: ["dist", ".eslintrc.cjs", "node_modules", "vite.config.ts"],
-  parser: "@typescript-eslint/parser",
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'vite.config.ts'],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: "./tsconfig.json",
+    project: './tsconfig.json',
     ecmaFeatures: {
       jsx: true,
     },
   },
   rules: {
-    "react-refresh/only-export-components": [
-      "warn",
-      { allowConstantExport: true },
-    ],
-    "import/order": [
-      "error",
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    'import/order': [
+      'error',
       {
-        "newlines-between": "always",
+        'newlines-between': 'always',
         pathGroups: [
           {
-            pattern: "$/**",
-            group: "internal",
+            pattern: '$/**',
+            group: 'internal',
           },
         ],
-        pathGroupsExcludedImportTypes: ["builtin"],
-        groups: [
-          ["builtin", "external"],
-          ["internal"],
-          ["parent", "sibling", "index"],
-          "unknown",
-        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
+        groups: [['builtin', 'external'], ['internal'], ['parent', 'sibling', 'index'], 'unknown'],
         alphabetize: {
-          order: "asc",
+          order: 'asc',
           caseInsensitive: true,
         },
       },
     ],
-    "import/no-default-export": "error",
-    "import/no-extraneous-dependencies": "error",
+    'import/no-default-export': 'error',
+    'import/no-extraneous-dependencies': 'error',
   },
   overrides: [
     {
-      files: ["*.ts", "*.tsx"],
-      extends: ["plugin:import/typescript"],
+      files: ['*.ts', '*.tsx'],
+      extends: ['plugin:import/typescript'],
     },
     {
       files: [
         // Next pages files
-        "src/pages/**/*.tsx",
+        'src/pages/**/*.tsx',
         // Typescript declaration file
-        "additional.d.ts",
+        'additional.d.ts',
         // Graphql Codegen generated file
-        "**/instrospection.ts",
+        '**/instrospection.ts',
       ],
       rules: {
-        "import/no-anonymous-default-export": "off",
-        "import/no-default-export": "off",
+        'import/no-anonymous-default-export': 'off',
+        'import/no-default-export': 'off',
       },
     },
   ],
