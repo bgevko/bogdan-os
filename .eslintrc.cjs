@@ -11,6 +11,7 @@ module.exports = {
     'plugin:jsx-a11y/recommended',
     'plugin:import/recommended',
     'plugin:unicorn/recommended',
+    'plugin:tailwindcss/recommended',
     'prettier',
   ],
   plugins: [
@@ -20,6 +21,8 @@ module.exports = {
     'import',
     'unicorn',
     'no-relative-import-paths',
+    'tailwindcss',
+    'eslint-plugin-react-compiler',
   ],
   settings: {
     react: {
@@ -41,6 +44,9 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'tailwindcss/classnames-order': 'error',
+    'tailwindcss/no-custom-classname': 'off',
+    'react-compiler/react-compiler': 'error',
     'react/jsx-no-useless-fragment': 'off',
     'react/jsx-filename-extension': [1, { extensions: ['.tsx'] }],
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
@@ -69,6 +75,7 @@ module.exports = {
     ],
     'no-restricted-syntax': ['off'],
     'import/no-extraneous-dependencies': 'error',
+    'no-else-return': ['error', { allowElseIf: false }],
     'no-relative-import-paths/no-relative-import-paths': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
   },
