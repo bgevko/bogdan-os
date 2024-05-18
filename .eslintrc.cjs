@@ -67,7 +67,7 @@ module.exports = {
         },
       },
     ],
-
+    'no-restricted-syntax': ['off'],
     'import/no-extraneous-dependencies': 'error',
     'no-relative-import-paths/no-relative-import-paths': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
