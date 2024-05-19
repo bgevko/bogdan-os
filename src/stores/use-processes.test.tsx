@@ -10,14 +10,20 @@ import { type Processes } from '@/types/processes';
 const testProcesses: Processes = {
   Test1: {
     Component: lazy(() => import('@/components/apps/hello-world')),
+    icon: '👋',
+    title: 'Test 1',
     hasWindow: true,
   },
   Test2: {
     Component: lazy(() => import('@/components/apps/hello-world')),
+    icon: '👋',
+    title: 'Test 2',
     hasWindow: true,
   },
   Test3: {
     Component: lazy(() => import('@/components/apps/hello-world')),
+    icon: '👋',
+    title: 'Test 3',
     hasWindow: true,
   },
 };
