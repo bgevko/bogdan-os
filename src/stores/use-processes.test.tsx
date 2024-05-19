@@ -4,7 +4,7 @@ import { lazy } from 'react';
 import { it, expect, describe } from 'vitest';
 
 import { processDirectory } from '@/globals/process-directory';
-import { useProcessStore, useSelectProcesses } from '@/stores/use-processes';
+import useProcessesStore from '@/stores/use-processes-store';
 import { type Processes } from '@/types/processes';
 
 const testProcesses: Processes = {
@@ -26,37 +26,34 @@ const subsetProcesses: string[] = ['Test1', 'Test3'];
 
 describe('useProcessesStore', () => {
   it('should initialize global process directory', () => {
-    const { result } = renderHook(() => useProcessStore());
-    expect(result.current.processes).toEqual(processDirectory);
+    const { result } = renderHook(() => useProcessesStore());
+    expect(result.current.processDirectory).toEqual(processDirectory);
   });
 
   it('should override existing processes when using set', () => {
-    const { result } = renderHook(() => useProcessStore());
+    const { result } = renderHook(() => useProcessesStore());
     act(() => {
-      result.current.setProcesses(testProcesses);
+      result.current.setProcessDirectory(testProcesses);
     });
-    expect(result.current.processes).toEqual(testProcesses);
+    expect(result.current.processDirectory).toEqual(testProcesses);
   });
 
   it('should select subset of processes', () => {
-    const { result: result1 } = renderHook(() => useProcessStore());
+    const { result } = renderHook(() => useProcessesStore());
     act(() => {
-      result1.current.setProcesses(testProcesses);
+      result.current.setProcessDirectory(testProcesses);
+      const selectedProcesses = result.current.getProcesses(subsetProcesses);
+      expect(Object.keys(selectedProcesses)).toEqual(subsetProcesses);
     });
-
-    const { result: result2 } = renderHook(() => useSelectProcesses(subsetProcesses));
-    expect(Object.keys(result2.current.select())).toEqual(subsetProcesses);
   });
 
-  it('selecting a non-existent process should throw an error', () => {
-    const { result: result1 } = renderHook(() => useProcessStore());
+  it('should throw an error when trying to select non-existent processes', () => {
+    const { result } = renderHook(() => useProcessesStore());
     act(() => {
-      result1.current.setProcesses(testProcesses);
+      result.current.setProcessDirectory(testProcesses);
+      expect(() => {
+        result.current.getProcesses(['Test4']);
+      }).toThrowError();
     });
-
-    const { result: result2 } = renderHook(() => useSelectProcesses(['Test4']));
-    expect(() => {
-      result2.current.select();
-    }).toThrowError();
   });
 });
