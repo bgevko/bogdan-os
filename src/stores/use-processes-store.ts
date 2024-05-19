@@ -9,8 +9,9 @@ interface ProcessStore {
   setProcessDirectory: (newProcesses: Processes) => void;
   getProcesses: (requested: string[]) => Processes;
   openedProcesses: string[];
-  openProcess: (processId: string) => void;
-  closeProcess: (processId: string) => void;
+  open: (processId: string | string[]) => void;
+  close: (processId: string | string[]) => void;
+  reset: () => void;
 }
 
 const processesStore = create<ProcessStore>((set, get) => ({
@@ -30,23 +31,44 @@ const processesStore = create<ProcessStore>((set, get) => ({
     return selected;
   },
   openedProcesses: [],
-  openProcess: (processId: string) => {
+  open: (processId) => {
+    const requested = Array.isArray(processId) ? processId : [processId];
     set((state) => {
-      if (!state.openedProcesses.includes(processId)) {
-        if (!Object.keys(state.processDirectory).includes(processId)) {
-          throw new Error(`Attempted to open process with an unknown id: ${processId}.`);
+      const available = Object.keys(state.processDirectory);
+      const toOpen: string[] = [];
+      for (const id of requested) {
+        if (!available.includes(id)) {
+          throw new Error(`Attempted to open process with an unknown id: ${id}.`);
         }
-        return { openedProcesses: [...state.openedProcesses, processId] };
+        if (!state.openedProcesses.includes(id)) {
+          toOpen.push(id);
+        }
       }
-      return state;
+      return { openedProcesses: [...state.openedProcesses, ...toOpen] };
     });
   },
-  closeProcess: (processId: string) => {
+  close: (processId) => {
+    const requested = Array.isArray(processId) ? processId : [processId];
     set((state) => {
-      if (state.openedProcesses.includes(processId)) {
-        return { openedProcesses: state.openedProcesses.filter((id) => id !== processId) };
+      const available = Object.keys(state.processDirectory);
+      const toClose: string[] = [];
+      for (const id of requested) {
+        if (!available.includes(id)) {
+          throw new Error(`Attempted to close process with an unknown id: ${id}.`);
+        }
+        if (!state.openedProcesses.includes(id)) {
+          throw new Error(`Attempted to close process that is not open: ${id}.`);
+        }
+        toClose.push(id);
       }
-      return state;
+      return { openedProcesses: state.openedProcesses.filter((id) => !toClose.includes(id)) };
+    });
+  },
+
+  reset: () => {
+    set({
+      processDirectory,
+      openedProcesses: [],
     });
   },
 }));
