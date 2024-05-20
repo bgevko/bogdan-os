@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from 'react';
 
 import Window from '@/components/system/window';
-import { desktopProcesses } from '@/globals/process-directory';
+import { openedProcesses } from '@/globals/process-directory';
 import useProcessesStore from '@/stores/use-processes-store';
 import { Processes } from '@/types/processes';
 
@@ -10,7 +10,7 @@ const ProcessLoader = (): React.ReactElement => {
   const store = useProcessesStore();
 
   useEffect(() => {
-    const fetchedProcesses = store.getProcesses(desktopProcesses);
+    const fetchedProcesses = store.getProcesses(openedProcesses);
     setProcesses(fetchedProcesses);
   }, [store]);
 

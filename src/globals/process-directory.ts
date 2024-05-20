@@ -13,4 +13,4 @@ export const processDirectory: Processes = {
 };
 
 // Processes that will load on startup
-export const desktopProcesses: string[] = ['HelloWorld'];
+export const openedProcesses: string[] = ['HelloWorld'];
