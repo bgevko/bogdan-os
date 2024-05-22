@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+$embossed-source: url('@/assets/embossed-border.png');
+$debossed-source: url('@/assets/debossed-border.png');
+$debossed-line-source: url('@/assets/debossed-line-border.png');
+$button-border-source: url('@/assets/button-border.png');
+$button-down-border-source: url('@/assets/button-down-border.png');
+
+$image-slice: 10;
+$border-size: 10px;
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -11,4 +20,74 @@
 body {
   @apply bg-background;
   @apply text-onBackground;
+}
+
+.embossed-border {
+  border: $border-size solid transparent;
+  border-image-source: $embossed-source;
+  border-image-slice: $image-slice;
+}
+
+.debossed-border {
+  border: $border-size solid transparent;
+  border-image-source: $debossed-source;
+  border-image-slice: $image-slice;
+  border-image-outset: 1px;
+
+  @apply bg-surface-200;
+}
+
+.debossed-line-border {
+  border: $border-size solid transparent;
+  border-image-source: $debossed-line-source;
+  border-image-slice: $image-slice;
+}
+
+.debossed-line-border-l {
+  border-left: $border-size solid transparent;
+  border-image-source: $debossed-line-source;
+  border-image-slice: $image-slice;
+}
+
+.debossed-line-border-r {
+  border-right: $border-size solid transparent;
+  border-image-source: $debossed-line-source;
+  border-image-slice: $image-slice;
+}
+
+.button-border {
+  border: $border-size solid transparent;
+  border-image-source: $button-border-source;
+  border-image-slice: $image-slice;
+  border-image-outset: 1px;
+}
+
+.button-down-border {
+  border: $border-size solid transparent;
+  border-image-source: $button-down-border-source;
+  border-image-slice: $image-slice;
+}
+
+.embossed-border-t {
+  border-top: $border-size solid transparent;
+  border-image-source: $embossed-source;
+  border-image-slice: $image-slice;
+}
+
+.embossed-border-r {
+  border-right: $border-size solid transparent;
+  border-image-source: $embossed-source;
+  border-image-slice: $image-slice;
+}
+
+.embossed-border-b {
+  border-bottom: $border-size solid transparent;
+  border-image-source: $embossed-source;
+  border-image-slice: $image-slice;
+}
+
+.embossed-border-l {
+  border-left: $border-size solid transparent;
+  border-image-source: $embossed-source;
+  border-image-slice: $image-slice;
 }
