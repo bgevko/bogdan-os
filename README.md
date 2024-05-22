@@ -1,9 +1,9 @@
 ### Tasks
 
-- Implement svg components
+- Bug: Dragging across window does not allow selection of text. This is supposed to happen only when moving and resizing windows.
+
 - Taskbar component
 
-  - Start Button
   - Taskbar entries
     - Icon and title
   - Clock component
