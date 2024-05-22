@@ -5,8 +5,9 @@ import { type Processes } from '@/types/processes';
 // Set all processes that can be loaded here
 export const processDirectory: Processes = {
   HelloWorld: {
-    title: 'Hello World',
+    title: 'Hello Title',
     icon: 'hello-world',
+    minSize: { width: 300, height: 300 },
     Component: lazy(() => import('@/components/apps/hello-world')),
     hasWindow: true,
   },
