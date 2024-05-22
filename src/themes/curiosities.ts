@@ -1,5 +1,5 @@
 /* eslint-disable no-relative-import-paths/no-relative-import-paths */
-import { Theme } from './theme';
+import { Theme } from '.';
 
 const theme: Theme = {
   colors: {

@@ -1,5 +1,5 @@
 /* eslint-disable no-relative-import-paths/no-relative-import-paths */
-import theme from './curiosities';
+import theme from './retrotronic';
 
 type Color = string | Record<string, string>;
 export interface Theme {
@@ -18,4 +18,6 @@ export interface Theme {
   };
 }
 
+export const TASKBAR_HEIGHT = 54;
+export const WINDOW_HEADER_HEIGHT = 24;
 export const currentTheme: Theme = theme;
