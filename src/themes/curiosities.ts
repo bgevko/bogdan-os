@@ -1,4 +1,3 @@
-/* eslint-disable no-relative-import-paths/no-relative-import-paths */
 import { Theme } from '.';
 
 const theme: Theme = {
