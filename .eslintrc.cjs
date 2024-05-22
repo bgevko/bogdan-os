@@ -44,6 +44,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'arrow-body-style': 'off',
     'tailwindcss/classnames-order': 'error',
     'tailwindcss/no-custom-classname': 'off',
     'react-compiler/react-compiler': 'error',
@@ -52,6 +53,8 @@ module.exports = {
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     'react/function-component-definition': ['error', { namedComponents: 'arrow-function' }],
     'react/jsx-key': 'error',
+    'react/require-default-props': 'off',
+    'react/jsx-props-no-spreading': 'off',
     'import/no-cycle': 'off',
     'import/consistent-type-specifier-style': ['error', 'prefer-inline'],
     'import/extensions': ['error', 'ignorePackages', { ts: 'never', tsx: 'never' }],
