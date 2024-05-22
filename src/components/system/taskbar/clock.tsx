@@ -1,5 +1,5 @@
 const Clock = (): JSX.Element => (
-  <time className="flex h-full w-[76px] items-center justify-center bg-secondary" />
+  <time className="debossed-border flex h-full w-[150px] items-center justify-center" />
 );
 
 export default Clock;
