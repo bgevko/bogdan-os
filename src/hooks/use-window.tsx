@@ -19,6 +19,7 @@ export enum ResizeDirection {
 // window state hook return types
 interface WindowState {
   isAnimatingResize: boolean;
+  maxed: boolean;
   position: { x: number; y: number };
   dimensions: { width: number; height: number };
   handleMouseDownResize: (direction: ResizeDirection) => void;
@@ -234,8 +235,9 @@ export const useWindowState = (minSize: Size): WindowState => {
   }, [dragging, handleMouseUp, handleWindowMove, handleSelectStart]);
 
   useEffect(() => {
-    document.addEventListener('selectstart', handleSelectStart);
-
+    if (resizeDirection !== ResizeDirection.NONE) {
+      document.addEventListener('selectstart', handleSelectStart);
+    }
     switch (resizeDirection) {
       case ResizeDirection.NONE: {
         return () => {
@@ -312,6 +314,7 @@ export const useWindowState = (minSize: Size): WindowState => {
   ]);
 
   return {
+    maxed,
     isAnimatingResize,
     position,
     dimensions,

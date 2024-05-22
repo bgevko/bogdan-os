@@ -1,6 +1,6 @@
 /* eslint-disable react/button-has-type */
 import { type ReactNode } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import cn from '@/utils/format';
 
@@ -13,26 +13,53 @@ interface ButtonProperties extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 // eslint-disable-next-line react/prop-types
 const Button: React.FC<ButtonProperties> = ({ className, children, ...properties }) => {
+  const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setMouseDown(false);
+    };
+
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [mouseDown]);
 
   return (
     <button
-      className={cn('relative', mouseDown ? 'debossed-border' : 'button-border', className)}
+      className={cn(
+        'relative bg-surface',
+        buttonDown ? 'debossed-border ' : 'button-border',
+        className,
+      )}
       {...properties}
-      onMouseDown={() => {
+      onMouseDown={(event) => {
+        event.stopPropagation();
+        setButtonDown(true);
         setMouseDown(true);
       }}
       onMouseUp={() => {
-        setMouseDown(false);
+        setButtonDown(false);
       }}
       onMouseLeave={() => {
-        setMouseDown(false);
+        setButtonDown(false);
+      }}
+      onMouseEnter={() => {
+        if (mouseDown) {
+          setButtonDown(true);
+        }
+      }}
+      onDoubleClick={(event) => {
+        event.stopPropagation();
       }}
     >
       <span
         className={cn(
           'absolute inset-[-5px] flex items-center justify-center select-none',
-          mouseDown ? 'bg-surface-200' : 'transparent',
+          buttonDown ? 'bg-surface-200 translate-y-[1px]' : 'transparent',
         )}
       >
         {children}

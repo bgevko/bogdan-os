@@ -1,5 +1,10 @@
 import { type ReactElement, ReactNode } from 'react';
 
+import CloseIcon from '@/assets/icons/close-icon.svg';
+import MaxIcon from '@/assets/icons/max-icon.svg';
+import MinIcon from '@/assets/icons/min-icon.svg';
+import UnmaxIcon from '@/assets/icons/unmax-icon.svg';
+import Button from '@/components/system/button';
 import { useWindowState, ResizeDirection } from '@/hooks/use-window';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
 import { Size } from '@/types/units';
@@ -16,6 +21,7 @@ const Window = ({ className, minSize, title, children }: WindowProperties): Reac
   const {
     isAnimatingResize,
     position,
+    maxed,
     dimensions,
     handleMouseDownMove,
     handleMouseDownResize,
@@ -110,8 +116,43 @@ const Window = ({ className, minSize, title, children }: WindowProperties): Reac
           handleWindowFullSize();
         }}
       >
-        <span className="absolute inset-x-[-5px] top-[-5px] flex h-6 select-none items-center justify-center bg-secondary">
-          {title}
+        <span className="absolute inset-x-[-5px] top-[-5px] flex h-6 select-none items-center justify-between bg-secondary px-[2px]">
+          <h1 className="pb-1 pl-1">{title}</h1>
+          <span className="flex gap-1">
+            <Button className="size-4">
+              <img
+                src={MinIcon}
+                draggable="false"
+                alt="minimize"
+                className="size-full select-none"
+                style={{ transform: 'scale(1.5) translateY(-0.5px)' }}
+              />
+            </Button>
+            <Button
+              className="size-4"
+              onClick={(event) => {
+                event.stopPropagation();
+                handleWindowFullSize();
+              }}
+            >
+              <img
+                src={maxed ? UnmaxIcon : MaxIcon}
+                draggable="false"
+                alt="maximize"
+                className="size-full select-none"
+                style={{ transform: 'scale(2.0) translateY(-0.5px)' }}
+              />
+            </Button>
+            <Button className="size-4">
+              <img
+                src={CloseIcon}
+                draggable="false"
+                alt="minimize"
+                className="size-full select-none"
+                style={{ transform: 'scale(2.0) translateY(-0.5px)' }}
+              />
+            </Button>
+          </span>
         </span>
       </header>
       <article className={cn('relative flex flex-1 bg-surface pt-2 text-onSurface', className)}>

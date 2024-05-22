@@ -25,14 +25,14 @@ body {
 .embossed-border {
   border: $border-size solid transparent;
   border-image-source: $embossed-source;
-  border-image-slice: $image-slice;
+  border-image-slice: 60;
 }
 
 .debossed-border {
   border: $border-size solid transparent;
   border-image-source: $debossed-source;
-  border-image-slice: $image-slice;
-  border-image-outset: 1px;
+  border-image-slice: 50;
+  border-image-outset: 2px;
 
   @apply bg-surface-200;
 }
@@ -56,10 +56,10 @@ body {
 }
 
 .button-border {
-  border: $border-size solid transparent;
+  border: 10px solid transparent;
   border-image-source: $button-border-source;
-  border-image-slice: $image-slice;
-  border-image-outset: 1px;
+  border-image-slice: 30;
+  border-image-outset: 2px;
 }
 
 .button-down-border {
@@ -71,7 +71,7 @@ body {
 .embossed-border-t {
   border-top: $border-size solid transparent;
   border-image-source: $embossed-source;
-  border-image-slice: $image-slice;
+  border-image-slice: 60;
 }
 
 .embossed-border-r {
