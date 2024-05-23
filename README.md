@@ -1,5 +1,6 @@
 ### Tasks
 
+- Tests for window sizing and positioning
 - Taskbar component
 
   - Taskbar entries

@@ -1,32 +1,11 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable no-relative-import-paths/no-relative-import-paths */
 import { renderHook, act } from '@testing-library/react';
-import { lazy } from 'react';
 import { it, expect, describe, beforeEach } from 'vitest';
 
 import { processDirectory } from '@/globals/process-directory';
 import useProcessesStore from '@/stores/use-processes-store';
-import { type Processes } from '@/types/processes';
 
-const testProcesses: Processes = {
-  Test1: {
-    Component: lazy(() => import('@/components/apps/hello-world')),
-    icon: '👋',
-    title: 'Test 1',
-    hasWindow: true,
-  },
-  Test2: {
-    Component: lazy(() => import('@/components/apps/hello-world')),
-    icon: '👋',
-    title: 'Test 2',
-    hasWindow: true,
-  },
-  Test3: {
-    Component: lazy(() => import('@/components/apps/hello-world')),
-    icon: '👋',
-    title: 'Test 3',
-    hasWindow: true,
-  },
-};
+import testProcesses from './globals';
 
 const subsetProcesses: string[] = ['Test1', 'Test3'];
 
@@ -92,12 +71,6 @@ describe('useProcessesStore', () => {
 
   it('should correctly close a process', () => {
     const { result } = renderHook(() => useProcessesStore());
-    // act(() => {
-    //   result.current.setProcessDirectory(testProcesses);
-    //   result.current.openProcess('Test1');
-    //   result.current.closeProcess('Test1');
-    //   expect(result.current.openedProcesses).toEqual([]);
-    // });
     act(() => {
       result.current.setProcessDirectory(testProcesses);
     });
@@ -235,6 +208,48 @@ describe('useProcessesStore', () => {
       expect(() => {
         result.current.close(['Test1', 'Test3']);
       }).toThrowError();
+    });
+  });
+
+  it('should maximize the window correctly', () => {
+    const { result } = renderHook(() => useProcessesStore());
+    act(() => {
+      expect(result.current.processDirectory.Test1.maximized).toBe(false);
+    });
+    act(() => {
+      result.current.setWindowMaximized('Test1', true);
+    });
+    act(() => {
+      expect(result.current.processDirectory.Test1.maximized).toBe(true);
+    });
+    act(() => {
+      result.current.setWindowMaximized('Test1', false);
+    });
+    act(() => {
+      expect(result.current.processDirectory.Test1.maximized).toBe(false);
+    });
+  });
+
+  it('should set position correctly', () => {
+    const { result } = renderHook(() => useProcessesStore());
+    act(() => {
+      expect(result.current.processDirectory.Test1.position).toEqual({ x: 0, y: 0 });
+    });
+    act(() => {
+      result.current.setWindowPosition('Test1', { x: 10, y: 20 });
+    });
+    act(() => {
+      expect(result.current.processDirectory.Test1.position).toEqual({ x: 10, y: 20 });
+    });
+  });
+
+  it('should set size correctly', () => {
+    const { result } = renderHook(() => useProcessesStore());
+    act(() => {
+      result.current.setWindowSize('Test1', { width: 100, height: 200 });
+    });
+    act(() => {
+      expect(result.current.processDirectory.Test1.size).toEqual({ width: 100, height: 200 });
     });
   });
 });

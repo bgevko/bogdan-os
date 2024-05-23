@@ -1,32 +1,11 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable no-relative-import-paths/no-relative-import-paths */
 import { renderHook, act, render } from '@testing-library/react';
-import { lazy } from 'react';
 import { it, expect, describe, beforeEach } from 'vitest';
 
 import TaskbarEntries from '@/components/system/taskbar/taskbar-entries';
 import useProcessesStore from '@/stores/use-processes-store';
-import { type Processes } from '@/types/processes';
 
-const testProcesses: Processes = {
-  Test1: {
-    Component: lazy(() => import('@/components/apps/hello-world')),
-    icon: '👋',
-    title: 'Test 1',
-    hasWindow: true,
-  },
-  Test2: {
-    Component: lazy(() => import('@/components/apps/hello-world')),
-    icon: '👋',
-    title: 'Test 2',
-    hasWindow: true,
-  },
-  Test3: {
-    Component: lazy(() => import('@/components/apps/hello-world')),
-    icon: '👋',
-    title: 'Test 3',
-    hasWindow: true,
-  },
-};
+import testProcesses from './globals';
 
 beforeEach(() => {
   const { result } = renderHook(() => useProcessesStore());

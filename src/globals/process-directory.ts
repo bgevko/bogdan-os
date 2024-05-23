@@ -7,9 +7,12 @@ export const processDirectory: Processes = {
   HelloWorld: {
     title: 'Hello Title',
     icon: 'hello-world',
-    minSize: { width: 300, height: 300 },
     Component: lazy(() => import('@/components/apps/hello-world')),
     hasWindow: true,
+    maximized: false,
+    minSize: { width: 300, height: 300 },
+    position: { x: 300, y: 300 },
+    size: { width: 400, height: 400 },
   },
 };
 
