@@ -6,6 +6,7 @@ import MinIcon from '@/assets/icons/min-icon.svg';
 import UnmaxIcon from '@/assets/icons/unmax-icon.svg';
 import Button from '@/components/system/button';
 import { useWindowState, ResizeDirection } from '@/hooks/use-window';
+import useProcessesStore from '@/stores/use-processes-store';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
 import { Size } from '@/types/units';
 import cn from '@/utils/format';
@@ -18,6 +19,8 @@ interface WindowProperties {
 }
 
 const Window = ({ className, minSize, title, children }: WindowProperties): ReactElement => {
+  const store = useProcessesStore();
+
   const {
     isAnimatingResize,
     position,
@@ -143,7 +146,12 @@ const Window = ({ className, minSize, title, children }: WindowProperties): Reac
                 style={{ transform: 'scale(2.0) translateY(-0.5px)' }}
               />
             </Button>
-            <Button className="size-4">
+            <Button
+              className="size-4"
+              onMouseUpCapture={() => {
+                store.close('HelloWorld');
+              }}
+            >
               <img
                 src={CloseIcon}
                 draggable="false"

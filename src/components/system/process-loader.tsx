@@ -1,19 +1,12 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense } from 'react';
 
 import Window from '@/components/system/window';
-import { openedProcesses } from '@/globals/process-directory';
 import useProcessesStore from '@/stores/use-processes-store';
-import { Processes } from '@/types/processes';
 
 const ProcessLoader = (): React.ReactElement => {
-  const [processes, setProcesses] = useState<Processes>({});
   const store = useProcessesStore();
 
-  useEffect(() => {
-    const fetchedProcesses = store.getProcesses(openedProcesses);
-    setProcesses(fetchedProcesses);
-  }, [store]);
-
+  const processes = store.getProcesses(store.openedProcesses);
   const loading = <div>Loading...</div>;
   const components = Object.entries(processes).map(
     ([key, { title, minSize, Component, hasWindow }]) =>

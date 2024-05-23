@@ -1,4 +1,6 @@
+/* eslint-disable no-param-reassign */
 import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
 
 import { processDirectory } from '@/globals/process-directory';
 import createSelectors from '@/stores/create-selectors';
@@ -13,6 +15,23 @@ interface ProcessStore {
   close: (processId: string | string[]) => void;
   reset: () => void;
 }
+
+interface TestImmer {
+  isWorking: boolean;
+  setIsWorking: (isWorking: boolean) => void;
+}
+
+const testImmer = create<TestImmer>()(
+  immer((set) => ({
+    processDirectory,
+    isWorking: false,
+    setIsWorking: (isWorking: boolean) => {
+      set((state) => {
+        state.isWorking = isWorking;
+      });
+    },
+  })),
+);
 
 const processesStore = create<ProcessStore>((set, get) => ({
   processDirectory,
@@ -74,10 +93,5 @@ const processesStore = create<ProcessStore>((set, get) => ({
 }));
 
 const useProcessesStore = createSelectors(processesStore);
+export const useTestImmer = createSelectors(testImmer);
 export default useProcessesStore;
-
-// Reference example, for later
-// export const useProcessStore = create<Processes>()((set) => ({
-//   count: 1,
-//   inc: () => set((state) => ({ count: state.count + 1 })),
-// }));

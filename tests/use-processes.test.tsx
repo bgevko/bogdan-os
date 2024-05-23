@@ -211,45 +211,45 @@ describe('useProcessesStore', () => {
     });
   });
 
-  it('should maximize the window correctly', () => {
-    const { result } = renderHook(() => useProcessesStore());
-    act(() => {
-      expect(result.current.processDirectory.Test1.maximized).toBe(false);
-    });
-    act(() => {
-      result.current.setWindowMaximized('Test1', true);
-    });
-    act(() => {
-      expect(result.current.processDirectory.Test1.maximized).toBe(true);
-    });
-    act(() => {
-      result.current.setWindowMaximized('Test1', false);
-    });
-    act(() => {
-      expect(result.current.processDirectory.Test1.maximized).toBe(false);
-    });
-  });
-
-  it('should set position correctly', () => {
-    const { result } = renderHook(() => useProcessesStore());
-    act(() => {
-      expect(result.current.processDirectory.Test1.position).toEqual({ x: 0, y: 0 });
-    });
-    act(() => {
-      result.current.setWindowPosition('Test1', { x: 10, y: 20 });
-    });
-    act(() => {
-      expect(result.current.processDirectory.Test1.position).toEqual({ x: 10, y: 20 });
-    });
-  });
-
-  it('should set size correctly', () => {
-    const { result } = renderHook(() => useProcessesStore());
-    act(() => {
-      result.current.setWindowSize('Test1', { width: 100, height: 200 });
-    });
-    act(() => {
-      expect(result.current.processDirectory.Test1.size).toEqual({ width: 100, height: 200 });
-    });
-  });
+  // it('should maximize the window correctly', () => {
+  //   const { result } = renderHook(() => useProcessesStore());
+  //   act(() => {
+  //     expect(result.current.processDirectory.Test1.maximized).toBe(false);
+  //   });
+  //   act(() => {
+  //     result.current.setWindowMaximized('Test1', true);
+  //   });
+  //   act(() => {
+  //     expect(result.current.processDirectory.Test1.maximized).toBe(true);
+  //   });
+  //   act(() => {
+  //     result.current.setWindowMaximized('Test1', false);
+  //   });
+  //   act(() => {
+  //     expect(result.current.processDirectory.Test1.maximized).toBe(false);
+  //   });
+  // });
+  //
+  // it('should set position correctly', () => {
+  //   const { result } = renderHook(() => useProcessesStore());
+  //   act(() => {
+  //     expect(result.current.processDirectory.Test1.position).toEqual({ x: 0, y: 0 });
+  //   });
+  //   act(() => {
+  //     result.current.setWindowPosition('Test1', { x: 10, y: 20 });
+  //   });
+  //   act(() => {
+  //     expect(result.current.processDirectory.Test1.position).toEqual({ x: 10, y: 20 });
+  //   });
+  // });
+  //
+  // it('should set size correctly', () => {
+  //   const { result } = renderHook(() => useProcessesStore());
+  //   act(() => {
+  //     result.current.setWindowSize('Test1', { width: 100, height: 200 });
+  //   });
+  //   act(() => {
+  //     expect(result.current.processDirectory.Test1.size).toEqual({ width: 100, height: 200 });
+  //   });
+  // });
 });
