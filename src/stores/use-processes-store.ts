@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { processDirectory } from '@/globals/process-directory';
 import { type Processes } from '@/types/processes';
+import { Position, Size } from '@/types/units';
 
 interface ProcessStore {
   processDirectory: Processes;
@@ -9,6 +10,9 @@ interface ProcessStore {
   openedProcesses: Processes;
   open: (processId: string | string[]) => void;
   close: (processId: string | string[]) => void;
+  setWindowPosition: (processId: string, pos: Position) => void;
+  setWindowSize: (processId: string, size: Size) => void;
+  setWindowMaximized: (processId: string, maximized: boolean) => void;
   reset: () => void;
 }
 
@@ -56,10 +60,42 @@ const useProcessesStore = create<ProcessStore>((set) => ({
     });
   },
 
+  setWindowPosition: (processId, pos) => {
+    set((state) => {
+      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+        throw new Error(`Attempted to set position of a process that is not open: ${processId}.`);
+      }
+      const newProcesses = { ...state.openedProcesses };
+      newProcesses[processId] = { ...newProcesses[processId], position: pos };
+      return { openedProcesses: newProcesses };
+    });
+  },
+
+  setWindowSize: (processId, size) => {
+    set((state) => {
+      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+        throw new Error(`Attempted to set size of a process that is not open: ${processId}.`);
+      }
+      const newProcesses = { ...state.openedProcesses };
+      newProcesses[processId] = { ...newProcesses[processId], size };
+      return { openedProcesses: newProcesses };
+    });
+  },
   reset: () => {
     set({
       processDirectory,
       openedProcesses: {},
+    });
+  },
+
+  setWindowMaximized: (processId, maximized) => {
+    set((state) => {
+      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+        throw new Error(`Attempted to set maximized of a process that is not open: ${processId}.`);
+      }
+      const newProcesses = { ...state.openedProcesses };
+      newProcesses[processId] = { ...newProcesses[processId], maximized };
+      return { openedProcesses: newProcesses };
     });
   },
 }));
