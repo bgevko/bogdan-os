@@ -11,12 +11,17 @@ interface ProcessStore {
   open: (processId: string | string[]) => void;
   close: (processId: string | string[]) => void;
   setWindowPosition: (processId: string, pos: Position) => void;
+  getWindowPosition: (processId: string) => Position;
   setWindowSize: (processId: string, size: Size) => void;
+  getWindowSize: (processId: string) => Size;
+  getWindowMinSize: (processId: string) => Size;
   setWindowMaximized: (processId: string, maximized: boolean) => void;
+  getWindowMaximized: (processId: string) => boolean;
+  getTitle: (processId: string) => string;
   reset: () => void;
 }
 
-const useProcessesStore = create<ProcessStore>((set) => ({
+const useProcessesStore = create<ProcessStore>((set, get) => ({
   processDirectory,
   openedProcesses: {},
   setProcessDirectory: (newDirectory: Processes) => {
@@ -48,7 +53,7 @@ const useProcessesStore = create<ProcessStore>((set) => ({
         if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, id)) {
           throw new Error(`Attempted to close process that is not open: ${id}.`);
         }
-        toClose[id] = state.processDirectory[id];
+        toClose[id] = state.openedProcesses[id];
       }
 
       // Update the main directory to reflect any changes to the closed processes
@@ -83,6 +88,16 @@ const useProcessesStore = create<ProcessStore>((set) => ({
     });
   },
 
+  getWindowPosition: (processId) => {
+    const pos = get().openedProcesses[processId].position;
+    const { openedProcesses } = get();
+
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(`Attempted to get position of a process that is not open: ${processId}.`);
+    }
+    return pos;
+  },
+
   setWindowSize: (processId, size) => {
     set((state) => {
       if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
@@ -93,6 +108,25 @@ const useProcessesStore = create<ProcessStore>((set) => ({
       return { openedProcesses: newProcesses };
     });
   },
+
+  getWindowSize: (processId) => {
+    const { size } = get().openedProcesses[processId];
+    const { openedProcesses } = get();
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(`Attempted to get size of a process that is not open: ${processId}.`);
+    }
+    return size;
+  },
+
+  getWindowMinSize: (processId) => {
+    const { minSize } = get().openedProcesses[processId];
+    const { openedProcesses } = get();
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(`Attempted to get minSize of a process that is not open: ${processId}.`);
+    }
+    return minSize;
+  },
+
   reset: () => {
     set({
       processDirectory,
@@ -109,6 +143,24 @@ const useProcessesStore = create<ProcessStore>((set) => ({
       newProcesses[processId] = { ...newProcesses[processId], maximized };
       return { openedProcesses: newProcesses };
     });
+  },
+
+  getWindowMaximized: (processId) => {
+    const { maximized } = get().openedProcesses[processId];
+    const { openedProcesses } = get();
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(`Attempted to get maximized of a process that is not open: ${processId}.`);
+    }
+    return maximized;
+  },
+
+  getTitle: (processId) => {
+    const { title } = get().openedProcesses[processId];
+    const { openedProcesses } = get();
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(`Attempted to get title of a process that is not open: ${processId}.`);
+    }
+    return title;
   },
 }));
 

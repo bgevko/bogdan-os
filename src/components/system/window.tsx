@@ -8,29 +8,22 @@ import Button from '@/components/system/button';
 import { useWindowState, ResizeDirection } from '@/hooks/use-window';
 import useProcessesStore from '@/stores/use-processes-store';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
-import { Size } from '@/types/units';
 import cn from '@/utils/format';
 
 interface WindowProperties {
-  className?: string;
-  title: string;
-  minSize: Size;
+  id: string;
   children: ReactNode;
 }
 
-const Window = ({ className, minSize, title, children }: WindowProperties): ReactElement => {
+const Window = ({ id, children }: WindowProperties): ReactElement => {
   const close = useProcessesStore((state) => state.close);
+  const { isAnimatingResize, handleWindowFullSize, handleMouseDownMove, handleMouseDownResize } =
+    useWindowState(id);
 
-  const {
-    isAnimatingResize,
-    position,
-    maxed,
-    dimensions,
-    handleMouseDownMove,
-    handleMouseDownResize,
-    handleWindowFullSize,
-  } = useWindowState(minSize);
-
+  const position = useProcessesStore((state) => state.getWindowPosition(id));
+  const size = useProcessesStore((state) => state.getWindowSize(id));
+  const maxed = useProcessesStore((state) => state.getWindowMaximized(id));
+  const title = useProcessesStore((state) => state.getTitle(id));
   return (
     <section
       className={cn(
@@ -39,8 +32,8 @@ const Window = ({ className, minSize, title, children }: WindowProperties): Reac
       )}
       style={{
         transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
-        width: dimensions.width,
-        height: dimensions.height,
+        width: size.width,
+        height: size.height,
       }}
     >
       <span
@@ -163,7 +156,7 @@ const Window = ({ className, minSize, title, children }: WindowProperties): Reac
           </span>
         </span>
       </header>
-      <article className={cn('relative flex flex-1 bg-surface pt-2 text-onSurface', className)}>
+      <article className={cn('relative flex flex-1 bg-surface pt-2 text-onSurface')}>
         <div className="absolute inset-x-[-5px] bottom-0 top-1">{children}</div>
       </article>
     </section>

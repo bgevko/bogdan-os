@@ -213,13 +213,17 @@ describe('useProcessesStore', () => {
       result.current.setWindowMaximized('Test1', true);
     });
     act(() => {
+      const maximized = result.current.getWindowMaximized('Test1');
       expect(result.current.openedProcesses.Test1.maximized).toBe(true);
+      expect(maximized).toBe(true);
     });
     act(() => {
       result.current.setWindowMaximized('Test1', false);
     });
     act(() => {
+      const maximized = result.current.getWindowMaximized('Test1');
       expect(result.current.openedProcesses.Test1.maximized).toBe(false);
+      expect(maximized).toBe(false);
     });
   });
 
@@ -229,13 +233,17 @@ describe('useProcessesStore', () => {
       result.current.open(['Test1']);
     });
     act(() => {
+      const position = result.current.getWindowPosition('Test1');
       expect(result.current.openedProcesses.Test1.position).toEqual({ x: 0, y: 0 });
+      expect(position).toEqual({ x: 0, y: 0 });
     });
     act(() => {
       result.current.setWindowPosition('Test1', { x: 10, y: 20 });
     });
     act(() => {
+      const position = result.current.getWindowPosition('Test1');
       expect(result.current.openedProcesses.Test1.position).toEqual({ x: 10, y: 20 });
+      expect(position).toEqual({ x: 10, y: 20 });
     });
   });
 
@@ -248,7 +256,9 @@ describe('useProcessesStore', () => {
       result.current.setWindowSize('Test1', { width: 100, height: 200 });
     });
     act(() => {
+      const size = result.current.getWindowSize('Test1');
       expect(result.current.openedProcesses.Test1.size).toEqual({ width: 100, height: 200 });
+      expect(size).toEqual({ width: 100, height: 200 });
     });
   });
 });

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
+import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
-import { Size } from '@/types/units';
 
 // eslint-disable-next-line no-shadow
 export enum ResizeDirection {
@@ -19,18 +19,21 @@ export enum ResizeDirection {
 // window state hook return types
 interface WindowState {
   isAnimatingResize: boolean;
-  maxed: boolean;
-  position: { x: number; y: number };
-  dimensions: { width: number; height: number };
   handleMouseDownResize: (direction: ResizeDirection) => void;
   handleMouseDownMove: () => void;
   handleWindowFullSize: () => void;
 }
 
-export const useWindowState = (minSize: Size): WindowState => {
-  const [position, setPosition] = useState({ x: 300, y: 300 });
+export const useWindowState = (id: string): WindowState => {
+  const position = useProcessesStore((state) => state.getWindowPosition(id));
+  const size = useProcessesStore((state) => state.getWindowSize(id));
+  const setPosition = useProcessesStore((state) => state.setWindowPosition);
+  const setSize = useProcessesStore((state) => state.setWindowSize);
+  const maximized = useProcessesStore((state) => state.getWindowMaximized(id));
+  const setMaximized = useProcessesStore((state) => state.setWindowMaximized);
+  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
+
   const [start, setStart] = useState({ x: 0, y: 0 });
-  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
   const [dragging, setDragging] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<ResizeDirection>(ResizeDirection.NONE);
   const [lastPosBeforeMaxed, setLastPosBeforeMaxed] = useState({ x: 0, y: 0 });
@@ -40,7 +43,6 @@ export const useWindowState = (minSize: Size): WindowState => {
     width: window.innerWidth,
     height: window.innerHeight - TASKBAR_HEIGHT,
   });
-  const [maxed, setMaxed] = useState(false);
   const [isAnimatingResize, setIsAnimatingResize] = useState(false);
 
   const handleMouseDownResize = (direction: ResizeDirection) => {
@@ -68,11 +70,11 @@ export const useWindowState = (minSize: Size): WindowState => {
       if (!dragging) return;
       const newX = event.clientX - start.x;
       const newY = event.clientY - start.y;
-      const clampedX = Math.max(0, Math.min(newX, window.innerWidth - dimensions.width));
-      const clampedY = Math.max(0, Math.min(newY, window.innerHeight - dimensions.height));
-      setPosition({ x: clampedX, y: clampedY });
+      const clampedX = Math.max(0, Math.min(newX, window.innerWidth - size.width));
+      const clampedY = Math.max(0, Math.min(newY, window.innerHeight - size.height));
+      setPosition(id, { x: clampedX, y: clampedY });
     },
-    [dragging, start, dimensions],
+    [dragging, start, size, id, setPosition],
   );
 
   const handleWindowResizeRight = useCallback(
@@ -80,9 +82,9 @@ export const useWindowState = (minSize: Size): WindowState => {
       if (resizeDirection !== ResizeDirection.RIGHT) return;
       const newWidth = event.clientX - position.x;
       const clampedWidth = Math.max(300, Math.min(newWidth, window.innerWidth - position.x));
-      setDimensions({ width: clampedWidth, height: dimensions.height });
+      setSize(id, { width: clampedWidth, height: size.height });
     },
-    [resizeDirection, position, dimensions],
+    [resizeDirection, position, size, id, setSize],
   );
 
   const handleWindowResizeBottom = useCallback(
@@ -90,35 +92,35 @@ export const useWindowState = (minSize: Size): WindowState => {
       if (resizeDirection !== ResizeDirection.BOTTOM) return;
       const newHeight = event.clientY - position.y;
       const clampedHeight = Math.max(300, Math.min(newHeight, window.innerHeight - position.y));
-      setDimensions({ width: dimensions.width, height: clampedHeight });
+      setSize(id, { width: size.width, height: clampedHeight });
     },
-    [resizeDirection, position, dimensions],
+    [id, resizeDirection, position, size, setSize],
   );
 
   const handleWindowResizeLeft = useCallback(
     (event: MouseEvent) => {
       if (resizeDirection !== ResizeDirection.LEFT) return;
       const newX = event.clientX - start.x;
-      const maxClampledX = dimensions.width + position.x - minSize.width;
+      const maxClampledX = size.width + position.x - minSize.width;
       const clampedX = Math.max(0, Math.min(newX, maxClampledX));
-      const newWidth = dimensions.width + position.x - clampedX;
-      setDimensions({ width: newWidth, height: dimensions.height });
-      setPosition({ x: clampedX, y: position.y });
+      const newWidth = size.width + position.x - clampedX;
+      setSize(id, { width: newWidth, height: size.height });
+      setPosition(id, { x: clampedX, y: position.y });
     },
-    [resizeDirection, start, position, dimensions, minSize.width],
+    [resizeDirection, setPosition, setSize, id, start, position, size, minSize.width],
   );
 
   const handleWindowResizeTop = useCallback(
     (event: MouseEvent) => {
       if (resizeDirection !== ResizeDirection.TOP) return;
       const newY = event.clientY - start.y;
-      const maxClampledY = dimensions.height + position.y - minSize.height;
+      const maxClampledY = size.height + position.y - minSize.height;
       const clampedY = Math.max(0, Math.min(newY, maxClampledY));
-      const newHeight = dimensions.height + position.y - clampedY;
-      setDimensions({ width: dimensions.width, height: newHeight });
-      setPosition({ x: position.x, y: clampedY });
+      const newHeight = size.height + position.y - clampedY;
+      setSize(id, { width: size.width, height: newHeight });
+      setPosition(id, { x: position.x, y: clampedY });
     },
-    [resizeDirection, start, position, dimensions, minSize.height],
+    [id, setSize, setPosition, resizeDirection, start, position, size, minSize.height],
   );
 
   const handleWindowResizeTopLeft = useCallback(
@@ -126,46 +128,46 @@ export const useWindowState = (minSize: Size): WindowState => {
       if (resizeDirection !== ResizeDirection.TOP_LEFT) return;
       const newX = event.clientX - start.x;
       const newY = event.clientY - start.y;
-      const maxClampledX = dimensions.width + position.x - minSize.width;
-      const maxClampledY = dimensions.height + position.y - minSize.height;
+      const maxClampledX = size.width + position.x - minSize.width;
+      const maxClampledY = size.height + position.y - minSize.height;
       const clampedX = Math.max(0, Math.min(newX, maxClampledX));
       const clampedY = Math.max(0, Math.min(newY, maxClampledY));
-      const newWidth = dimensions.width + position.x - clampedX;
-      const newHeight = dimensions.height + position.y - clampedY;
-      setDimensions({ width: newWidth, height: newHeight });
-      setPosition({ x: clampedX, y: clampedY });
+      const newWidth = size.width + position.x - clampedX;
+      const newHeight = size.height + position.y - clampedY;
+      setSize(id, { width: newWidth, height: newHeight });
+      setPosition(id, { x: clampedX, y: clampedY });
     },
-    [resizeDirection, start, position, dimensions, minSize],
+    [resizeDirection, id, start, position, setPosition, setSize, size, minSize],
   );
 
   const handleWindowResizeTopRight = useCallback(
     (event: MouseEvent) => {
       if (resizeDirection !== ResizeDirection.TOP_RIGHT) return;
       const newY = event.clientY - start.y;
-      const maxClampledY = dimensions.height + position.y - minSize.height;
+      const maxClampledY = size.height + position.y - minSize.height;
       const clampedY = Math.max(0, Math.min(newY, maxClampledY));
-      const newHeight = dimensions.height + position.y - clampedY;
+      const newHeight = size.height + position.y - clampedY;
       const newWidth = event.clientX - position.x;
       const clampedWidth = Math.max(300, Math.min(newWidth, window.innerWidth - position.x));
-      setDimensions({ width: clampedWidth, height: newHeight });
-      setPosition({ x: position.x, y: clampedY });
+      setSize(id, { width: clampedWidth, height: newHeight });
+      setPosition(id, { x: position.x, y: clampedY });
     },
-    [resizeDirection, start, position, dimensions, minSize.height],
+    [resizeDirection, setSize, setPosition, id, start, position, size, minSize.height],
   );
 
   const handleWindowResizeBottomLeft = useCallback(
     (event: MouseEvent) => {
       if (resizeDirection !== ResizeDirection.BOTTOM_LEFT) return;
       const newX = event.clientX - start.x;
-      const maxClampledX = dimensions.width + position.x - minSize.width;
+      const maxClampledX = size.width + position.x - minSize.width;
       const clampedX = Math.max(0, Math.min(newX, maxClampledX));
-      const newWidth = dimensions.width + position.x - clampedX;
+      const newWidth = size.width + position.x - clampedX;
       const newHeight = event.clientY - position.y;
       const clampedHeight = Math.max(300, Math.min(newHeight, window.innerHeight - position.y));
-      setDimensions({ width: newWidth, height: clampedHeight });
-      setPosition({ x: clampedX, y: position.y });
+      setSize(id, { width: newWidth, height: clampedHeight });
+      setPosition(id, { x: clampedX, y: position.y });
     },
-    [resizeDirection, start, position, dimensions, minSize.width],
+    [resizeDirection, id, setSize, setPosition, start, position, size, minSize.width],
   );
 
   const handleWindowResizeBottomRight = useCallback(
@@ -175,33 +177,45 @@ export const useWindowState = (minSize: Size): WindowState => {
       const clampedWidth = Math.max(300, Math.min(newWidth, window.innerWidth - position.x));
       const newHeight = event.clientY - position.y;
       const clampedHeight = Math.max(300, Math.min(newHeight, window.innerHeight - position.y));
-      setDimensions({ width: clampedWidth, height: clampedHeight });
+      setSize(id, { width: clampedWidth, height: clampedHeight });
     },
-    [resizeDirection, position],
+    [resizeDirection, id, setSize, position],
   );
 
-  const handleWindowFullSize = () => {
+  const handleWindowFullSize = useCallback(() => {
     setIsAnimatingResize(true);
-    if (maxed) {
+    if (maximized) {
       setLastPosBeforeMin({ x: position.x, y: position.y });
-      setLastSizeBeforeMin({ width: dimensions.width, height: dimensions.height });
-      setDimensions({ width: lastSizeBeforeMaxed.width, height: lastSizeBeforeMaxed.height });
-      setPosition({ x: lastPosBeforeMaxed.x, y: lastPosBeforeMaxed.y });
-      setMaxed(false);
+      setLastSizeBeforeMin({ width: size.width, height: size.height });
+      setSize(id, { width: lastSizeBeforeMaxed.width, height: lastSizeBeforeMaxed.height });
+      setPosition(id, { x: lastPosBeforeMaxed.x, y: lastPosBeforeMaxed.y });
+      setMaximized(id, false);
     } else {
-      if (!(dimensions.width === window.innerWidth && dimensions.height === window.innerHeight)) {
+      if (!(size.width === window.innerWidth && size.height === window.innerHeight)) {
         setLastPosBeforeMaxed({ x: position.x, y: position.y });
-        setLastSizeBeforeMaxed({ width: dimensions.width, height: dimensions.height });
+        setLastSizeBeforeMaxed({ width: size.width, height: size.height });
       }
 
-      setDimensions({ width: lastSizeBeforeMin.width, height: lastSizeBeforeMin.height });
-      setPosition({ x: lastPosBeforeMin.x, y: lastPosBeforeMin.y });
-      setMaxed(true);
+      setSize(id, { width: lastSizeBeforeMin.width, height: lastSizeBeforeMin.height });
+      setPosition(id, { x: lastPosBeforeMin.x, y: lastPosBeforeMin.y });
+      setMaximized(id, true);
     }
     setTimeout(() => {
       setIsAnimatingResize(false);
     }, 200);
-  };
+  }, [
+    id,
+    maximized,
+    position,
+    size,
+    setSize,
+    setPosition,
+    setMaximized,
+    lastSizeBeforeMaxed,
+    lastPosBeforeMaxed,
+    lastSizeBeforeMin,
+    lastPosBeforeMin,
+  ]);
 
   const handleSelectStart = useCallback((event: Event) => {
     event.preventDefault();
@@ -314,10 +328,7 @@ export const useWindowState = (minSize: Size): WindowState => {
   ]);
 
   return {
-    maxed,
     isAnimatingResize,
-    position,
-    dimensions,
     handleMouseDownResize,
     handleMouseDownMove,
     handleWindowFullSize,

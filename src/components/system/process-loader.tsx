@@ -7,19 +7,18 @@ const ProcessLoader = (): React.ReactElement => {
   const processes = useProcessesStore((state) => state.openedProcesses);
 
   const loading = <div>Loading...</div>;
-  const components = Object.entries(processes).map(
-    ([key, { title, minSize, Component, hasWindow }]) =>
-      hasWindow ? (
-        <Window key={key} title={title} minSize={minSize}>
-          <Suspense fallback={loading}>
-            <Component />
-          </Suspense>
-        </Window>
-      ) : (
-        <Suspense fallback={loading} key={key}>
+  const components = Object.entries(processes).map(([key, { Component, hasWindow }]) =>
+    hasWindow ? (
+      <Window key={key} id={key}>
+        <Suspense fallback={loading}>
           <Component />
         </Suspense>
-      ),
+      </Window>
+    ) : (
+      <Suspense fallback={loading} key={key}>
+        <Component />
+      </Suspense>
+    ),
   );
 
   return <>{components}</>;
