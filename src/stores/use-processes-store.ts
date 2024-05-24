@@ -50,13 +50,25 @@ const useProcessesStore = create<ProcessStore>((set) => ({
         }
         toClose[id] = state.processDirectory[id];
       }
+
+      // Update the main directory to reflect any changes to the closed processes
+      const oldDirectory = { ...state.processDirectory };
+      const newDirectory: Processes = {};
+      for (const key of Object.keys(oldDirectory)) {
+        newDirectory[key] = requested.includes(key) ? toClose[key] : oldDirectory[key];
+      }
+
       const newOpened: Processes = {};
       for (const key of Object.keys(state.openedProcesses)) {
         if (!Object.prototype.hasOwnProperty.call(toClose, key)) {
           newOpened[key] = state.openedProcesses[key];
         }
       }
-      return { openedProcesses: newOpened };
+
+      return {
+        openedProcesses: newOpened,
+        processDirectory: newDirectory,
+      };
     });
   },
 
