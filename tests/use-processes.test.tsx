@@ -7,8 +7,6 @@ import useProcessesStore from '@/stores/use-processes-store';
 
 import testProcesses from './globals';
 
-const subsetProcesses: string[] = ['Test1', 'Test3'];
-
 beforeEach(() => {
   const { result } = renderHook(() => useProcessesStore());
   act(() => {
@@ -18,7 +16,7 @@ beforeEach(() => {
     result.current.setProcessDirectory(testProcesses);
   });
   expect(result.current.processDirectory).toEqual(testProcesses);
-  expect(result.current.openedProcesses).toEqual([]);
+  expect(result.current.openedProcesses).toEqual({});
 });
 
 describe('useProcessesStore', () => {
@@ -38,25 +36,6 @@ describe('useProcessesStore', () => {
     expect(result.current.processDirectory).toEqual(testProcesses);
   });
 
-  it('should select subset of processes', () => {
-    const { result } = renderHook(() => useProcessesStore());
-    act(() => {
-      result.current.setProcessDirectory(testProcesses);
-      const selectedProcesses = result.current.getProcesses(subsetProcesses);
-      expect(Object.keys(selectedProcesses)).toEqual(subsetProcesses);
-    });
-  });
-
-  it('should throw an error when trying to select non-existent processes', () => {
-    const { result } = renderHook(() => useProcessesStore());
-    act(() => {
-      result.current.setProcessDirectory(testProcesses);
-      expect(() => {
-        result.current.getProcesses(['Test4']);
-      }).toThrowError();
-    });
-  });
-
   it('should correctly open a process', () => {
     const { result } = renderHook(() => useProcessesStore());
     act(() => {
@@ -66,7 +45,9 @@ describe('useProcessesStore', () => {
       result.current.open('Test1');
     });
 
-    expect(result.current.openedProcesses).toEqual(['Test1']);
+    expect(result.current.openedProcesses).toEqual({
+      Test1: testProcesses.Test1,
+    });
   });
 
   it('should correctly close a process', () => {
@@ -80,7 +61,7 @@ describe('useProcessesStore', () => {
     act(() => {
       result.current.close('Test1');
     });
-    expect(result.current.openedProcesses).toEqual([]);
+    expect(result.current.openedProcesses).toEqual({});
   });
 
   it('should throw an error when trying to open a non-existent process', () => {
@@ -121,7 +102,10 @@ describe('useProcessesStore', () => {
     act(() => {
       result.current.open(['Test1', 'Test2']);
     });
-    expect(result.current.openedProcesses).toEqual(['Test1', 'Test2']);
+    expect(result.current.openedProcesses).toEqual({
+      Test1: testProcesses.Test1,
+      Test2: testProcesses.Test2,
+    });
   });
 
   it('should correctly close multiple processes', () => {
@@ -135,7 +119,7 @@ describe('useProcessesStore', () => {
     act(() => {
       result.current.close(['Test1', 'Test2']);
     });
-    expect(result.current.openedProcesses).toEqual([]);
+    expect(result.current.openedProcesses).toEqual({});
   });
 
   it('should correctly open a single process, followed by multiple processes', () => {
@@ -149,7 +133,11 @@ describe('useProcessesStore', () => {
     act(() => {
       result.current.open(['Test2', 'Test3']);
     });
-    expect(result.current.openedProcesses).toEqual(['Test1', 'Test2', 'Test3']);
+    expect(result.current.openedProcesses).toEqual({
+      Test1: testProcesses.Test1,
+      Test2: testProcesses.Test2,
+      Test3: testProcesses.Test3,
+    });
   });
 
   it('should correctly close a single process, followed by multiple processes', () => {
@@ -166,7 +154,7 @@ describe('useProcessesStore', () => {
     act(() => {
       result.current.close(['Test2', 'Test3']);
     });
-    expect(result.current.openedProcesses).toEqual([]);
+    expect(result.current.openedProcesses).toEqual({});
   });
 
   it('should throw an error when opening multiple processes and one does not exist', () => {

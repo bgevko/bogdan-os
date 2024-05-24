@@ -4,9 +4,8 @@ import Window from '@/components/system/window';
 import useProcessesStore from '@/stores/use-processes-store';
 
 const ProcessLoader = (): React.ReactElement => {
-  const store = useProcessesStore();
+  const processes = useProcessesStore((state) => state.openedProcesses);
 
-  const processes = store.getProcesses(store.openedProcesses);
   const loading = <div>Loading...</div>;
   const components = Object.entries(processes).map(
     ([key, { title, minSize, Component, hasWindow }]) =>

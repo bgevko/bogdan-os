@@ -6,9 +6,9 @@ export interface Process {
   Component: LazyExoticComponent<ComponentType>;
   title: string;
   icon: string;
-  maximized: boolean;
   hasWindow: boolean;
   minSize: Size;
+  maximized: boolean;
   size: Size;
   position: Position;
 }

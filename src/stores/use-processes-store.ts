@@ -9,8 +9,7 @@ import { type Processes } from '@/types/processes';
 interface ProcessStore {
   processDirectory: Processes;
   setProcessDirectory: (newProcesses: Processes) => void;
-  getProcesses: (requested: string[]) => Processes;
-  openedProcesses: string[];
+  openedProcesses: Processes;
   open: (processId: string | string[]) => void;
   close: (processId: string | string[]) => void;
   reset: () => void;
@@ -33,65 +32,57 @@ const testImmer = create<TestImmer>()(
   })),
 );
 
-const processesStore = create<ProcessStore>((set, get) => ({
+const useProcessesStore = create<ProcessStore>((set) => ({
   processDirectory,
+  openedProcesses: {},
   setProcessDirectory: (newDirectory: Processes) => {
     set({ processDirectory: newDirectory });
   },
-  getProcesses: (requested: string[]): Processes => {
-    const available = get().processDirectory;
-    const selected: Processes = {};
-    for (const id of requested) {
-      if (!Object.keys(available).includes(id)) {
-        throw new Error(`Attempted to select process with an unknown id: ${id}.`);
-      }
-      selected[id] = available[id];
-    }
-    return selected;
-  },
-  openedProcesses: [],
   open: (processId) => {
     const requested = Array.isArray(processId) ? processId : [processId];
     set((state) => {
-      const available = Object.keys(state.processDirectory);
-      const toOpen: string[] = [];
+      const toOpen: Processes = {};
       for (const id of requested) {
-        if (!available.includes(id)) {
+        if (!Object.prototype.hasOwnProperty.call(state.processDirectory, id)) {
           throw new Error(`Attempted to open process with an unknown id: ${id}.`);
         }
-        if (!state.openedProcesses.includes(id)) {
-          toOpen.push(id);
+        if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, id)) {
+          toOpen[id] = state.processDirectory[id];
         }
       }
-      return { openedProcesses: [...state.openedProcesses, ...toOpen] };
+      return { openedProcesses: { ...state.openedProcesses, ...toOpen } };
     });
   },
   close: (processId) => {
     const requested = Array.isArray(processId) ? processId : [processId];
     set((state) => {
-      const available = Object.keys(state.processDirectory);
-      const toClose: string[] = [];
+      const toClose: Processes = {};
       for (const id of requested) {
-        if (!available.includes(id)) {
+        if (!Object.prototype.hasOwnProperty.call(state.processDirectory, id)) {
           throw new Error(`Attempted to close process with an unknown id: ${id}.`);
         }
-        if (!state.openedProcesses.includes(id)) {
+        if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, id)) {
           throw new Error(`Attempted to close process that is not open: ${id}.`);
         }
-        toClose.push(id);
+        toClose[id] = state.processDirectory[id];
       }
-      return { openedProcesses: state.openedProcesses.filter((id) => !toClose.includes(id)) };
+      const newOpened: Processes = {};
+      for (const key of Object.keys(state.openedProcesses)) {
+        if (!Object.prototype.hasOwnProperty.call(toClose, key)) {
+          newOpened[key] = state.openedProcesses[key];
+        }
+      }
+      return { openedProcesses: newOpened };
     });
   },
 
   reset: () => {
     set({
       processDirectory,
-      openedProcesses: [],
+      openedProcesses: {},
     });
   },
 }));
 
-const useProcessesStore = createSelectors(processesStore);
 export const useTestImmer = createSelectors(testImmer);
 export default useProcessesStore;

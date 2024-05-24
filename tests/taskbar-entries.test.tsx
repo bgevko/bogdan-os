@@ -16,7 +16,7 @@ beforeEach(() => {
     result.current.setProcessDirectory(testProcesses);
   });
   expect(result.current.processDirectory).toEqual(testProcesses);
-  expect(result.current.openedProcesses).toEqual([]);
+  expect(result.current.openedProcesses).toEqual({});
 });
 
 describe('TaskbarEntries', () => {

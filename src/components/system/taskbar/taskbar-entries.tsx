@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import useProcessesStore from '@/stores/use-processes-store';
 
 interface taskbarEntryProperties {
@@ -15,17 +13,11 @@ const TaskbarEntry = ({ icon, title }: taskbarEntryProperties): JSX.Element => (
 );
 
 const TaskbarEntries = (): JSX.Element => {
-  const [opened, setOpened] = useState<string[]>([]);
-  const store = useProcessesStore();
-
-  useEffect(() => {
-    setOpened(store.openedProcesses);
-  }, [store.openedProcesses]);
+  const opened = useProcessesStore((state) => state.openedProcesses);
 
   return (
     <ol className="flex size-full items-center justify-start bg-surface">
-      {opened.map((process) => {
-        const { icon, title } = store.processDirectory[process];
+      {Object.entries(opened).map(([process, { icon, title }]) => {
         return <TaskbarEntry key={process} icon={icon} title={title} />;
       })}
     </ol>
