@@ -19,7 +19,7 @@ interface WindowProperties {
 }
 
 const Window = ({ className, minSize, title, children }: WindowProperties): ReactElement => {
-  const store = useProcessesStore();
+  const close = useProcessesStore((state) => state.close);
 
   const {
     isAnimatingResize,
@@ -149,7 +149,7 @@ const Window = ({ className, minSize, title, children }: WindowProperties): Reac
             <Button
               className="size-4"
               onMouseUpCapture={() => {
-                store.close('HelloWorld');
+                close('HelloWorld');
               }}
             >
               <img

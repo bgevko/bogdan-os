@@ -2,13 +2,13 @@ import Button from '@/components/system/button';
 import useProcessesStore from '@/stores/use-processes-store';
 
 const StartButton = (): JSX.Element => {
-  const store = useProcessesStore();
+  const open = useProcessesStore((state) => state.open);
   return (
     <Button
       className="flex h-full w-20 items-center justify-center p-2 text-onSurface"
       type="button"
       onMouseUpCapture={() => {
-        store.open('HelloWorld');
+        open('HelloWorld');
       }}
     >
       Explore
