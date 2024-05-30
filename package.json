@@ -12,6 +12,7 @@
     "prettier": "prettier --write .",
     "prepare": "husky",
     "test": "vitest --run",
+    "test:current": "vitest window",
     "test:ui": "vitest --ui"
   },
   "lint-staged": {

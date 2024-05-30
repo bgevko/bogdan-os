@@ -6,7 +6,10 @@ interface taskbarEntryProperties {
 }
 
 const TaskbarEntry = ({ icon, title }: taskbarEntryProperties): JSX.Element => (
-  <figure className="flex h-full items-center justify-center bg-primary px-2 text-onPrimary">
+  <figure
+    data-testid="taskbar-entry"
+    className="flex h-full items-center justify-center bg-primary px-2 text-onPrimary"
+  >
     <img src={icon} alt={title} />
     <figcaption>{title}</figcaption>
   </figure>

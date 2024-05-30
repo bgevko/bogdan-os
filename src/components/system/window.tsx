@@ -26,6 +26,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
   const title = useProcessesStore((state) => state.getTitle(id));
   return (
     <section
+      data-testid="window"
       className={cn(
         'embossed-border absolute flex min-h-[300px] min-w-[300px] flex-col',
         isAnimatingResize && 'transition-all duration-200',
@@ -102,6 +103,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
       />
       <header
         className="relative flex items-center justify-center bg-surface text-[14px]"
+        data-testid="window-header"
         style={{ height: `${WINDOW_HEADER_HEIGHT.toString()}px` }}
         role="toolbar"
         aria-label="Window header"
@@ -140,6 +142,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
               />
             </Button>
             <Button
+              data-testid="window-close"
               className="size-4"
               onMouseUpCapture={() => {
                 close('HelloWorld');
