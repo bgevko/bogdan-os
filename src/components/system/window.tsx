@@ -38,6 +38,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
       }}
     >
       <span
+        data-testid="resize-left"
         className="absolute left-[-16px] h-full w-3 cursor-ew-resize"
         role="toolbar"
         aria-label="Window left resize"
@@ -46,6 +47,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         }}
       />
       <span
+        data-testid="resize-right"
         className="absolute right-[-16px] h-full w-3 cursor-ew-resize"
         role="toolbar"
         aria-label="Window right resize"
@@ -54,6 +56,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         }}
       />
       <span
+        data-testid="resize-top"
         className="absolute top-[-16px] h-3 w-full cursor-ns-resize"
         role="toolbar"
         aria-label="Window top resize"
@@ -62,6 +65,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         }}
       />
       <span
+        data-testid="resize-bottom"
         className="absolute bottom-[-16px] h-3 w-full cursor-ns-resize"
         role="toolbar"
         aria-label="Window bottom resize"
@@ -70,6 +74,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         }}
       />
       <span
+        data-testid="resize-top-left"
         className="absolute left-[-16px] top-[-16px] size-4 cursor-nwse-resize"
         role="toolbar"
         aria-label="Window top left corner resize"
@@ -78,6 +83,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         }}
       />
       <span
+        data-testid="resize-top-right"
         className="absolute right-[-16px] top-[-16px] size-4 cursor-nesw-resize"
         role="toolbar"
         aria-label="Window top right corner resize"
@@ -86,6 +92,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         }}
       />
       <span
+        data-testid="resize-bottom-left"
         className="absolute bottom-[-16px] left-[-16px] size-4 cursor-nesw-resize"
         role="toolbar"
         aria-label="Window bottom left corner resize"
@@ -94,6 +101,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         }}
       />
       <span
+        data-testid="resize-bottom-right"
         className="absolute bottom-[-16px] right-[-16px] size-4 cursor-nwse-resize"
         role="toolbar"
         aria-label="Window bottom right corner resize"
@@ -127,6 +135,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
               />
             </Button>
             <Button
+              data-testid="window-maximize"
               className="size-4"
               onClick={(event) => {
                 event.stopPropagation();
