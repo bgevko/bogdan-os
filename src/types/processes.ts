@@ -1,6 +1,6 @@
 import { type ComponentType, LazyExoticComponent } from 'react';
 
-import { type Size, Position } from '@/types/units';
+import { type Size, Position, Dimensions } from '@/types/units';
 
 export interface Process {
   Component: LazyExoticComponent<ComponentType>;
@@ -13,6 +13,8 @@ export interface Process {
   position: Position;
   isAnimating: boolean;
   isMinimized: boolean;
+  tabDimensions?: Dimensions;
+  opacity?: number;
 }
 
 export type Processes = Record<string, Process>;

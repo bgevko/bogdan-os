@@ -22,6 +22,10 @@ body {
   @apply text-onBackground;
 }
 
+* {
+  -webkit-user-drag: none;
+}
+
 .embossed-border {
   border: $border-size solid transparent;
   border-image-source: $embossed-source;

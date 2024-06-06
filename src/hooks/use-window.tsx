@@ -21,6 +21,7 @@ interface WindowState {
   handleMouseDownResize: (direction: ResizeDirection) => void;
   handleMouseDownMove: () => void;
   handleWindowFullSize: () => void;
+  handleWindowMinimizeToggle: () => void;
 }
 
 export const useWindowState = (id: string): WindowState => {
@@ -32,17 +33,23 @@ export const useWindowState = (id: string): WindowState => {
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
   const setSize = useProcessesStore((state) => state.setWindowSize);
   const setMaximized = useProcessesStore((state) => state.setWindowMaximized);
+  const tabDimensions = useProcessesStore((state) => state.getTabDimensions(id));
+  const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
+  const setIsMinimized = useProcessesStore((state) => state.setIsMinimized);
+  const setOpacity = useProcessesStore((state) => state.setOpacity);
 
   const [start, setStart] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<ResizeDirection>(ResizeDirection.NONE);
   const [lastPosBeforeMaxed, setLastPosBeforeMaxed] = useState({ x: 0, y: 0 });
   const [lastSizeBeforeMaxed, setLastSizeBeforeMaxed] = useState({ width: 0, height: 0 });
-  const [lastPosBeforeMin, setLastPosBeforeMin] = useState({ x: 0, y: 0 });
-  const [lastSizeBeforeMin, setLastSizeBeforeMin] = useState({
+  const [lastPosBeforeUnmaxed, setLastPosBeforeMin] = useState({ x: 0, y: 0 });
+  const [lastSizeBeforeUnmaxed, setLastSizeBeforeMin] = useState({
     width: window.innerWidth,
     height: window.innerHeight - TASKBAR_HEIGHT,
   });
+  const [lastPos, setLastPos] = useState(position);
+  const [lastSize, setLastSize] = useState(size);
 
   const handleMouseDownResize = (direction: ResizeDirection) => {
     setResizeDirection(direction);
@@ -79,11 +86,11 @@ export const useWindowState = (id: string): WindowState => {
   const handleWindowResizeRight = useCallback(
     (event: MouseEvent) => {
       if (resizeDirection !== ResizeDirection.RIGHT) return;
-      const newWidth = event.clientX - position.x;
+      const newWidth = Math.max(event.clientX - position.x, minSize.width);
       const clampedWidth = Math.max(300, Math.min(newWidth, window.innerWidth - position.x));
       setSize(id, { width: clampedWidth, height: size.height });
     },
-    [resizeDirection, position, size, id, setSize],
+    [resizeDirection, position, size, id, setSize, minSize],
   );
 
   const handleWindowResizeBottom = useCallback(
@@ -195,8 +202,8 @@ export const useWindowState = (id: string): WindowState => {
         setLastSizeBeforeMaxed({ width: size.width, height: size.height });
       }
 
-      setSize(id, { width: lastSizeBeforeMin.width, height: lastSizeBeforeMin.height });
-      setPosition(id, { x: lastPosBeforeMin.x, y: lastPosBeforeMin.y });
+      setSize(id, { width: lastSizeBeforeUnmaxed.width, height: lastSizeBeforeUnmaxed.height });
+      setPosition(id, { x: lastPosBeforeUnmaxed.x, y: lastPosBeforeUnmaxed.y });
       setMaximized(id, true);
     }
     setTimeout(() => {
@@ -213,8 +220,48 @@ export const useWindowState = (id: string): WindowState => {
     setIsAnimating,
     lastSizeBeforeMaxed,
     lastPosBeforeMaxed,
-    lastSizeBeforeMin,
-    lastPosBeforeMin,
+    lastSizeBeforeUnmaxed,
+    lastPosBeforeUnmaxed,
+  ]);
+
+  const handleWindowMinimizeToggle = useCallback(() => {
+    const { x, y, width, height } = tabDimensions;
+    setIsAnimating(id, true);
+
+    if (isMinimized) {
+      setIsMinimized(id, false);
+      setPosition(id, lastPos);
+      setSize(id, lastSize);
+      setOpacity(id, 1);
+      setTimeout(() => {
+        setIsAnimating(id, false);
+      }, 200);
+    } else {
+      setLastPos(position);
+      setLastSize(size);
+      setPosition(id, { x, y });
+      setSize(id, { width, height });
+      setOpacity(id, 0);
+      setTimeout(() => {
+        setIsAnimating(id, false);
+        setIsMinimized(id, true);
+      }, 200);
+    }
+  }, [
+    id,
+    isMinimized,
+    lastPos,
+    lastSize,
+    position,
+    size,
+    setIsAnimating,
+    setPosition,
+    setSize,
+    setLastPos,
+    setLastSize,
+    setIsMinimized,
+    tabDimensions,
+    setOpacity,
   ]);
 
   const handleSelectStart = useCallback((event: Event) => {
@@ -331,5 +378,6 @@ export const useWindowState = (id: string): WindowState => {
     handleMouseDownResize,
     handleMouseDownMove,
     handleWindowFullSize,
+    handleWindowMinimizeToggle,
   };
 };

@@ -55,6 +55,9 @@ const Button: React.FC<ButtonProperties> = ({ className, children, ...properties
       onDoubleClick={(event) => {
         event.stopPropagation();
       }}
+      onContextMenuCapture={(event) => {
+        event.preventDefault();
+      }}
     >
       <span
         className={cn(

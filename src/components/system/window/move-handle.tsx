@@ -14,11 +14,11 @@ interface WindowHandlesProperties {
 }
 
 const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
-  const { handleWindowFullSize, handleMouseDownMove } = useWindowState(id);
+  const { handleWindowFullSize, handleMouseDownMove, handleWindowMinimizeToggle } =
+    useWindowState(id);
   const close = useProcessesStore((state) => state.close);
   const title = useProcessesStore((state) => state.getTitle(id));
   const maxed = useProcessesStore((state) => state.getWindowMaximized(id));
-  const setIsMinimized = useProcessesStore((state) => state.setIsMinimized);
   return (
     <>
       <header
@@ -45,7 +45,7 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
                 className="size-full select-none"
                 style={{ transform: 'scale(1.5) translateY(-0.5px)' }}
                 onMouseUpCapture={() => {
-                  setIsMinimized(id, true);
+                  handleWindowMinimizeToggle();
                 }}
               />
             </Button>

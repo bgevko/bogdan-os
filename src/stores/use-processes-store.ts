@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import { processDirectory } from '@/globals/process-directory';
 import { type Processes } from '@/types/processes';
-import { Position, Size } from '@/types/units';
+import { Position, Size, Dimensions } from '@/types/units';
 
 interface ProcessStore {
   processDirectory: Processes;
@@ -22,6 +22,10 @@ interface ProcessStore {
   setIsMinimized: (processId: string, isMinimized: boolean) => void;
   getIsMinimized: (processId: string) => boolean;
   getTitle: (processId: string) => string;
+  setTabDimensions: (processId: string, dimensions: Dimensions) => void;
+  getTabDimensions: (processId: string) => Dimensions;
+  setOpacity: (processId: string, opacity: number) => void;
+  getOpacity: (processId: string) => number;
   reset: () => void;
 }
 
@@ -209,6 +213,50 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
       throw new Error(`Attempted to get isMinimized of a process that is not open: ${processId}.`);
     }
     return isMinimized;
+  },
+
+  setTabDimensions: (processId, dimensions) => {
+    set((state) => {
+      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+        throw new Error(
+          `Attempted to set tab dimensions of a process that is not open: ${processId}.`,
+        );
+      }
+      const newProcesses = { ...state.openedProcesses };
+      newProcesses[processId] = { ...newProcesses[processId], tabDimensions: dimensions };
+      return { openedProcesses: newProcesses };
+    });
+  },
+
+  getTabDimensions: (processId) => {
+    const { openedProcesses } = get();
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(
+        `Attempted to get tab dimensions of a process that is not open: ${processId}.`,
+      );
+    }
+    const { tabDimensions } = get().openedProcesses[processId];
+    return tabDimensions ?? { x: 0, y: 0, width: 0, height: 0 };
+  },
+
+  setOpacity: (processId, opacity) => {
+    set((state) => {
+      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+        throw new Error(`Attempted to set opacity of a process that is not open: ${processId}.`);
+      }
+      const newProcesses = { ...state.openedProcesses };
+      newProcesses[processId] = { ...newProcesses[processId], opacity };
+      return { openedProcesses: newProcesses };
+    });
+  },
+
+  getOpacity: (processId) => {
+    const { opacity } = get().openedProcesses[processId];
+    const { openedProcesses } = get();
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(`Attempted to get opacity of a process that is not open: ${processId}.`);
+    }
+    return opacity ?? 1;
   },
 }));
 
