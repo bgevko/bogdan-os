@@ -11,6 +11,7 @@ export interface Process {
   maximized: boolean;
   size: Size;
   position: Position;
+  isAnimating: boolean;
 }
 
 export type Processes = Record<string, Process>;

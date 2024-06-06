@@ -18,7 +18,6 @@ export enum ResizeDirection {
 
 // window state hook return types
 interface WindowState {
-  isAnimatingResize: boolean;
   handleMouseDownResize: (direction: ResizeDirection) => void;
   handleMouseDownMove: () => void;
   handleWindowFullSize: () => void;
@@ -27,11 +26,12 @@ interface WindowState {
 export const useWindowState = (id: string): WindowState => {
   const position = useProcessesStore((state) => state.getWindowPosition(id));
   const size = useProcessesStore((state) => state.getWindowSize(id));
+  const maximized = useProcessesStore((state) => state.getWindowMaximized(id));
+  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
+  const setIsAnimating = useProcessesStore((state) => state.setIsAnimating);
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
   const setSize = useProcessesStore((state) => state.setWindowSize);
-  const maximized = useProcessesStore((state) => state.getWindowMaximized(id));
   const setMaximized = useProcessesStore((state) => state.setWindowMaximized);
-  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
 
   const [start, setStart] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
@@ -43,7 +43,6 @@ export const useWindowState = (id: string): WindowState => {
     width: window.innerWidth,
     height: window.innerHeight - TASKBAR_HEIGHT,
   });
-  const [isAnimatingResize, setIsAnimatingResize] = useState(false);
 
   const handleMouseDownResize = (direction: ResizeDirection) => {
     setResizeDirection(direction);
@@ -183,7 +182,7 @@ export const useWindowState = (id: string): WindowState => {
   );
 
   const handleWindowFullSize = useCallback(() => {
-    setIsAnimatingResize(true);
+    setIsAnimating(id, true);
     if (maximized) {
       setLastPosBeforeMin({ x: position.x, y: position.y });
       setLastSizeBeforeMin({ width: size.width, height: size.height });
@@ -201,7 +200,7 @@ export const useWindowState = (id: string): WindowState => {
       setMaximized(id, true);
     }
     setTimeout(() => {
-      setIsAnimatingResize(false);
+      setIsAnimating(id, false);
     }, 200);
   }, [
     id,
@@ -211,6 +210,7 @@ export const useWindowState = (id: string): WindowState => {
     setSize,
     setPosition,
     setMaximized,
+    setIsAnimating,
     lastSizeBeforeMaxed,
     lastPosBeforeMaxed,
     lastSizeBeforeMin,
@@ -328,7 +328,6 @@ export const useWindowState = (id: string): WindowState => {
   ]);
 
   return {
-    isAnimatingResize,
     handleMouseDownResize,
     handleMouseDownMove,
     handleWindowFullSize,

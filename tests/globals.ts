@@ -12,6 +12,7 @@ const testProcesses: Processes = {
     maximized: false,
     position: { x: 0, y: 0 },
     size: { width: 300, height: 300 },
+    isAnimating: false,
   },
   Test2: {
     Component: lazy(() => import('@/components/apps/hello-world')),
@@ -22,6 +23,7 @@ const testProcesses: Processes = {
     maximized: false,
     position: { x: 0, y: 0 },
     size: { width: 300, height: 300 },
+    isAnimating: false,
   },
   Test3: {
     Component: lazy(() => import('@/components/apps/hello-world')),
@@ -32,6 +34,7 @@ const testProcesses: Processes = {
     maximized: false,
     position: { x: 0, y: 0 },
     size: { width: 300, height: 300 },
+    isAnimating: false,
   },
 };
 

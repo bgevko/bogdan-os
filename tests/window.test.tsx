@@ -1,6 +1,5 @@
 /* eslint-disable react-compiler/react-compiler */
 /* eslint-disable react-hooks/rules-of-hooks */
-/* eslint-disable react-compiler/react-compiler */
 import { renderHook, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { it, expect, describe, beforeEach } from 'vitest';

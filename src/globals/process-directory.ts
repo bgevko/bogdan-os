@@ -12,6 +12,7 @@ export const testDirectory: Processes = {
     minSize: { width: 300, height: 300 },
     position: { x: 300, y: 300 },
     size: { width: 400, height: 400 },
+    isAnimating: false,
   },
 };
 
@@ -25,6 +26,7 @@ export const processDirectory: Processes = {
     minSize: { width: 300, height: 300 },
     position: { x: 300, y: 300 },
     size: { width: 400, height: 400 },
+    isAnimating: false,
   },
 };
 
