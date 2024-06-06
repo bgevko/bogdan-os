@@ -19,6 +19,8 @@ interface ProcessStore {
   getWindowMaximized: (processId: string) => boolean;
   setIsAnimating: (processId: string, isAnimating: boolean) => void;
   getIsAnimating: (processId: string) => boolean;
+  setIsMinimized: (processId: string, isMinimized: boolean) => void;
+  getIsMinimized: (processId: string) => boolean;
   getTitle: (processId: string) => string;
   reset: () => void;
 }
@@ -185,6 +187,28 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
       throw new Error(`Attempted to get isAnimating of a process that is not open: ${processId}.`);
     }
     return isAnimating;
+  },
+
+  setIsMinimized: (processId, isMinimized) => {
+    set((state) => {
+      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+        throw new Error(
+          `Attempted to set isMinimized of a process that is not open: ${processId}.`,
+        );
+      }
+      const newProcesses = { ...state.openedProcesses };
+      newProcesses[processId] = { ...newProcesses[processId], isMinimized };
+      return { openedProcesses: newProcesses };
+    });
+  },
+
+  getIsMinimized: (processId) => {
+    const { isMinimized } = get().openedProcesses[processId];
+    const { openedProcesses } = get();
+    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
+      throw new Error(`Attempted to get isMinimized of a process that is not open: ${processId}.`);
+    }
+    return isMinimized;
   },
 }));
 

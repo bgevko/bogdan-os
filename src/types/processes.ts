@@ -12,6 +12,7 @@ export interface Process {
   size: Size;
   position: Position;
   isAnimating: boolean;
+  isMinimized: boolean;
 }
 
 export type Processes = Record<string, Process>;

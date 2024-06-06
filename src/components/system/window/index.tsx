@@ -12,6 +12,7 @@ interface WindowProperties {
 
 const Window = ({ id, children }: WindowProperties): ReactElement => {
   const isAnimating = useProcessesStore((state) => state.getIsAnimating(id));
+  const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
   const position = useProcessesStore((state) => state.getWindowPosition(id));
   const size = useProcessesStore((state) => state.getWindowSize(id));
   return (
@@ -21,11 +22,17 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
         'embossed-border absolute flex min-h-[300px] min-w-[300px] flex-col',
         isAnimating && 'transition-all duration-200',
       )}
-      style={{
-        transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
-        width: size.width,
-        height: size.height,
-      }}
+      style={
+        isMinimized
+          ? {
+              display: 'none',
+            }
+          : {
+              transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
+              width: size.width,
+              height: size.height,
+            }
+      }
     >
       <WindowResizeHandles id={id} />
       <WindowMoveHandle id={id} />

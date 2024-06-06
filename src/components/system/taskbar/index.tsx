@@ -8,7 +8,7 @@ const Taskbar = (): JSX.Element => (
     className="embossed-border-t absolute inset-x-0 bottom-0 w-dvw"
     style={{ top: `calc(100% - ${TASKBAR_HEIGHT.toString()}px)` }}
   >
-    <nav className="absolute inset-x-0 bottom-0 top-[-5px] flex bg-surface px-[5px] pb-[5px]">
+    <nav className="absolute inset-x-0 bottom-0 top-[-5px] flex gap-1 bg-surface px-[5px] pb-[5px]">
       <StartButton />
       <TaskbarEntries />
       <Clock />

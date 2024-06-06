@@ -18,6 +18,7 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
   const close = useProcessesStore((state) => state.close);
   const title = useProcessesStore((state) => state.getTitle(id));
   const maxed = useProcessesStore((state) => state.getWindowMaximized(id));
+  const setIsMinimized = useProcessesStore((state) => state.setIsMinimized);
   return (
     <>
       <header
@@ -43,6 +44,9 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
                 alt="minimize"
                 className="size-full select-none"
                 style={{ transform: 'scale(1.5) translateY(-0.5px)' }}
+                onMouseUpCapture={() => {
+                  setIsMinimized(id, true);
+                }}
               />
             </Button>
             <Button
