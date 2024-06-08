@@ -403,42 +403,23 @@ describe('Window', () => {
     expect(minimizedHeight2).toBe(initialHeight);
   });
 
-  it('Should remember previous maximized / minimized sizes', () => {
+  it('Should remember previous unmaximized sizes', async () => {
     const { myWindow, windowHeader, bottomLeftCorner } = useTestValues();
-    fireEvent.doubleClick(windowHeader);
-
-    // resize from bottom left corner
-    const initialWidth = Number.parseFloat(getComputedStyle(myWindow).width);
     const initialHeight = Number.parseFloat(getComputedStyle(myWindow).height);
+    const initialWidth = Number.parseFloat(getComputedStyle(myWindow).width);
     const initialPosition = parseTranslate(myWindow.style.transform);
     const deltaX = 10;
-    const deltaY = initialPosition.y + initialHeight - 10;
+    const deltaY = initialPosition.y + initialHeight + 10;
     fireEvent.mouseDown(bottomLeftCorner);
     fireEvent.mouseMove(bottomLeftCorner, { clientX: deltaX, clientY: deltaY });
     fireEvent.mouseUp(bottomLeftCorner);
-    const maximizedWidth = Number.parseFloat(getComputedStyle(myWindow).width);
-    const maximizedHeight = Number.parseFloat(getComputedStyle(myWindow).height);
-    expect(maximizedWidth).toBe(initialWidth - 10);
-    expect(maximizedHeight).toBe(initialHeight - 10);
-    fireEvent.doubleClick(windowHeader);
-
-    // resize from bottom left corner
-    fireEvent.mouseDown(bottomLeftCorner);
-    fireEvent.mouseMove(bottomLeftCorner, { clientX: deltaX, clientY: deltaY });
-    fireEvent.mouseUp(bottomLeftCorner);
-    const minimizedWidth = Number.parseFloat(getComputedStyle(myWindow).width);
+    await userEvent.dblClick(windowHeader);
+    await userEvent.dblClick(windowHeader);
     const minimizedHeight = Number.parseFloat(getComputedStyle(myWindow).height);
-
-    fireEvent.doubleClick(windowHeader);
-    const maximizedWidth2 = Number.parseFloat(getComputedStyle(myWindow).width);
-    const maximizedHeight2 = Number.parseFloat(getComputedStyle(myWindow).height);
-    expect(maximizedWidth2).toBe(maximizedWidth);
-    expect(maximizedHeight2).toBe(maximizedHeight);
-
-    fireEvent.doubleClick(windowHeader);
-    const minimizedWidth2 = Number.parseFloat(getComputedStyle(myWindow).width);
-    const minimizedHeight2 = Number.parseFloat(getComputedStyle(myWindow).height);
-    expect(minimizedWidth2).toBe(minimizedWidth);
-    expect(minimizedHeight2).toBe(minimizedHeight);
+    const minimizedWidth = Number.parseFloat(getComputedStyle(myWindow).width);
+    const minimizedPosition = parseTranslate(myWindow.style.transform);
+    expect(minimizedHeight).toBe(initialHeight + 10);
+    expect(minimizedWidth).toBe(initialWidth - 10);
+    expect(minimizedPosition.x).toBe(initialPosition.x + 10);
   });
 });

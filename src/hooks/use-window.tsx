@@ -119,8 +119,9 @@ export const useWindowState = (id: string): WindowState => {
       const newWidth = Math.max(event.clientX - position.x, minSize.width);
       const clampedWidth = Math.max(300, Math.min(newWidth, window.innerWidth - position.x));
       setSize(id, { width: clampedWidth, height: size.height });
+      setIsMaximized(id, false);
     },
-    [resizeDirection, position, size, id, setSize, minSize],
+    [resizeDirection, position, size, id, setSize, minSize, setIsMaximized],
   );
 
   const handleWindowResizeBottom = useCallback(
@@ -129,8 +130,9 @@ export const useWindowState = (id: string): WindowState => {
       const newHeight = event.clientY - position.y;
       const clampedHeight = Math.max(300, Math.min(newHeight, window.innerHeight - position.y));
       setSize(id, { width: size.width, height: clampedHeight });
+      setIsMaximized(id, false);
     },
-    [id, resizeDirection, position, size, setSize],
+    [id, resizeDirection, position, size, setSize, setIsMaximized],
   );
 
   const handleWindowResizeLeft = useCallback(
@@ -142,8 +144,19 @@ export const useWindowState = (id: string): WindowState => {
       const newWidth = size.width + position.x - clampedX;
       setSize(id, { width: newWidth, height: size.height });
       setPosition(id, { x: clampedX, y: position.y });
+      setIsMaximized(id, false);
     },
-    [resizeDirection, setPosition, setSize, id, start, position, size, minSize.width],
+    [
+      resizeDirection,
+      setPosition,
+      setSize,
+      id,
+      start,
+      position,
+      size,
+      minSize.width,
+      setIsMaximized,
+    ],
   );
 
   const handleWindowResizeTop = useCallback(
@@ -155,8 +168,19 @@ export const useWindowState = (id: string): WindowState => {
       const newHeight = size.height + position.y - clampedY;
       setSize(id, { width: size.width, height: newHeight });
       setPosition(id, { x: position.x, y: clampedY });
+      setIsMaximized(id, false);
     },
-    [id, setSize, setPosition, resizeDirection, start, position, size, minSize.height],
+    [
+      id,
+      setSize,
+      setPosition,
+      resizeDirection,
+      start,
+      position,
+      size,
+      minSize.height,
+      setIsMaximized,
+    ],
   );
 
   const handleWindowResizeTopLeft = useCallback(
@@ -172,8 +196,9 @@ export const useWindowState = (id: string): WindowState => {
       const newHeight = size.height + position.y - clampedY;
       setSize(id, { width: newWidth, height: newHeight });
       setPosition(id, { x: clampedX, y: clampedY });
+      setIsMaximized(id, false);
     },
-    [resizeDirection, id, start, position, setPosition, setSize, size, minSize],
+    [resizeDirection, id, start, position, setPosition, setSize, size, minSize, setIsMaximized],
   );
 
   const handleWindowResizeTopRight = useCallback(
@@ -187,8 +212,19 @@ export const useWindowState = (id: string): WindowState => {
       const clampedWidth = Math.max(300, Math.min(newWidth, window.innerWidth - position.x));
       setSize(id, { width: clampedWidth, height: newHeight });
       setPosition(id, { x: position.x, y: clampedY });
+      setIsMaximized(id, false);
     },
-    [resizeDirection, setSize, setPosition, id, start, position, size, minSize.height],
+    [
+      resizeDirection,
+      setSize,
+      setPosition,
+      id,
+      start,
+      position,
+      size,
+      minSize.height,
+      setIsMaximized,
+    ],
   );
 
   const handleWindowResizeBottomLeft = useCallback(
@@ -202,8 +238,19 @@ export const useWindowState = (id: string): WindowState => {
       const clampedHeight = Math.max(300, Math.min(newHeight, window.innerHeight - position.y));
       setSize(id, { width: newWidth, height: clampedHeight });
       setPosition(id, { x: clampedX, y: position.y });
+      setIsMaximized(id, false);
     },
-    [resizeDirection, id, setSize, setPosition, start, position, size, minSize.width],
+    [
+      resizeDirection,
+      id,
+      setSize,
+      setPosition,
+      start,
+      position,
+      size,
+      minSize.width,
+      setIsMaximized,
+    ],
   );
 
   const handleWindowResizeBottomRight = useCallback(
@@ -214,19 +261,19 @@ export const useWindowState = (id: string): WindowState => {
       const newHeight = event.clientY - position.y;
       const clampedHeight = Math.max(300, Math.min(newHeight, window.innerHeight - position.y));
       setSize(id, { width: clampedWidth, height: clampedHeight });
+      setIsMaximized(id, false);
     },
-    [resizeDirection, id, setSize, position],
+    [resizeDirection, id, setSize, position, setIsMaximized],
   );
 
   const handleWindowFullSize = useCallback(() => {
     setIsAnimating(id, true);
     if (isMaximized) {
-      setMaximizedDimensions(id, windowDimensions);
       setWindowDimensions(id, unmaximizedDimensions);
       setIsMaximized(id, false);
     } else {
       setUnmaximizedDimensions(id, windowDimensions);
-      setWindowDimensions(id, maximizedDimensions);
+      setWindowDimensions(id, viewportDimensions);
       setIsMaximized(id, true);
     }
     setTimeout(() => {
@@ -235,12 +282,11 @@ export const useWindowState = (id: string): WindowState => {
   }, [
     id,
     isMaximized,
-    maximizedDimensions,
+    viewportDimensions,
     unmaximizedDimensions,
     windowDimensions,
     setIsAnimating,
     setIsMaximized,
-    setMaximizedDimensions,
     setUnmaximizedDimensions,
     setWindowDimensions,
   ]);
@@ -273,31 +319,14 @@ export const useWindowState = (id: string): WindowState => {
     setUnminimizedDimensions,
   ]);
 
-  // Handler for keeping minimized and unminimized window sizes appropriate
-  useEffect(() => {
-    // Reset default unminimized size to default if it ever becomes smaller than the minimum allowed size
-    if (aNarrowerOrShorterThanB(unminimizedDimensions, minSize)) {
-      setUnminimizedDimensions(id, defaultDimensions);
-    }
-  }, [id, unminimizedDimensions, defaultDimensions, minSize, setUnminimizedDimensions]);
-
   const handleSelectStart = useCallback((event: Event) => {
     event.preventDefault();
   }, []);
 
-  // Handler for keeping maximized and unmazimized window sizes appropriate
   useEffect(() => {
-    // Reset default maximized window to viewport size
-    // if the user resizes the window to be smaller than the unmazimized window
-    if (aNarrowerOrShorterThanB(maximizedDimensions, unmaximizedDimensions)) {
-      setMaximizedDimensions(id, viewportDimensions);
-
-      // Reset default unmaximized window to default settings
-      // if the user resizes the window to be bigger than the maximized window
-      // or smaller than the the minimum allowed size (usually not possible)
-    } else if (
-      aWiderOrTallerThanB(unmaximizedDimensions, maximizedDimensions) ||
-      aNarrowerOrShorterThanB(unmaximizedDimensions, minSize)
+    if (
+      aNarrowerOrShorterThanB(unmaximizedDimensions, minSize) ||
+      aWiderOrTallerThanB(unmaximizedDimensions, viewportDimensions)
     ) {
       setUnmaximizedDimensions(id, defaultDimensions);
     }
@@ -311,6 +340,14 @@ export const useWindowState = (id: string): WindowState => {
     defaultDimensions,
     viewportDimensions,
   ]);
+
+  // Handler for keeping minimized and unminimized window sizes appropriate
+  useEffect(() => {
+    // Reset default unminimized size to default if it ever becomes smaller than the minimum allowed size
+    if (aNarrowerOrShorterThanB(unminimizedDimensions, minSize)) {
+      setUnminimizedDimensions(id, defaultDimensions);
+    }
+  }, [id, unminimizedDimensions, defaultDimensions, minSize, setUnminimizedDimensions]);
 
   useEffect(() => {
     window.addEventListener('mouseup', handleMouseUp);
