@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 
 import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
+import { Dimensions } from '@/types/units';
+import { aNarrowerOrShorterThanB, aWiderOrTallerThanB } from '@/utils/compare';
 
 // eslint-disable-next-line no-shadow
 export enum ResizeDirection {
@@ -26,30 +28,58 @@ interface WindowState {
 
 export const useWindowState = (id: string): WindowState => {
   const position = useProcessesStore((state) => state.getWindowPosition(id));
-  const size = useProcessesStore((state) => state.getWindowSize(id));
-  const maximized = useProcessesStore((state) => state.getWindowMaximized(id));
-  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
-  const setIsAnimating = useProcessesStore((state) => state.setIsAnimating);
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
+
+  const size = useProcessesStore((state) => state.getWindowSize(id));
   const setSize = useProcessesStore((state) => state.setWindowSize);
-  const setMaximized = useProcessesStore((state) => state.setWindowMaximized);
-  const tabDimensions = useProcessesStore((state) => state.getTabDimensions(id));
+
+  const isMaximized = useProcessesStore((state) => state.getIsMaximized(id));
+  const setIsMaximized = useProcessesStore((state) => state.setIsMaximized);
+
   const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
   const setIsMinimized = useProcessesStore((state) => state.setIsMinimized);
+
+  const maximizedDimensions = useProcessesStore((state) => state.getMaximizedDimensions(id));
+  const setMaximizedDimensions = useProcessesStore((state) => state.setMaximizedDimensions);
+
+  const unmaximizedDimensions = useProcessesStore((state) => state.getUnmaximizedDimensions(id));
+  const setUnmaximizedDimensions = useProcessesStore((state) => state.setUnmaximizedDimensions);
+
+  const unminimizedDimensions = useProcessesStore((state) => state.getUnminimizedDimensions(id));
+  const setUnminimizedDimensions = useProcessesStore((state) => state.setUnminimizedDimensions);
+
+  const setWindowDimensions = useProcessesStore((state) => state.setWindowDimensions);
+  const defaultDimensions = useProcessesStore((state) => state.getDefaultDimensions(id));
+
+  const minimizedDimensions = useProcessesStore((state) => state.getMinimizedDimensions(id));
+
+  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
+  const setIsAnimating = useProcessesStore((state) => state.setIsAnimating);
   const setOpacity = useProcessesStore((state) => state.setOpacity);
 
   const [start, setStart] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<ResizeDirection>(ResizeDirection.NONE);
-  const [lastPosBeforeMaxed, setLastPosBeforeMaxed] = useState({ x: 0, y: 0 });
-  const [lastSizeBeforeMaxed, setLastSizeBeforeMaxed] = useState({ width: 0, height: 0 });
-  const [lastPosBeforeUnmaxed, setLastPosBeforeMin] = useState({ x: 0, y: 0 });
-  const [lastSizeBeforeUnmaxed, setLastSizeBeforeMin] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight - TASKBAR_HEIGHT,
-  });
-  const [lastPos, setLastPos] = useState(position);
-  const [lastSize, setLastSize] = useState(size);
+
+  const viewportDimensions: Dimensions = useMemo(() => {
+    return {
+      size: {
+        width: window.innerWidth,
+        height: window.innerHeight - TASKBAR_HEIGHT,
+      },
+      position: {
+        x: 0,
+        y: 0,
+      },
+    };
+  }, []);
+
+  const windowDimensions = useMemo(() => {
+    return {
+      position,
+      size,
+    };
+  }, [position, size]);
 
   const handleMouseDownResize = (direction: ResizeDirection) => {
     setResizeDirection(direction);
@@ -190,83 +220,97 @@ export const useWindowState = (id: string): WindowState => {
 
   const handleWindowFullSize = useCallback(() => {
     setIsAnimating(id, true);
-    if (maximized) {
-      setLastPosBeforeMin({ x: position.x, y: position.y });
-      setLastSizeBeforeMin({ width: size.width, height: size.height });
-      setSize(id, { width: lastSizeBeforeMaxed.width, height: lastSizeBeforeMaxed.height });
-      setPosition(id, { x: lastPosBeforeMaxed.x, y: lastPosBeforeMaxed.y });
-      setMaximized(id, false);
+    if (isMaximized) {
+      setMaximizedDimensions(id, windowDimensions);
+      setWindowDimensions(id, unmaximizedDimensions);
+      setIsMaximized(id, false);
     } else {
-      if (!(size.width === window.innerWidth && size.height === window.innerHeight)) {
-        setLastPosBeforeMaxed({ x: position.x, y: position.y });
-        setLastSizeBeforeMaxed({ width: size.width, height: size.height });
-      }
-
-      setSize(id, { width: lastSizeBeforeUnmaxed.width, height: lastSizeBeforeUnmaxed.height });
-      setPosition(id, { x: lastPosBeforeUnmaxed.x, y: lastPosBeforeUnmaxed.y });
-      setMaximized(id, true);
+      setUnmaximizedDimensions(id, windowDimensions);
+      setWindowDimensions(id, maximizedDimensions);
+      setIsMaximized(id, true);
     }
     setTimeout(() => {
       setIsAnimating(id, false);
     }, 200);
   }, [
     id,
-    maximized,
-    position,
-    size,
-    setSize,
-    setPosition,
-    setMaximized,
+    isMaximized,
+    maximizedDimensions,
+    unmaximizedDimensions,
+    windowDimensions,
     setIsAnimating,
-    lastSizeBeforeMaxed,
-    lastPosBeforeMaxed,
-    lastSizeBeforeUnmaxed,
-    lastPosBeforeUnmaxed,
+    setIsMaximized,
+    setMaximizedDimensions,
+    setUnmaximizedDimensions,
+    setWindowDimensions,
   ]);
 
   const handleWindowMinimizeToggle = useCallback(() => {
-    const { x, y, width, height } = tabDimensions;
     setIsAnimating(id, true);
-
     if (isMinimized) {
-      setIsMinimized(id, false);
-      setPosition(id, lastPos);
-      setSize(id, lastSize);
+      setWindowDimensions(id, unminimizedDimensions);
       setOpacity(id, 1);
-      setTimeout(() => {
-        setIsAnimating(id, false);
-      }, 200);
+      setIsMinimized(id, false);
     } else {
-      setLastPos(position);
-      setLastSize(size);
-      setPosition(id, { x, y });
-      setSize(id, { width, height });
+      setUnminimizedDimensions(id, windowDimensions);
+      setWindowDimensions(id, minimizedDimensions);
       setOpacity(id, 0);
-      setTimeout(() => {
-        setIsAnimating(id, false);
-        setIsMinimized(id, true);
-      }, 200);
+      setIsMinimized(id, true);
     }
+    setTimeout(() => {
+      setIsAnimating(id, false);
+    }, 200);
   }, [
+    setIsAnimating,
+    setIsMinimized,
+    setOpacity,
+    setWindowDimensions,
     id,
     isMinimized,
-    lastPos,
-    lastSize,
-    position,
-    size,
-    setIsAnimating,
-    setPosition,
-    setSize,
-    setLastPos,
-    setLastSize,
-    setIsMinimized,
-    tabDimensions,
-    setOpacity,
+    windowDimensions,
+    unminimizedDimensions,
+    minimizedDimensions,
+    setUnminimizedDimensions,
   ]);
+
+  // Handler for keeping minimized and unminimized window sizes appropriate
+  useEffect(() => {
+    // Reset default unminimized size to default if it ever becomes smaller than the minimum allowed size
+    if (aNarrowerOrShorterThanB(unminimizedDimensions, minSize)) {
+      setUnminimizedDimensions(id, defaultDimensions);
+    }
+  }, [id, unminimizedDimensions, defaultDimensions, minSize, setUnminimizedDimensions]);
 
   const handleSelectStart = useCallback((event: Event) => {
     event.preventDefault();
   }, []);
+
+  // Handler for keeping maximized and unmazimized window sizes appropriate
+  useEffect(() => {
+    // Reset default maximized window to viewport size
+    // if the user resizes the window to be smaller than the unmazimized window
+    if (aNarrowerOrShorterThanB(maximizedDimensions, unmaximizedDimensions)) {
+      setMaximizedDimensions(id, viewportDimensions);
+
+      // Reset default unmaximized window to default settings
+      // if the user resizes the window to be bigger than the maximized window
+      // or smaller than the the minimum allowed size (usually not possible)
+    } else if (
+      aWiderOrTallerThanB(unmaximizedDimensions, maximizedDimensions) ||
+      aNarrowerOrShorterThanB(unmaximizedDimensions, minSize)
+    ) {
+      setUnmaximizedDimensions(id, defaultDimensions);
+    }
+  }, [
+    id,
+    maximizedDimensions,
+    unmaximizedDimensions,
+    minSize,
+    setMaximizedDimensions,
+    setUnmaximizedDimensions,
+    defaultDimensions,
+    viewportDimensions,
+  ]);
 
   useEffect(() => {
     window.addEventListener('mouseup', handleMouseUp);
