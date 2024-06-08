@@ -3,9 +3,12 @@ import { renderHook, act, render } from '@testing-library/react';
 import { it, expect, describe, beforeEach } from 'vitest';
 
 import TaskbarEntries from '@/components/system/taskbar/taskbar-entries';
+import { getProcessDirectory } from '@/globals/process-directory';
 import useProcessesStore from '@/stores/use-processes-store';
 
 import testProcesses from './globals';
+
+const processes = getProcessDirectory(testProcesses);
 
 beforeEach(() => {
   const { result } = renderHook(() => useProcessesStore());
@@ -13,9 +16,9 @@ beforeEach(() => {
     result.current.reset();
   });
   act(() => {
-    result.current.setProcessDirectory(testProcesses);
+    result.current.setProcessDirectory(processes);
   });
-  expect(result.current.processDirectory).toEqual(testProcesses);
+  expect(result.current.processDirectory).toEqual(processes);
   expect(result.current.openedProcesses).toEqual({});
 });
 
