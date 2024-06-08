@@ -1,6 +1,6 @@
 /* eslint-disable react-compiler/react-compiler */
 /* eslint-disable react-hooks/rules-of-hooks */
-import { renderHook, fireEvent, render, screen } from '@testing-library/react';
+import { renderHook, act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { it, expect, describe, beforeEach } from 'vitest';
 
@@ -61,6 +61,12 @@ const useTestValues = () => {
 beforeEach(async () => {
   render(<App />);
   // TODO: Change this to an appropriate desktop icon later
+
+  const { result } = renderHook(() => useProcessesStore());
+
+  act(() => {
+    result.current.reset();
+  });
   await userEvent.click(screen.getByText('Explore'));
 });
 
@@ -397,22 +403,29 @@ describe('Window', () => {
     expect(minimizedHeight2).toBe(initialHeight);
   });
 
-  it('Should remember previous maximized sizes', () => {
+  it('Should remember previous maximized / minimized sizes', () => {
     const { myWindow, windowHeader, bottomLeftCorner } = useTestValues();
     fireEvent.doubleClick(windowHeader);
 
     // resize from bottom left corner
+    const initialWidth = Number.parseFloat(getComputedStyle(myWindow).width);
+    const initialHeight = Number.parseFloat(getComputedStyle(myWindow).height);
+    const initialPosition = parseTranslate(myWindow.style.transform);
+    const deltaX = 10;
+    const deltaY = initialPosition.y + initialHeight - 10;
     fireEvent.mouseDown(bottomLeftCorner);
-    fireEvent.mouseMove(bottomLeftCorner, { clientX: -100, clientY: 100 });
+    fireEvent.mouseMove(bottomLeftCorner, { clientX: deltaX, clientY: deltaY });
     fireEvent.mouseUp(bottomLeftCorner);
     const maximizedWidth = Number.parseFloat(getComputedStyle(myWindow).width);
     const maximizedHeight = Number.parseFloat(getComputedStyle(myWindow).height);
-
+    expect(maximizedWidth).toBe(initialWidth - 10);
+    expect(maximizedHeight).toBe(initialHeight - 10);
     fireEvent.doubleClick(windowHeader);
 
     // resize from bottom left corner
     fireEvent.mouseDown(bottomLeftCorner);
-    fireEvent.mouseMove(bottomLeftCorner, { clientX: 100, clientY: -100 });
+    fireEvent.mouseMove(bottomLeftCorner, { clientX: deltaX, clientY: deltaY });
+    fireEvent.mouseUp(bottomLeftCorner);
     const minimizedWidth = Number.parseFloat(getComputedStyle(myWindow).width);
     const minimizedHeight = Number.parseFloat(getComputedStyle(myWindow).height);
 
