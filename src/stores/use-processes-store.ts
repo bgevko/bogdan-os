@@ -1,33 +1,97 @@
 import { create } from 'zustand';
 
-import { processDirectory } from '@/globals/process-directory';
-import { type Processes } from '@/types/processes';
+import { getProcessDirectory } from '@/globals/process-directory';
+import { type Processes, Process } from '@/types/processes';
 import { Position, Size, Dimensions } from '@/types/units';
 
+const processDirectory = getProcessDirectory();
 interface ProcessStore {
   processDirectory: Processes;
   setProcessDirectory: (newProcesses: Processes) => void;
+  setProperty: <K extends keyof Process>(processId: string, property: K, value: Process[K]) => void;
+  getProperty: <K extends keyof Process>(processId: string, property: K) => Process[K];
   openedProcesses: Processes;
   open: (processId: string | string[]) => void;
   close: (processId: string | string[]) => void;
-  setWindowPosition: (processId: string, pos: Position) => void;
+  setWindowDimensions: (processId: string, dimensions: Dimensions) => void;
+  getWindowDimensions: (processId: string) => Dimensions;
+  setWindowPosition: (processId: string, position: Position) => void;
   getWindowPosition: (processId: string) => Position;
   setWindowSize: (processId: string, size: Size) => void;
   getWindowSize: (processId: string) => Size;
   getWindowMinSize: (processId: string) => Size;
-  setWindowMaximized: (processId: string, maximized: boolean) => void;
-  getWindowMaximized: (processId: string) => boolean;
-  setIsAnimating: (processId: string, isAnimating: boolean) => void;
-  getIsAnimating: (processId: string) => boolean;
+  setDefaultDimensions: (processId: string, dimensions: Dimensions) => void;
+  getDefaultDimensions: (processId: string) => Dimensions;
+  setIsMaximized: (processId: string, maximized: boolean) => void;
+  getIsMaximized: (processId: string) => boolean;
   setIsMinimized: (processId: string, isMinimized: boolean) => void;
   getIsMinimized: (processId: string) => boolean;
+  setIsAnimating: (processId: string, isAnimating: boolean) => void;
+  getIsAnimating: (processId: string) => boolean;
   getTitle: (processId: string) => string;
-  setTabDimensions: (processId: string, dimensions: Dimensions) => void;
-  getTabDimensions: (processId: string) => Dimensions;
+  setMinimizedDimensions: (processId: string, dimensions: Dimensions) => void;
+  getMinimizedDimensions: (processId: string) => Dimensions;
+  setUnminimizedDimensions: (processId: string, dimensions: Dimensions) => void;
+  getUnminimizedDimensions: (processId: string) => Dimensions;
   setOpacity: (processId: string, opacity: number) => void;
   getOpacity: (processId: string) => number;
-  reset: () => void;
+  setMaximizedDimensions: (processId: string, dimensions: Dimensions) => void;
+  getMaximizedDimensions: (processId: string) => Dimensions;
+  setUnmaximizedDimensions: (processId: string, dimensions: Dimensions) => void;
+  getUnmaximizedDimensions: (processId: string) => Dimensions;
+  reset: (directory?: Processes) => void;
 }
+
+const setPropertyHelper = <K extends keyof Process>(
+  state: ProcessStore,
+  processId: string,
+  property: K,
+  value: Process[K],
+): { openedProcesses: Processes } => {
+  if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+    throw new Error(`Attempted to set ${property} of a process that is not open: ${processId}.`);
+  }
+
+  const newProcesses = {
+    ...state.openedProcesses,
+    [processId]: {
+      ...state.openedProcesses[processId],
+      [property]: value,
+    },
+  };
+
+  return { openedProcesses: newProcesses };
+};
+const getPropertyHelper = <K extends keyof Process>(
+  state: ProcessStore,
+  processId: string,
+  property: K,
+): Process[K] => {
+  if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
+    throw new Error(`Attempted to get ${property} of a process that is not open: ${processId}.`);
+  }
+  const process = state.openedProcesses[processId];
+  return process[property];
+};
+
+const cleanupProcesses = (closedProcesses: Processes) => {
+  for (const key of Object.keys(closedProcesses)) {
+    const process = closedProcesses[key];
+    // Unminimize the process and restore it to its unminimized dimensions
+    if (process.minimized) {
+      process.minimized = false;
+      process.position = process.unminimizedDimensions.position;
+      process.size = process.unminimizedDimensions.size;
+    }
+
+    if (process.isAnimating) {
+      process.isAnimating = false;
+    }
+
+    // Other cleanup tasks
+    process.opacity = 1;
+  }
+};
 
 const useProcessesStore = create<ProcessStore>((set, get) => ({
   processDirectory,
@@ -35,6 +99,10 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
   setProcessDirectory: (newDirectory: Processes) => {
     set({ processDirectory: newDirectory });
   },
+  setProperty: (processId, property, value) => {
+    set((state) => setPropertyHelper(state, processId, property, value));
+  },
+  getProperty: (processId, property) => getPropertyHelper(get(), processId, property),
   open: (processId) => {
     const requested = Array.isArray(processId) ? processId : [processId];
     set((state) => {
@@ -64,6 +132,9 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
         toClose[id] = state.openedProcesses[id];
       }
 
+      // Clean up the state of all closed processes
+      cleanupProcesses(toClose);
+
       // Update the main directory to reflect any changes to the closed processes
       const oldDirectory = { ...state.processDirectory };
       const newDirectory: Processes = {};
@@ -85,178 +156,83 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
     });
   },
 
-  setWindowPosition: (processId, pos) => {
-    set((state) => {
-      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-        throw new Error(`Attempted to set position of a process that is not open: ${processId}.`);
-      }
-      const newProcesses = { ...state.openedProcesses };
-      newProcesses[processId] = { ...newProcesses[processId], position: pos };
-      return { openedProcesses: newProcesses };
-    });
+  setWindowDimensions: (processId, dimensions) => {
+    const { size, position } = dimensions;
+    set((state) => setPropertyHelper(state, processId, 'size', size));
+    set((state) => setPropertyHelper(state, processId, 'position', position));
+  },
+  getWindowDimensions: (processId) => {
+    const size = getPropertyHelper(get(), processId, 'size');
+    const position = getPropertyHelper(get(), processId, 'position');
+    const dimensions = { size, position };
+    return dimensions;
   },
 
-  getWindowPosition: (processId) => {
-    const pos = get().openedProcesses[processId].position;
-    const { openedProcesses } = get();
-
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get position of a process that is not open: ${processId}.`);
-    }
-    return pos;
+  setDefaultDimensions: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'defaultDimensions', dimensions));
   },
+  getDefaultDimensions: (processId) => getPropertyHelper(get(), processId, 'defaultDimensions'),
+
+  setWindowPosition: (processId, position) => {
+    set((state) => setPropertyHelper(state, processId, 'position', position));
+  },
+  getWindowPosition: (processId) => getPropertyHelper(get(), processId, 'position'),
 
   setWindowSize: (processId, size) => {
-    set((state) => {
-      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-        throw new Error(`Attempted to set size of a process that is not open: ${processId}.`);
-      }
-      const newProcesses = { ...state.openedProcesses };
-      newProcesses[processId] = { ...newProcesses[processId], size };
-      return { openedProcesses: newProcesses };
-    });
+    set((state) => setPropertyHelper(state, processId, 'size', size));
   },
+  getWindowSize: (processId) => getPropertyHelper(get(), processId, 'size'),
+  getWindowMinSize: (processId) => getPropertyHelper(get(), processId, 'minSize'),
 
-  getWindowSize: (processId) => {
-    const { size } = get().openedProcesses[processId];
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get size of a process that is not open: ${processId}.`);
-    }
-    return size;
+  setIsMaximized: (processId, maximized) => {
+    set((state) => setPropertyHelper(state, processId, 'maximized', maximized));
   },
-
-  getWindowMinSize: (processId) => {
-    const { minSize } = get().openedProcesses[processId];
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get minSize of a process that is not open: ${processId}.`);
-    }
-    return minSize;
-  },
-
-  reset: () => {
-    set({
-      processDirectory,
-      openedProcesses: {},
-    });
-  },
-
-  setWindowMaximized: (processId, maximized) => {
-    set((state) => {
-      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-        throw new Error(`Attempted to set maximized of a process that is not open: ${processId}.`);
-      }
-      const newProcesses = { ...state.openedProcesses };
-      newProcesses[processId] = { ...newProcesses[processId], maximized };
-      return { openedProcesses: newProcesses };
-    });
-  },
-
-  getWindowMaximized: (processId) => {
-    const { maximized } = get().openedProcesses[processId];
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get maximized of a process that is not open: ${processId}.`);
-    }
-    return maximized;
-  },
-
-  getTitle: (processId) => {
-    const { title } = get().openedProcesses[processId];
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get title of a process that is not open: ${processId}.`);
-    }
-    return title;
-  },
+  getIsMaximized: (processId) => getPropertyHelper(get(), processId, 'maximized'),
 
   setIsAnimating: (processId, isAnimating) => {
-    set((state) => {
-      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-        throw new Error(
-          `Attempted to set isAnimating of a process that is not open: ${processId}.`,
-        );
-      }
-      const newProcesses = { ...state.openedProcesses };
-      newProcesses[processId] = { ...newProcesses[processId], isAnimating };
-      return { openedProcesses: newProcesses };
-    });
+    set((state) => setPropertyHelper(state, processId, 'isAnimating', isAnimating));
   },
-
-  getIsAnimating: (processId) => {
-    const { isAnimating } = get().openedProcesses[processId];
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get isAnimating of a process that is not open: ${processId}.`);
-    }
-    return isAnimating;
-  },
+  getIsAnimating: (processId) => getPropertyHelper(get(), processId, 'isAnimating'),
 
   setIsMinimized: (processId, isMinimized) => {
-    set((state) => {
-      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-        throw new Error(
-          `Attempted to set isMinimized of a process that is not open: ${processId}.`,
-        );
-      }
-      const newProcesses = { ...state.openedProcesses };
-      newProcesses[processId] = { ...newProcesses[processId], isMinimized };
-      return { openedProcesses: newProcesses };
-    });
+    set((state) => setPropertyHelper(state, processId, 'minimized', isMinimized));
   },
+  getIsMinimized: (processId) => getPropertyHelper(get(), processId, 'minimized'),
 
-  getIsMinimized: (processId) => {
-    const { isMinimized } = get().openedProcesses[processId];
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get isMinimized of a process that is not open: ${processId}.`);
-    }
-    return isMinimized;
+  setMinimizedDimensions: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'minimizedDimensions', dimensions));
   },
-
-  setTabDimensions: (processId, dimensions) => {
-    set((state) => {
-      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-        throw new Error(
-          `Attempted to set tab dimensions of a process that is not open: ${processId}.`,
-        );
-      }
-      const newProcesses = { ...state.openedProcesses };
-      newProcesses[processId] = { ...newProcesses[processId], tabDimensions: dimensions };
-      return { openedProcesses: newProcesses };
-    });
-  },
-
-  getTabDimensions: (processId) => {
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(
-        `Attempted to get tab dimensions of a process that is not open: ${processId}.`,
-      );
-    }
-    const { tabDimensions } = get().openedProcesses[processId];
-    return tabDimensions ?? { x: 0, y: 0, width: 0, height: 0 };
-  },
+  getMinimizedDimensions: (processId) => getPropertyHelper(get(), processId, 'minimizedDimensions'),
 
   setOpacity: (processId, opacity) => {
-    set((state) => {
-      if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-        throw new Error(`Attempted to set opacity of a process that is not open: ${processId}.`);
-      }
-      const newProcesses = { ...state.openedProcesses };
-      newProcesses[processId] = { ...newProcesses[processId], opacity };
-      return { openedProcesses: newProcesses };
-    });
+    set((state) => setPropertyHelper(state, processId, 'opacity', opacity));
   },
+  getOpacity: (processId) => getPropertyHelper(get(), processId, 'opacity'),
 
-  getOpacity: (processId) => {
-    const { opacity } = get().openedProcesses[processId];
-    const { openedProcesses } = get();
-    if (!Object.prototype.hasOwnProperty.call(openedProcesses, processId)) {
-      throw new Error(`Attempted to get opacity of a process that is not open: ${processId}.`);
-    }
-    return opacity ?? 1;
+  setMaximizedDimensions: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'maximizedDimensions', dimensions));
+  },
+  getMaximizedDimensions: (processId) => getPropertyHelper(get(), processId, 'maximizedDimensions'),
+
+  setUnmaximizedDimensions: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'unmaximizedDimensions', dimensions));
+  },
+  getUnmaximizedDimensions: (processId) =>
+    getPropertyHelper(get(), processId, 'unmaximizedDimensions'),
+
+  setUnminimizedDimensions: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'unminimizedDimensions', dimensions));
+  },
+  getUnminimizedDimensions: (processId) =>
+    getPropertyHelper(get(), processId, 'unminimizedDimensions'),
+
+  getTitle: (processId) => getPropertyHelper(get(), processId, 'title'),
+
+  reset: (directory) => {
+    set({
+      processDirectory: directory ?? processDirectory,
+      openedProcesses: {},
+    });
   },
 }));
 

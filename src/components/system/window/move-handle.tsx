@@ -18,7 +18,7 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
     useWindowState(id);
   const close = useProcessesStore((state) => state.close);
   const title = useProcessesStore((state) => state.getTitle(id));
-  const maxed = useProcessesStore((state) => state.getWindowMaximized(id));
+  const isMaximized = useProcessesStore((state) => state.getIsMaximized(id));
   return (
     <>
       <header
@@ -58,7 +58,7 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
               }}
             >
               <img
-                src={maxed ? UnmaxIcon : MaxIcon}
+                src={isMaximized ? UnmaxIcon : MaxIcon}
                 draggable="false"
                 alt="maximize"
                 className="size-full select-none"
