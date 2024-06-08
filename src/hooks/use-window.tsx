@@ -58,22 +58,18 @@ export const useWindowState = (id: string): WindowState => {
   const setOpacity = useProcessesStore((state) => state.setOpacity);
 
   const [start, setStart] = useState({ x: 0, y: 0 });
+  const [viewportDimensions, setViewportDimensions] = useState<Dimensions>({
+    size: {
+      width: window.innerWidth,
+      height: window.innerHeight - TASKBAR_HEIGHT,
+    },
+    position: {
+      x: 0,
+      y: 0,
+    },
+  });
   const [dragging, setDragging] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<ResizeDirection>(ResizeDirection.NONE);
-
-  const viewportDimensions: Dimensions = useMemo(() => {
-    return {
-      size: {
-        width: window.innerWidth,
-        height: window.innerHeight - TASKBAR_HEIGHT,
-      },
-      position: {
-        x: 0,
-        y: 0,
-      },
-    };
-  }, []);
-
   const windowDimensions = useMemo(() => {
     return {
       position,
@@ -323,6 +319,27 @@ export const useWindowState = (id: string): WindowState => {
     event.preventDefault();
   }, []);
 
+  // handler for updating the viewport dimensions
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportDimensions({
+        size: {
+          width: window.innerWidth,
+          height: window.innerHeight - TASKBAR_HEIGHT,
+        },
+        position: {
+          x: 0,
+          y: 0,
+        },
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Handler for keeping unmaximized window sizes appropriate
   useEffect(() => {
     if (
       aNarrowerOrShorterThanB(unmaximizedDimensions, minSize) ||
