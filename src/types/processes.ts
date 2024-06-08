@@ -1,19 +1,19 @@
 import { type ComponentType, LazyExoticComponent } from 'react';
 
-import { type Size, Position, Dimensions } from '@/types/units';
+import { type Size, Position, Window } from '@/types/units';
 
 export interface WindowState {
   hasWindow: boolean;
   position: Position;
   size: Size;
   minSize: Size;
-  defaultDimensions: Dimensions;
+  defaultWindow: Window;
   maximized: boolean;
-  maximizedDimensions: Dimensions;
-  unmaximizedDimensions: Dimensions;
+  maximizedWindow: Window;
+  unMaximizedWindow: Window;
   minimized: boolean;
-  minimizedDimensions: Dimensions;
-  unminimizedDimensions: Dimensions;
+  minimizedWindow: Window;
+  unMinimizedWindow: Window;
   isAnimating: boolean;
   opacity: number;
 }

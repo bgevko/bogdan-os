@@ -1,13 +1,14 @@
 import { ReactElement } from 'react';
 
-import { useWindowState, ResizeDirection } from '@/hooks/use-window';
+import useWindowState from '@/hooks/use-window';
+import { ResizeDirection } from '@/hooks/window/use-resize';
 
 interface WindowHandlesProperties {
   id: string;
 }
 
 const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
-  const { handleMouseDownResize } = useWindowState(id);
+  const { handleSetResizeDirection } = useWindowState(id);
   return (
     <>
       <span
@@ -16,7 +17,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window left resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.LEFT);
+          handleSetResizeDirection(ResizeDirection.LEFT);
         }}
       />
       <span
@@ -25,7 +26,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window right resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.RIGHT);
+          handleSetResizeDirection(ResizeDirection.RIGHT);
         }}
       />
       <span
@@ -34,7 +35,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window top resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.TOP);
+          handleSetResizeDirection(ResizeDirection.TOP);
         }}
       />
       <span
@@ -43,7 +44,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window bottom resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.BOTTOM);
+          handleSetResizeDirection(ResizeDirection.BOTTOM);
         }}
       />
       <span
@@ -52,7 +53,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window top left corner resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.TOP_LEFT);
+          handleSetResizeDirection(ResizeDirection.TOP_LEFT);
         }}
       />
       <span
@@ -61,7 +62,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window top right corner resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.TOP_RIGHT);
+          handleSetResizeDirection(ResizeDirection.TOP_RIGHT);
         }}
       />
       <span
@@ -70,7 +71,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window bottom left corner resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.BOTTOM_LEFT);
+          handleSetResizeDirection(ResizeDirection.BOTTOM_LEFT);
         }}
       />
       <span
@@ -79,7 +80,7 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         role="toolbar"
         aria-label="Window bottom right corner resize"
         onMouseDown={() => {
-          handleMouseDownResize(ResizeDirection.BOTTOM_RIGHT);
+          handleSetResizeDirection(ResizeDirection.BOTTOM_RIGHT);
         }}
       />
     </>

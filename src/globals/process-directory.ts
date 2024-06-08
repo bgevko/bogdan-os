@@ -21,7 +21,7 @@ export function getProcessDirectory(customDirectory?: ProcessComponents): Proces
     maximized: false,
     minSize: { width: 300, height: 300 },
     position: { x: 300, y: 300 },
-    defaultDimensions: {
+    defaultWindow: {
       size: { width: 400, height: 400 },
       position: { x: 300, y: 300 },
     },
@@ -29,10 +29,10 @@ export function getProcessDirectory(customDirectory?: ProcessComponents): Proces
     isAnimating: false,
     minimized: false,
     opacity: 1,
-    maximizedDimensions: zeroDimensions,
-    unmaximizedDimensions: zeroDimensions,
-    minimizedDimensions: zeroDimensions,
-    unminimizedDimensions: zeroDimensions,
+    maximizedWindow: zeroDimensions,
+    unMaximizedWindow: zeroDimensions,
+    minimizedWindow: zeroDimensions,
+    unMinimizedWindow: zeroDimensions,
   };
   const newDirectory: Processes = {};
   for (const process in directory) {

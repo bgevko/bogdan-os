@@ -8,7 +8,7 @@ export interface Position {
   y: number;
 }
 
-export interface Dimensions {
+export interface Window {
   size: Size;
   position: Position;
 }

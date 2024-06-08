@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import { getProcessDirectory } from '@/globals/process-directory';
 import { type Processes, Process } from '@/types/processes';
-import { Position, Size, Dimensions } from '@/types/units';
+import { Position, Size, Window } from '@/types/units';
 
 const processDirectory = getProcessDirectory();
 interface ProcessStore {
@@ -13,15 +13,15 @@ interface ProcessStore {
   openedProcesses: Processes;
   open: (processId: string | string[]) => void;
   close: (processId: string | string[]) => void;
-  setWindowDimensions: (processId: string, dimensions: Dimensions) => void;
-  getWindowDimensions: (processId: string) => Dimensions;
+  setWindow: (processId: string, dimensions: Window) => void;
+  getWindow: (processId: string) => Window;
   setWindowPosition: (processId: string, position: Position) => void;
   getWindowPosition: (processId: string) => Position;
   setWindowSize: (processId: string, size: Size) => void;
   getWindowSize: (processId: string) => Size;
   getWindowMinSize: (processId: string) => Size;
-  setDefaultDimensions: (processId: string, dimensions: Dimensions) => void;
-  getDefaultDimensions: (processId: string) => Dimensions;
+  setDefaultWindow: (processId: string, dimensions: Window) => void;
+  getDefaultWindow: (processId: string) => Window;
   setIsMaximized: (processId: string, maximized: boolean) => void;
   getIsMaximized: (processId: string) => boolean;
   setIsMinimized: (processId: string, isMinimized: boolean) => void;
@@ -29,16 +29,16 @@ interface ProcessStore {
   setIsAnimating: (processId: string, isAnimating: boolean) => void;
   getIsAnimating: (processId: string) => boolean;
   getTitle: (processId: string) => string;
-  setMinimizedDimensions: (processId: string, dimensions: Dimensions) => void;
-  getMinimizedDimensions: (processId: string) => Dimensions;
-  setUnminimizedDimensions: (processId: string, dimensions: Dimensions) => void;
-  getUnminimizedDimensions: (processId: string) => Dimensions;
+  setMinimizedWindow: (processId: string, dimensions: Window) => void;
+  getMinimizedWindow: (processId: string) => Window;
+  setUnminimizedWindow: (processId: string, dimensions: Window) => void;
+  getUnminimizedWindow: (processId: string) => Window;
   setOpacity: (processId: string, opacity: number) => void;
   getOpacity: (processId: string) => number;
-  setMaximizedDimensions: (processId: string, dimensions: Dimensions) => void;
-  getMaximizedDimensions: (processId: string) => Dimensions;
-  setUnmaximizedDimensions: (processId: string, dimensions: Dimensions) => void;
-  getUnmaximizedDimensions: (processId: string) => Dimensions;
+  setMaximizedWindow: (processId: string, dimensions: Window) => void;
+  getMaximizedWindow: (processId: string) => Window;
+  setUnmaximizedWindow: (processId: string, dimensions: Window) => void;
+  getUnmaximizedWindow: (processId: string) => Window;
   reset: (directory?: Processes) => void;
 }
 
@@ -80,8 +80,8 @@ const cleanupProcesses = (closedProcesses: Processes) => {
     // Unminimize the process and restore it to its unminimized dimensions
     if (process.minimized) {
       process.minimized = false;
-      process.position = process.unminimizedDimensions.position;
-      process.size = process.unminimizedDimensions.size;
+      process.position = process.unMinimizedWindow.position;
+      process.size = process.unMinimizedWindow.size;
     }
 
     if (process.isAnimating) {
@@ -156,22 +156,22 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
     });
   },
 
-  setWindowDimensions: (processId, dimensions) => {
+  setWindow: (processId, dimensions) => {
     const { size, position } = dimensions;
     set((state) => setPropertyHelper(state, processId, 'size', size));
     set((state) => setPropertyHelper(state, processId, 'position', position));
   },
-  getWindowDimensions: (processId) => {
+  getWindow: (processId) => {
     const size = getPropertyHelper(get(), processId, 'size');
     const position = getPropertyHelper(get(), processId, 'position');
     const dimensions = { size, position };
     return dimensions;
   },
 
-  setDefaultDimensions: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'defaultDimensions', dimensions));
+  setDefaultWindow: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'defaultWindow', dimensions));
   },
-  getDefaultDimensions: (processId) => getPropertyHelper(get(), processId, 'defaultDimensions'),
+  getDefaultWindow: (processId) => getPropertyHelper(get(), processId, 'defaultWindow'),
 
   setWindowPosition: (processId, position) => {
     set((state) => setPropertyHelper(state, processId, 'position', position));
@@ -199,32 +199,30 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
   },
   getIsMinimized: (processId) => getPropertyHelper(get(), processId, 'minimized'),
 
-  setMinimizedDimensions: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'minimizedDimensions', dimensions));
+  setMinimizedWindow: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'minimizedWindow', dimensions));
   },
-  getMinimizedDimensions: (processId) => getPropertyHelper(get(), processId, 'minimizedDimensions'),
+  getMinimizedWindow: (processId) => getPropertyHelper(get(), processId, 'minimizedWindow'),
 
   setOpacity: (processId, opacity) => {
     set((state) => setPropertyHelper(state, processId, 'opacity', opacity));
   },
   getOpacity: (processId) => getPropertyHelper(get(), processId, 'opacity'),
 
-  setMaximizedDimensions: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'maximizedDimensions', dimensions));
+  setMaximizedWindow: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'maximizedWindow', dimensions));
   },
-  getMaximizedDimensions: (processId) => getPropertyHelper(get(), processId, 'maximizedDimensions'),
+  getMaximizedWindow: (processId) => getPropertyHelper(get(), processId, 'maximizedWindow'),
 
-  setUnmaximizedDimensions: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'unmaximizedDimensions', dimensions));
+  setUnmaximizedWindow: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'unMaximizedWindow', dimensions));
   },
-  getUnmaximizedDimensions: (processId) =>
-    getPropertyHelper(get(), processId, 'unmaximizedDimensions'),
+  getUnmaximizedWindow: (processId) => getPropertyHelper(get(), processId, 'unMaximizedWindow'),
 
-  setUnminimizedDimensions: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'unminimizedDimensions', dimensions));
+  setUnminimizedWindow: (processId, dimensions) => {
+    set((state) => setPropertyHelper(state, processId, 'unMinimizedWindow', dimensions));
   },
-  getUnminimizedDimensions: (processId) =>
-    getPropertyHelper(get(), processId, 'unminimizedDimensions'),
+  getUnminimizedWindow: (processId) => getPropertyHelper(get(), processId, 'unMinimizedWindow'),
 
   getTitle: (processId) => getPropertyHelper(get(), processId, 'title'),
 

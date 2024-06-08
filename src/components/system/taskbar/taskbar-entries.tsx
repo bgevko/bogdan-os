@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 
 import { iconDirectory } from '@/globals/process-directory';
-import { useWindowState } from '@/hooks/use-window';
+import useWindowState from '@/hooks/use-window';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
 
@@ -17,7 +17,7 @@ const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element 
   const [mouseDown, setMouseDown] = useState(false);
   const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
   const close = useProcessesStore((state) => state.close);
-  const setMinimizedDimensions = useProcessesStore((state) => state.setMinimizedDimensions);
+  const setMinimizedDimensions = useProcessesStore((state) => state.setMinimizedWindow);
   const tabReference = useRef<HTMLButtonElement>(null);
 
   const { handleWindowMinimizeToggle } = useWindowState(id);

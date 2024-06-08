@@ -235,8 +235,8 @@ describe('useProcessesStore', () => {
       result.current.open(['Test1']);
     });
     act(() => {
-      const defaultDimensions = result.current.getDefaultDimensions('Test1');
-      expect(result.current.getWindowDimensions('Test1')).toEqual(defaultDimensions);
+      const defaultDimensions = result.current.getDefaultWindow('Test1');
+      expect(result.current.getWindow('Test1')).toEqual(defaultDimensions);
     });
     act(() => {
       result.current.setWindowPosition('Test1', { x: 10, y: 20 });

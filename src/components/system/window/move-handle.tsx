@@ -5,7 +5,7 @@ import MaxIcon from '@/assets/icons/max-icon.svg';
 import MinIcon from '@/assets/icons/min-icon.svg';
 import UnmaxIcon from '@/assets/icons/unmax-icon.svg';
 import Button from '@/components/system/button';
-import { useWindowState } from '@/hooks/use-window';
+import useWindowState from '@/hooks/use-window';
 import useProcessesStore from '@/stores/use-processes-store';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
 
