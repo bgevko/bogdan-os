@@ -16,7 +16,8 @@ const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element 
   const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
   const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
-  const setTabDimensions = useProcessesStore((state) => state.setTabDimensions);
+  const close = useProcessesStore((state) => state.close);
+  const setMinimizedDimensions = useProcessesStore((state) => state.setMinimizedDimensions);
   const tabReference = useRef<HTMLButtonElement>(null);
 
   const { handleWindowMinimizeToggle } = useWindowState(id);
@@ -24,9 +25,19 @@ const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element 
   useEffect(() => {
     if (tabReference.current) {
       const rect = tabReference.current.getBoundingClientRect();
-      setTabDimensions(id, rect);
+      const tabRect = {
+        size: {
+          width: rect.width,
+          height: rect.height,
+        },
+        position: {
+          x: rect.left,
+          y: rect.top,
+        },
+      };
+      setMinimizedDimensions(id, tabRect);
     }
-  }, [id, setTabDimensions]);
+  }, [id, setMinimizedDimensions]);
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -55,7 +66,8 @@ const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element 
       }}
       onContextMenuCapture={(event) => {
         event.preventDefault();
-        /* TODO: Add context menu */
+        // debug
+        close('HelloWorld');
       }}
       onMouseDown={(event) => {
         event.stopPropagation();

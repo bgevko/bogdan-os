@@ -8,11 +8,7 @@ export interface Position {
   y: number;
 }
 
-// export interface Dimensions {
-//   x: number;
-//   y: number;
-//   width: number;
-//   height: number;
-// }
-
-export interface Dimensions extends Size, Position {}
+export interface Dimensions {
+  size: Size;
+  position: Position;
+}
