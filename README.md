@@ -1,6 +1,5 @@
 ### Tasks
 
-- Tests for window sizing and positioning
 - Taskbar component
 
   - Taskbar entries
@@ -12,3 +11,7 @@
   - Wallpaper
 
 - File System with browserfs or another library
+
+### Later
+
+- Handle window positioning when viewport is resized. This is mostly relevant for mobile orientation changes.

@@ -15,6 +15,7 @@ const useMaxMin = (id: string): ReturnTypes => {
   const position = useProcessesStore((state) => state.getWindowPosition(id));
 
   const size = useProcessesStore((state) => state.getWindowSize(id));
+  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
 
   const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(id));
 
@@ -80,7 +81,11 @@ const useMaxMin = (id: string): ReturnTypes => {
       setIsMaximized(id, false);
     } else {
       if (WindowsEqualOrGreater(unMaximizedWindow, myViewport)) {
-        setUnmaximizedWindow(id, WindowMax(defaultWindow, myWindow));
+        const minWindowSize = {
+          position: myWindow.position,
+          size: minSize,
+        };
+        setUnmaximizedWindow(id, WindowMax(minWindowSize, myWindow));
       } else {
         setUnmaximizedWindow(id, myWindow);
       }
@@ -96,6 +101,7 @@ const useMaxMin = (id: string): ReturnTypes => {
     myViewport,
     unMaximizedWindow,
     myWindow,
+    minSize,
     defaultWindow,
     setIsAnimating,
     setIsMaximized,
