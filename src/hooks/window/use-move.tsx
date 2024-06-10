@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 
 import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
+import { TASKBAR_HEIGHT } from '@/themes';
 import { Position } from '@/types/units';
 
 interface ReturnTypes {
@@ -11,6 +12,8 @@ interface ReturnTypes {
 const useWindowMove = (id: string): ReturnTypes => {
   const position = useProcessesStore((state) => state.getWindowPosition(id));
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
+  const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(id));
+  const setDefaultWindow = useProcessesStore((state) => state.setDefaultWindow);
 
   const size = useProcessesStore((state) => state.getWindowSize(id));
 
@@ -56,6 +59,20 @@ const useWindowMove = (id: string): ReturnTypes => {
     registerEvents('contextmenu', [handleStopMove]);
     registerEvents('selectstart', [handlePreventSelect]);
   }, [getMouseClickStart, registerEvents, handleWindowMove, handleStopMove, handlePreventSelect]);
+
+  useEffect(() => {
+    // Make sure window is within the viewport when first opened
+    const clampedX = Math.max(0, Math.min(position.x, window.innerWidth - size.width));
+    const clampedY = Math.max(
+      0,
+      Math.min(position.y, window.innerHeight - size.height - TASKBAR_HEIGHT),
+    );
+    setPosition(id, { x: clampedX, y: clampedY });
+    setDefaultWindow(id, { ...defaultWindow, position: { x: clampedX, y: clampedY } });
+    // NOTE: We don't need to run this effect on every render
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     handleMouseDownMove,
