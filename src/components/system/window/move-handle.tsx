@@ -37,7 +37,7 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
         <span className="absolute inset-x-[-5px] top-[-5px] flex h-6 select-none items-center justify-between bg-secondary px-[2px]">
           <h1 className="pb-1 pl-1">{title}</h1>
           <span className="flex gap-1">
-            <Button className="size-4">
+            <Button className="size-4" data-testid="window-minimize">
               <img
                 src={MinIcon}
                 draggable="false"

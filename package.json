@@ -7,19 +7,20 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --ignore-pattern 'cypress/*' && tsc --noEmit --skipLibCheck",
     "stylelint": "stylelint **/*.scss",
     "prettier": "prettier --write .",
     "prepare": "husky",
     "test": "vitest --run",
     "test:w": "vitest --watch",
     "test:current": "vitest window",
+    "cy:window": "cypress run --spec 'cypress/e2e/window.cy.ts'",
     "test:ui": "vitest --ui"
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write",
     "*.{ts,tsx}": "stylelint --fix --allow-empty-input",
-    "*.{js,ts,tsx}": "eslint --fix"
+    "*.{js,ts,tsx}": "eslint --ignore-pattern 'cypress/**' --fix"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -44,6 +45,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/ui": "^1.6.0",
     "autoprefixer": "^10.4.19",
+    "cypress": "^13.11.0",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.1.0",

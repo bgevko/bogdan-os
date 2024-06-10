@@ -5,6 +5,7 @@ const StartButton = (): JSX.Element => {
   const open = useProcessesStore((state) => state.open);
   return (
     <Button
+      data-testid="start-button"
       className="flex h-full w-20 items-center justify-center p-2 text-onSurface"
       type="button"
       onMouseUpCapture={() => {
