@@ -44,19 +44,19 @@ body {
 .debossed-line-border {
   border: $border-size solid transparent;
   border-image-source: $debossed-line-source;
-  border-image-slice: $image-slice;
+  border-image-slice: 50;
 }
 
 .debossed-line-border-l {
   border-left: $border-size solid transparent;
   border-image-source: $debossed-line-source;
-  border-image-slice: $image-slice;
+  border-image-slice: 50;
 }
 
 .debossed-line-border-r {
   border-right: $border-size solid transparent;
   border-image-source: $debossed-line-source;
-  border-image-slice: $image-slice;
+  border-image-slice: 50;
 }
 
 .button-border {
