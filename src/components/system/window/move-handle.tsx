@@ -69,7 +69,7 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
               data-testid="window-close"
               className="size-4"
               onMouseUpCapture={() => {
-                close('HelloWorld');
+                close(id);
               }}
             >
               <img

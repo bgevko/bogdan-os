@@ -10,6 +10,16 @@ const processDirectory: ProcessComponents = {
     icon: 'folder',
     Component: lazy(() => import('@/components/apps/hello-world')),
   },
+  Terminal: {
+    title: 'Terminal',
+    icon: 'terminal',
+    Component: lazy(() => import('@/components/apps/terminal')),
+    minSize: { width: 600, height: 300 },
+    defaultWindow: {
+      size: { width: 800, height: 400 },
+      position: { x: 300, y: 300 },
+    },
+  },
 };
 
 export function getProcessDirectory(customDirectory?: ProcessComponents): Processes {

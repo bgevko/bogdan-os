@@ -22,6 +22,8 @@ export interface ProcessComponent {
   Component: LazyExoticComponent<ComponentType>;
   title: string;
   icon: string;
+  minSize?: Size;
+  defaultWindow?: Window;
 }
 
 export type Process = ProcessComponent & WindowState;

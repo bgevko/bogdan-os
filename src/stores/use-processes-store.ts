@@ -93,6 +93,26 @@ const cleanupProcesses = (closedProcesses: Processes) => {
   }
 };
 
+const initiateProcesses = (processes: Processes) => {
+  for (const key of Object.keys(processes)) {
+    const process = processes[key];
+    // make sure defaultWindow.size >= minSize
+    if (process.defaultWindow.size.width < process.minSize.width) {
+      throw new Error(
+        `The default width of ${process.title} is less than the minimum width of ${process.minSize.width.toString()}. Either increase the default width or decrease the minimum width.`,
+      );
+    } else if (process.defaultWindow.size.height < process.minSize.height) {
+      throw new Error(
+        `The default height of ${process.title} is less than the minimum height of ${process.minSize.height.toString()}. Either increase the default height or decrease the minimum height.`,
+      );
+    }
+
+    // Make sure size and position are set to default size and position
+    process.size = process.defaultWindow.size;
+    process.position = process.defaultWindow.position;
+  }
+};
+
 const useProcessesStore = create<ProcessStore>((set, get) => ({
   processDirectory,
   openedProcesses: {},
@@ -115,6 +135,7 @@ const useProcessesStore = create<ProcessStore>((set, get) => ({
           toOpen[id] = state.processDirectory[id];
         }
       }
+      initiateProcesses(toOpen);
       return { openedProcesses: { ...state.openedProcesses, ...toOpen } };
     });
   },
