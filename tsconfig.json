@@ -1,6 +1,6 @@
 {
   "include": ["**/*.ts", "**/*.tsx", "tests/app.test.jsx", "cypress/e2e/window.cy.ts"],
-  "exclude": ["node_modules", "dist", "build", "coverage", "public"],
+  "exclude": ["node_modules", "dist", "build", "coverage", "public", "cypress"],
   "references": [{ "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
