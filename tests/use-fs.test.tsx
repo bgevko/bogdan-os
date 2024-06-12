@@ -56,7 +56,13 @@ describe('useFsStore', () => {
     act(() => {
       result.current.setCurrentPath('/Desktop');
       const desktopChildren = result.current.getChildren('/Desktop');
-      expect(desktopChildren).toEqual(['/Desktop/HelloWorld']);
+      expect(desktopChildren).toEqual(['/Desktop/HelloWorld', '/Desktop/MyFolder']);
+    });
+
+    act(() => {
+      result.current.setCurrentPath('/');
+      const rootChildren = result.current.getChildren('/Desktop', { filesOnly: true });
+      expect(rootChildren).toEqual(['/Desktop/HelloWorld']);
     });
 
     act(() => {

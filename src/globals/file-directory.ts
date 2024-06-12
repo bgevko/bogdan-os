@@ -1,6 +1,6 @@
 import { FileSystem } from '@/types/file-system';
 
-const fileSystem: FileSystem = {
+const fileDirectory: FileSystem = {
   '/': {
     name: 'root',
     type: 'directory',
@@ -13,10 +13,15 @@ const fileSystem: FileSystem = {
     name: 'HelloWorld.app',
     type: 'file',
   },
+  '/Desktop/Terminal': {
+    name: 'Terminal.app',
+    type: 'file',
+  },
+
   '/Documents': {
     name: 'Documents',
     type: 'directory',
   },
 };
 
-export default fileSystem;
+export default fileDirectory;

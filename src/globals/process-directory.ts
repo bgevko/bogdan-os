@@ -12,7 +12,7 @@ const processDirectory: ProcessComponents = {
   },
   Terminal: {
     title: 'Terminal',
-    icon: 'terminal',
+    icon: 'executable',
     Component: lazy(() => import('@/components/apps/terminal')),
     minSize: { width: 600, height: 300 },
     defaultWindow: {
@@ -52,6 +52,9 @@ export function getProcessDirectory(customDirectory?: ProcessComponents): Proces
   }
   return newDirectory;
 }
+
+// Return a set with all the process names
+export const validProcesses = new Set(Object.keys(processDirectory));
 
 // Processes that will load on startup
 export const openedProcesses: string[] = ['HelloWorld'];

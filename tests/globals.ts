@@ -34,6 +34,10 @@ export const testFileSystem: FileSystem = {
     name: 'HelloWorld.app',
     type: 'file',
   },
+  '/Desktop/MyFolder': {
+    name: 'MyFolder',
+    type: 'directory',
+  },
   '/Documents': {
     name: 'Documents',
     type: 'directory',
