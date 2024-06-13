@@ -6,7 +6,7 @@ import { TASKBAR_HEIGHT } from '@/themes';
 import { Position } from '@/types/units';
 
 interface ReturnTypes {
-  handleMouseDownMove: () => void;
+  handleMouseDownMove: (event: React.MouseEvent) => void;
 }
 
 const useWindowMove = (id: string): ReturnTypes => {
@@ -21,9 +21,13 @@ const useWindowMove = (id: string): ReturnTypes => {
   const [start, setStart] = useState<Position>({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
 
-  const handleMouseDownMove = () => {
-    setDragging(true);
-  };
+  const handleMouseDownMove = useCallback(
+    (event: React.MouseEvent) => {
+      setDragging(true);
+      setStart({ x: event.clientX - position.x, y: event.clientY - position.y });
+    },
+    [position],
+  );
 
   const handleStopMove = useCallback(() => {
     setDragging(false);
@@ -45,20 +49,12 @@ const useWindowMove = (id: string): ReturnTypes => {
     event.preventDefault();
   }, []);
 
-  const getMouseClickStart = useCallback(
-    (event: MouseEvent) => {
-      setStart({ x: event.clientX - position.x, y: event.clientY - position.y });
-    },
-    [position],
-  );
-
   useEffect(() => {
-    registerEvents('mousedown', [getMouseClickStart]);
     registerEvents('mousemove', [handleWindowMove]);
     registerEvents('mouseup', [handleStopMove]);
     registerEvents('contextmenu', [handleStopMove]);
     registerEvents('selectstart', [handlePreventSelect]);
-  }, [getMouseClickStart, registerEvents, handleWindowMove, handleStopMove, handlePreventSelect]);
+  }, [registerEvents, handleWindowMove, handleStopMove, handlePreventSelect]);
 
   useEffect(() => {
     // Make sure window is within the viewport when first opened
