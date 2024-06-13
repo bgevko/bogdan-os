@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import React, { type ReactElement } from 'react';
 
 import CloseIcon from '@/assets/icons/close-icon.svg';
 import MaxIcon from '@/assets/icons/max-icon.svg';
@@ -27,10 +27,12 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
         style={{ height: `${WINDOW_HEADER_HEIGHT.toString()}px` }}
         role="toolbar"
         aria-label="Window header"
-        onMouseDown={() => {
-          handleMouseDownMove();
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
+          handleMouseDownMove(event);
         }}
-        onDoubleClick={() => {
+        onDoubleClick={(event) => {
+          event.stopPropagation();
           handleWindowFullSize();
         }}
       >

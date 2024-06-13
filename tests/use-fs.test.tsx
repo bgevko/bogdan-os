@@ -71,4 +71,31 @@ describe('useFsStore', () => {
       expect(documentsChildren).toEqual([]);
     });
   });
+  it('Should set directory item position correctly', () => {
+    const { result } = renderHook(() => useFsStore());
+    act(() => {
+      result.current.setItemPosition('/Desktop/HelloWorld', { x: 100, y: 100 });
+    });
+    act(() => {
+      const itemPosition = result.current.getItemPosition('/Desktop/HelloWorld');
+      expect(itemPosition).toEqual({ x: 100, y: 100 });
+    });
+
+    act(() => {
+      result.current.setItemPosition('/Desktop/HelloWorld', { x: 200, y: 200 });
+    });
+    act(() => {
+      const itemPosition = result.current.getItemPosition('/Desktop/HelloWorld');
+      expect(itemPosition).toEqual({ x: 200, y: 200 });
+    });
+
+    act(() => {
+      result.current.setItemPosition('/Desktop/MyFolder', { x: 300, y: 300 });
+    });
+
+    act(() => {
+      const itemPosition = result.current.getItemPosition('/Desktop/MyFolder');
+      expect(itemPosition).toEqual({ x: 300, y: 300 });
+    });
+  });
 });

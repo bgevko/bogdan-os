@@ -5,7 +5,7 @@ import useWindowResize, { ResizeDirection } from '@/hooks/use-window/use-resize'
 // window state hook return types
 interface WindowState {
   handleSetResizeDirection: (direction: ResizeDirection) => void;
-  handleMouseDownMove: () => void;
+  handleMouseDownMove: (event: React.MouseEvent) => void;
   handleWindowFullSize: () => void;
   handleWindowMinimizeToggle: () => void;
 }

@@ -21,7 +21,7 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
     <section
       data-testid="window"
       className={cn(
-        'embossed-border absolute flex flex-col',
+        'z-10 embossed-border absolute flex flex-col',
         isAnimating && 'transition-all duration-200',
       )}
       style={{
