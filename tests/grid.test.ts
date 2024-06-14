@@ -11,6 +11,10 @@ describe('Index to Position', () => {
     expect(indexToPosition(7, 4)).toEqual({ x: 1, y: 3 });
   });
 
+  it('should convert index 7 to position [100, 300] with 4 lines, multiplier=100', () => {
+    expect(indexToPosition(7, 4, { multiplier: 100 })).toEqual({ x: 100, y: 300 });
+  });
+
   it('should convert index 7 to position [3, 1] with 4 lines when flow is row', () => {
     expect(indexToPosition(7, 4, { flow: 'row' })).toEqual({ x: 3, y: 1 });
   });
@@ -36,6 +40,10 @@ describe('Position to Index', () => {
 
   it('should convert position [3, 1] to index 7 with 4 lines when flow is row', () => {
     expect(positionToIndex(3, 1, 4, { flow: 'row' })).toBe(7);
+  });
+
+  it('should convert position [100, 300] to index 7 with 4 lines, multiplier=100', () => {
+    expect(positionToIndex(100, 300, 4, { multiplier: 100 })).toBe(7);
   });
 
   it('should convert position [2, 0] to index 8 with 4 lines', () => {

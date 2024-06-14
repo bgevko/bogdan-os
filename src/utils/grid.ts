@@ -25,5 +25,9 @@ export function positionToIndex(
 ): number {
   const { flow = 'col' } = options ?? {};
   const multiplier = options?.multiplier ?? 1;
-  return flow === 'row' ? y * itemsPerLine + x * multiplier : x * itemsPerLine + y * multiplier;
+  const adjustedX = Math.floor(x / multiplier);
+  const adjustedY = Math.floor(y / multiplier);
+  return flow === 'row'
+    ? adjustedY * itemsPerLine + adjustedX
+    : adjustedX * itemsPerLine + adjustedY;
 }

@@ -1,4 +1,4 @@
-import React, { type ReactElement, useEffect, useCallback } from 'react';
+import React, { type ReactElement, useState, useEffect, useCallback } from 'react';
 
 import { iconDirectory } from '@/globals/process-directory';
 import useEvents from '@/hooks/use-events';
@@ -8,8 +8,9 @@ import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
 // import { type Position, Window } from '@/types/units';
 import { GridState } from '@/types/file-system';
+import { Position } from '@/types/units';
 import cn, { parseFileName } from '@/utils/format';
-import { indexToPosition } from '@/utils/grid';
+import { indexToPosition, positionToIndex } from '@/utils/grid';
 
 const ICON_SIZE = 70;
 const GRID_SIZE = 100;
@@ -27,7 +28,24 @@ const DesktopIconComponent = ({
   const gridIndex = useFsStore((state) => state.getItemGridIndex(path));
   const iconSrc = `${iconDirectory}${processDirectory[id].icon}.png`;
   const { title } = processDirectory[id];
-  const gridPosition = indexToPosition(gridIndex, gridState.rows, { multiplier: GRID_SIZE });
+  const [gridPosition, setGridPosition] = useState<Position>(
+    indexToPosition(gridIndex, gridState.rows, { multiplier: GRID_SIZE }),
+  );
+  useEffect(() => {
+    setGridPosition(indexToPosition(gridIndex, gridState.rows, { multiplier: GRID_SIZE }));
+  }, [gridIndex, gridState.rows]);
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      const dropX = event.clientX;
+      const dropY = event.clientY;
+      const dropIndex = positionToIndex(dropX, dropY, gridState.rows, { multiplier: GRID_SIZE });
+      console.log(dropIndex);
+      setGridPosition(indexToPosition(dropIndex, gridState.rows, { multiplier: GRID_SIZE }));
+    },
+    [gridState.rows],
+  );
 
   return (
     <button
@@ -42,6 +60,13 @@ const DesktopIconComponent = ({
         height: `${ICON_SIZE.toString()}px`,
         transform: `translate( ${gridPosition.x.toString()}px, ${gridPosition.y.toString()}px)`,
       }}
+      onDragOver={(event) => {
+        event.preventDefault();
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+      }}
+      onDragEnd={handleDrop}
     >
       <img draggable="false" src={iconSrc} alt={title} width="48px" height="48px" />
       <span className="text-sm">{title}</span>
@@ -122,13 +147,21 @@ const Desktop = (): React.ReactElement => {
     registerEvents('mouseup', [handleMouseUp]);
   }, [registerEvents, handleMouseDown, getMouseClickStart, drawSelectRect, handleMouseUp]);
 
-  useEffect(() => {
+  const setGridSize = useCallback(() => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const rows = Math.floor((viewportHeight - TASKBAR_HEIGHT) / GRID_SIZE);
     const columns = Math.floor(viewportWidth / GRID_SIZE);
     setGrid('/Desktop', { columns, rows });
   }, [setGrid]);
+
+  useEffect(() => {
+    setGridSize();
+  }, [setGridSize]);
+
+  useEffect(() => {
+    registerEvents('resize', [setGridSize]);
+  }, [registerEvents, setGridSize]);
   return (
     <>
       <span
