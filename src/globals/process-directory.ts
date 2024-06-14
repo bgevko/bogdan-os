@@ -20,6 +20,56 @@ const processDirectory: ProcessComponents = {
       position: { x: 300, y: 300 },
     },
   },
+  Test1: {
+    title: 'Test1',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test2: {
+    title: 'Test2',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test3: {
+    title: 'Test3',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test4: {
+    title: 'Test4',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test5: {
+    title: 'Test5',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test6: {
+    title: 'Test6',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test7: {
+    title: 'Test7',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test8: {
+    title: 'Test8',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test9: {
+    title: 'Test9',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
+  Test10: {
+    title: 'Test10',
+    icon: 'executable',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
 };
 
 export function getProcessDirectory(customDirectory?: ProcessComponents): Processes {

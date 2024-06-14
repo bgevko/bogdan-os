@@ -1,4 +1,4 @@
-import React, { type ReactElement, useEffect, useState, useCallback } from 'react';
+import React, { type ReactElement, useEffect, useCallback } from 'react';
 
 import { iconDirectory } from '@/globals/process-directory';
 import useEvents from '@/hooks/use-events';
@@ -6,203 +6,44 @@ import useDesktopStore from '@/stores/use-desktop-store';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
-import { type Position, Window } from '@/types/units';
+// import { type Position, Window } from '@/types/units';
+import { GridState } from '@/types/file-system';
 import cn, { parseFileName } from '@/utils/format';
+import { indexToPosition } from '@/utils/grid';
 
 const ICON_SIZE = 70;
+const GRID_SIZE = 100;
 
-const DesktopIconComponent = ({ id, path }: { id: string; path: string }): ReactElement => {
+const DesktopIconComponent = ({
+  id,
+  path,
+  gridState,
+}: {
+  id: string;
+  path: string;
+  gridState: GridState;
+}): ReactElement => {
   const processDirectory = useProcessesStore((state) => state.processDirectory);
-  const open = useProcessesStore((state) => state.open);
-  const position = useFsStore((state) => state.getItemPosition(path));
-  const setPosition = useFsStore((state) => state.setItemPosition);
-  const getPosition = useFsStore((state) => state.getItemPosition);
-  const selected = useFsStore((state) => state.getIsSelected(path));
-  const allSelected = useFsStore((state) => state.getAllSelected());
-  const isMultipleSelected = useFsStore((state) => state.getIsMultipleSelected());
-  const setSelected = useFsStore((state) => state.setIsSelected);
-  const selectingRect = useDesktopStore((state) => state.selectingRect);
-  const selecting = useDesktopStore((state) => state.selecting);
+  const gridIndex = useFsStore((state) => state.getItemGridIndex(path));
   const iconSrc = `${iconDirectory}${processDirectory[id].icon}.png`;
   const { title } = processDirectory[id];
-
-  const { registerEvents } = useEvents();
-  const [start, setStart] = useState<Position>({ x: 0, y: 0 });
-  const [shiftIsPressed, setShiftIsPressed] = useState(false);
-  const [dragging, setDragging] = useState(false);
-
-  const handleStartDrag = useCallback(() => {
-    setDragging(true);
-  }, []);
-
-  const handleStopDrag = useCallback(() => {
-    setDragging(false);
-  }, []);
-
-  const handleGetMouseStart = useCallback(
-    (event: React.MouseEvent) => {
-      setStart({ x: event.clientX - position.x, y: event.clientY - position.y });
-    },
-    [position],
-  );
-
-  const selectionIntersectsElement = useCallback((selection: Window, element: Position) => {
-    if (
-      element.x + ICON_SIZE + 20 < selection.position.x ||
-      element.y + ICON_SIZE + 20 < selection.position.y ||
-      element.x > selection.position.x + selection.size.width - 14 ||
-      element.y > selection.position.y + selection.size.height - 14
-    ) {
-      return false;
-    }
-    return true;
-  }, []);
-
-  const handleSelectFocus = useCallback(() => {
-    if (shiftIsPressed) return;
-    setSelected(path, true);
-  }, [path, setSelected, shiftIsPressed]);
-
-  const handleSelectToggle = useCallback(() => {
-    if (shiftIsPressed) {
-      setSelected(path, !selected);
-    }
-  }, [path, setSelected, selected, shiftIsPressed]);
-
-  const handleDeselectBlur = useCallback(() => {
-    if (selected && isMultipleSelected) return;
-    setSelected(path, false);
-  }, [selected, path, setSelected, isMultipleSelected]);
-
-  const handleDragSelect = useCallback(() => {
-    if (!selecting) return;
-    if (selectionIntersectsElement(selectingRect, position)) {
-      setSelected(path, true);
-    } else if (!shiftIsPressed) setSelected(path, false);
-  }, [
-    path,
-    position,
-    selecting,
-    selectingRect,
-    setSelected,
-    selectionIntersectsElement,
-    shiftIsPressed,
-  ]);
-
-  const handleDeselectAll = useCallback(() => {
-    if (!shiftIsPressed) {
-      setSelected(path, false);
-    }
-  }, [path, setSelected, shiftIsPressed]);
-
-  const handleShiftPress = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'Shift') {
-      setShiftIsPressed(true);
-    }
-  }, []);
-
-  const handleShiftRelease = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'Shift') {
-      setShiftIsPressed(false);
-    }
-  }, []);
-
-  const handleMove = useCallback(
-    (event: MouseEvent) => {
-      if (!dragging) return;
-
-      const newX = event.clientX - start.x;
-      const newY = event.clientY - start.y;
-      const clampedX = Math.max(0, Math.min(newX, window.innerWidth - ICON_SIZE - 16));
-      const clampedY = Math.max(
-        0,
-        Math.min(newY, window.innerHeight - ICON_SIZE - TASKBAR_HEIGHT - 16),
-      );
-
-      const updatePosition = (iconPath: string, baseX: number, baseY: number) => {
-        const selectedPosition = getPosition(iconPath);
-        const otherX = selectedPosition.x + baseX - position.x;
-        const otherY = selectedPosition.y + baseY - position.y;
-        const otherClampedX = Math.max(0, Math.min(otherX, window.innerWidth - ICON_SIZE - 16));
-        const otherClampedY = Math.max(
-          0,
-          Math.min(otherY, window.innerHeight - ICON_SIZE - TASKBAR_HEIGHT - 16),
-        );
-        setPosition(iconPath, { x: otherClampedX, y: otherClampedY });
-      };
-
-      for (const selectedPath of allSelected) {
-        if (selectedPath === path) {
-          setPosition(selectedPath, { x: clampedX, y: clampedY });
-        } else {
-          updatePosition(selectedPath, clampedX, clampedY);
-        }
-      }
-    },
-    [dragging, start, path, setPosition, position, allSelected, getPosition],
-  );
-
-  const handlePreventSelect = useCallback((event: Event) => {
-    event.preventDefault();
-  }, []);
-
-  const handlePreventContextMenu = useCallback((event: MouseEvent) => {
-    event.preventDefault();
-  }, []);
-  useEffect(() => {
-    registerEvents('mousedown', [handleDeselectAll]);
-    registerEvents('mousemove', [handleMove, handleDragSelect]);
-    registerEvents('contextmenu', [handlePreventContextMenu]);
-    registerEvents('selectstart', [handlePreventSelect]);
-    registerEvents('keydown', [handleShiftPress]);
-    registerEvents('keyup', [handleShiftRelease]);
-  }, [
-    handlePreventContextMenu,
-    handleShiftRelease,
-    registerEvents,
-    handleMove,
-    handlePreventSelect,
-    handleShiftPress,
-    handleDragSelect,
-    handleDeselectBlur,
-    handleDeselectAll,
-  ]);
+  const gridPosition = indexToPosition(gridIndex, gridState.rows, { multiplier: GRID_SIZE });
 
   return (
     <button
       type="button"
-      // className="absolute flex min-h-[70px] min-w-[70px] cursor-default flex-col items-center"
+      draggable
       className={cn(
-        'absolute flex cursor-default flex-col items-center focus:outline-none',
-        selected && 'bg-accent-50/20',
-        !selected && !selecting && 'hover:bg-accent-50/10',
+        'absolute flex background-transparent cursor-default flex-col items-center focus:outline-none',
+        'hover:bg-accent-50/10',
       )}
       style={{
         width: `${ICON_SIZE.toString()}px`,
         height: `${ICON_SIZE.toString()}px`,
-        transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
-      }}
-      onMouseDown={(event) => {
-        event.stopPropagation();
-        handleStartDrag();
-        handleGetMouseStart(event);
-        handleSelectToggle();
-      }}
-      onFocus={() => {
-        handleSelectFocus();
-      }}
-      onBlur={() => {
-        handleDeselectBlur();
-      }}
-      onMouseUp={() => {
-        handleStopDrag();
-      }}
-      onDoubleClick={(event) => {
-        event.stopPropagation();
-        open(id);
+        transform: `translate( ${gridPosition.x.toString()}px, ${gridPosition.y.toString()}px)`,
       }}
     >
-      <img src={iconSrc} alt={title} width="48px" height="48px" />
+      <img draggable="false" src={iconSrc} alt={title} width="48px" height="48px" />
       <span className="text-sm">{title}</span>
       {/* <span className={cn('text-sm', selected ? 'bg-surface text-onSurface' : '')}>{title}</span> */}
     </button>
@@ -212,7 +53,8 @@ const DesktopIconComponent = ({ id, path }: { id: string; path: string }): React
 const DesktopIcon = React.memo(DesktopIconComponent);
 
 const DesktopIconsComponents = (): ReactElement => {
-  const desktopPaths = useFsStore().getChildren('/Desktop', { filesOnly: true });
+  const desktopPaths = useFsStore().loadDirectory('/Desktop');
+  const gridState = useFsStore((state) => state.getDirectoryGrid('/Desktop'));
 
   return (
     <section
@@ -221,7 +63,7 @@ const DesktopIconsComponents = (): ReactElement => {
     >
       {desktopPaths.map((path) => {
         const fileName = parseFileName(path);
-        return <DesktopIcon key={fileName} id={fileName} path={path} />;
+        return <DesktopIcon key={fileName} id={fileName} path={path} gridState={gridState} />;
       })}
     </section>
   );
@@ -237,6 +79,7 @@ const Desktop = (): React.ReactElement => {
   const start = useDesktopStore((state) => state.clickStart);
   const setStart = useDesktopStore((state) => state.setClickStart);
   const { registerEvents } = useEvents();
+  const setGrid = useFsStore((state) => state.setDirectoryGrid);
 
   const handleMouseDown = useCallback(() => {
     setSelecting(true);
@@ -275,10 +118,17 @@ const Desktop = (): React.ReactElement => {
 
   useEffect(() => {
     registerEvents('mousedown', [handleMouseDown, getMouseClickStart]);
-    registerEvents('mousemove', [drawSelectRect]);
+    // registerEvents('mousemove', [drawSelectRect]);
     registerEvents('mouseup', [handleMouseUp]);
   }, [registerEvents, handleMouseDown, getMouseClickStart, drawSelectRect, handleMouseUp]);
 
+  useEffect(() => {
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const rows = Math.floor((viewportHeight - TASKBAR_HEIGHT) / GRID_SIZE);
+    const columns = Math.floor(viewportWidth / GRID_SIZE);
+    setGrid('/Desktop', { columns, rows });
+  }, [setGrid]);
   return (
     <>
       <span
