@@ -3,6 +3,9 @@ import { Position } from '@/types/units';
 interface GridOptions {
   flow?: 'row' | 'col';
   multiplier?: number;
+  offsetX?: number;
+  offsetY?: number;
+  offsetIndex?: number;
 }
 
 export function indexToPosition(
@@ -12,9 +15,17 @@ export function indexToPosition(
 ): Position {
   const { flow = 'col' } = options ?? {};
   const multiplier = options?.multiplier ?? 1;
-  const x = flow === 'row' ? index % itemsPerLine : Math.floor(index / itemsPerLine);
-  const y = flow === 'row' ? Math.floor(index / itemsPerLine) : index % itemsPerLine;
-  return { x: x * multiplier, y: y * multiplier };
+  const offsetX = options?.offsetX ?? 0;
+  const offsetY = options?.offsetY ?? 0;
+  const offsetIndex = options?.offsetIndex ?? 0;
+
+  const adjustedIndex = index + offsetIndex;
+
+  const x =
+    flow === 'row' ? adjustedIndex % itemsPerLine : Math.floor(adjustedIndex / itemsPerLine);
+  const y =
+    flow === 'row' ? Math.floor(adjustedIndex / itemsPerLine) : adjustedIndex % itemsPerLine;
+  return { x: x * multiplier + offsetX, y: y * multiplier + offsetY };
 }
 
 export function positionToIndex(
