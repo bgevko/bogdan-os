@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 
 import useWindowState from '@/hooks/use-window';
-import { ResizeDirection } from '@/hooks/window/use-resize';
+import { ResizeDirection } from '@/hooks/use-window/use-resize';
 
 interface WindowHandlesProperties {
   id: string;

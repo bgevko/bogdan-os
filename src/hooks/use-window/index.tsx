@@ -1,11 +1,11 @@
-import useMaxMin from '@/hooks/window/use-max-min';
-import useWindowMove from '@/hooks/window/use-move';
-import useWindowResize, { ResizeDirection } from '@/hooks/window/use-resize';
+import useMaxMin from '@/hooks/use-window/use-max-min';
+import useWindowMove from '@/hooks/use-window/use-move';
+import useWindowResize, { ResizeDirection } from '@/hooks/use-window/use-resize';
 
 // window state hook return types
 interface WindowState {
   handleSetResizeDirection: (direction: ResizeDirection) => void;
-  handleMouseDownMove: () => void;
+  handleMouseDownMove: (event: React.MouseEvent) => void;
   handleWindowFullSize: () => void;
   handleWindowMinimizeToggle: () => void;
 }

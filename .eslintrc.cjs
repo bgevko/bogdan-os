@@ -48,6 +48,7 @@ module.exports = {
     'tailwindcss/classnames-order': 'error',
     'tailwindcss/no-custom-classname': 'off',
     'unicorn/prevent-abbreviations': 'off',
+    'unicorn/no-null': 'off',
     'react-compiler/react-compiler': 'error',
     'react/jsx-no-useless-fragment': 'off',
     'react/jsx-filename-extension': [1, { extensions: ['.tsx'] }],

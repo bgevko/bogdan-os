@@ -67,7 +67,7 @@ const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element 
       onContextMenuCapture={(event) => {
         event.preventDefault();
         // debug
-        close('HelloWorld');
+        close(id);
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
