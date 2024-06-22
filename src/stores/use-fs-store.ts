@@ -29,11 +29,14 @@ function validateDirectory(fs: FileSystem, path: string): void {
 interface FileSystemState {
   fileDirectory: FileSystem;
   currentPath: string;
+  selected: string[];
+
   setFileSystem: (fs: FileSystem) => void;
 
   setCurrentPath: (path: string) => void;
 
   getCurrentDirectory: () => string;
+  getParentDirectory: (path: string) => string;
 
   loadDirectory: (path: string) => string[];
 
@@ -42,25 +45,24 @@ interface FileSystemState {
   getDirectoryGrid: (path: string) => GridState;
   setDirectoryGrid: (path: string, grid: GridState) => void;
 
+  getParentGridItemsPerLine: (path: string) => number;
+
   getItemPosition: (path: string) => Position;
   setItemPosition: (path: string, position: Position) => void;
 
   getItemGridIndex: (path: string) => number;
   setItemGridIndex: (path: string, index: number) => void;
 
-  getIsSelected: (path: string) => boolean;
-  setIsSelected: (path: string, selected: boolean) => void;
-
-  getIsMultipleSelected: () => boolean;
-
-  getAllSelected: () => string[];
-
-  getSelectedBoundingBox: () => { left: number; top: number; right: number; bottom: number };
+  getSelected: () => string[];
+  setSelected: (paths: string[]) => void;
+  addSelected: (path: string) => void;
+  removeSelected: (path: string) => void;
 }
 
 const useFsStore = create<FileSystemState>((set, get) => ({
   fileDirectory,
   currentPath: '/',
+  selected: [],
   setFileSystem: (fs) => {
     set({ fileDirectory: fs });
   },
@@ -70,6 +72,12 @@ const useFsStore = create<FileSystemState>((set, get) => ({
     set({ currentPath: path });
   },
   getCurrentDirectory: () => get().currentPath,
+  getParentDirectory: (path) => {
+    validatePath(get().fileDirectory, path);
+    if (path === '/') return '/';
+    const parentPath = path.split('/').slice(0, -1).join('/');
+    return parentPath === '' ? '/' : parentPath;
+  },
 
   loadDirectory: (path) => {
     validatePath(get().fileDirectory, path);
@@ -116,7 +124,7 @@ const useFsStore = create<FileSystemState>((set, get) => ({
   getDirectoryGrid: (path) => {
     validatePath(get().fileDirectory, path);
     validateDirectory(get().fileDirectory, path);
-    return get().fileDirectory[path].childGrid ?? { columns: 0, rows: 0 };
+    return get().fileDirectory[path].childGrid ?? { itemsPerLine: 0 };
   },
   setDirectoryGrid: (path, grid) => {
     validatePath(get().fileDirectory, path);
@@ -126,6 +134,12 @@ const useFsStore = create<FileSystemState>((set, get) => ({
       fs[path].childGrid = grid;
       return { fileDirectory: fs };
     });
+  },
+  getParentGridItemsPerLine: (path) => {
+    validatePath(get().fileDirectory, path);
+    const parentPath = get().getParentDirectory(path);
+    const parentGrid = get().getDirectoryGrid(parentPath);
+    return parentGrid.itemsPerLine;
   },
   getItemPosition: (path) => {
     validatePath(get().fileDirectory, path);
@@ -151,41 +165,41 @@ const useFsStore = create<FileSystemState>((set, get) => ({
       return { fileDirectory: fs };
     });
   },
-  getIsSelected: (path) => {
-    validatePath(get().fileDirectory, path);
-    return get().fileDirectory[path].isSelected ?? false;
-  },
-  setIsSelected: (path, selected) => {
-    validatePath(get().fileDirectory, path);
+  setSelected: (paths) => {
     set((state) => {
       const fs = { ...state.fileDirectory };
-      fs[path].isSelected = selected;
-      return { fileDirectory: fs };
+      for (const path of paths) {
+        validatePath(fs, path);
+      }
+      return {
+        selected: paths,
+      };
     });
   },
-  getIsMultipleSelected: () => {
-    const fs = get().fileDirectory;
-    const selectedItems = Object.keys(fs).filter((path) => fs[path].isSelected);
-    return selectedItems.length > 1;
+  getSelected: () => {
+    return get().selected;
   },
-  getAllSelected: () => {
-    const fs = get().fileDirectory;
-    return Object.keys(fs).filter((path) => fs[path].isSelected);
+  addSelected: (path) => {
+    set((state) => {
+      const fs = { ...state.fileDirectory };
+      const newSelected = new Set(state.selected);
+      validatePath(fs, path);
+      newSelected.add(path);
+      return {
+        selected: [...newSelected],
+      };
+    });
   },
-  getSelectedBoundingBox: () => {
-    // Leftmost x, topmost y, rightmost x with width offset, bottommost y with height offset
-    let leftmost = Infinity;
-    let topmost = Infinity;
-    let rightmost = -Infinity;
-    let bottommost = -Infinity;
-    for (const path of get().getAllSelected()) {
-      const { x, y } = get().getItemPosition(path);
-      leftmost = Math.min(leftmost, x);
-      topmost = Math.min(topmost, y);
-      rightmost = Math.max(rightmost, x + 70);
-      bottommost = Math.max(bottommost, y + 70);
-    }
-    return { left: leftmost, top: topmost, right: rightmost, bottom: bottommost };
+  removeSelected: (path) => {
+    set((state) => {
+      const fs = { ...state.fileDirectory };
+      const newSelected = new Set(state.selected);
+      validatePath(fs, path);
+      newSelected.delete(path);
+      return {
+        selected: [...newSelected],
+      };
+    });
   },
 }));
 

@@ -1,8 +1,7 @@
 import { Position } from '@/types/units';
 
 export interface GridState {
-  columns: number;
-  rows: number;
+  itemsPerLine: number;
 }
 
 export interface FileSystemEntry {
@@ -10,8 +9,13 @@ export interface FileSystemEntry {
   type: 'file' | 'directory';
   position?: Position;
   gridIndex?: number;
-  isSelected?: boolean;
   childGrid?: GridState;
+}
+
+export interface TransferData {
+  path: string;
+  startingGridIndex: number;
+  isHead: boolean;
 }
 
 export type FileSystem = Record<string, FileSystemEntry>;
