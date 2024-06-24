@@ -17,7 +17,7 @@ interface UseSelectReturn {
 }
 
 const UseSelect = (path: string): UseSelectReturn => {
-  const gridIndex = useFsStore((state) => state.getItemGridIndex(path));
+  const gridIndex = useFsStore((state) => state.getGridIndex(path));
   const itemsPerLine = useFsStore((state) => state.getParentGridItemsPerLine(path));
 
   const allSelected = useFsStore((state) => state.getSelected());

@@ -21,9 +21,9 @@ interface GridProps {
 
 const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const { registerEvents } = useEvents();
-  const setGrid = useFsStore((state) => state.setDirectoryGrid);
-  const setGridIndex = useFsStore((state) => state.setItemGridIndex);
-  const gridState = useFsStore((state) => state.getDirectoryGrid(path));
+  const setGrid = useFsStore((state) => state.setGridStack);
+  const setGridIndex = useFsStore((state) => state.setGridIndex);
+  const gridState = useFsStore((state) => state.getGridStack(path));
   const setSelected = useFsStore((state) => state.setSelected);
 
   const [numColumns, setNumColumns] = useState(0);

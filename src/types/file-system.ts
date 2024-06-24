@@ -1,15 +1,16 @@
 import { Position } from '@/types/units';
 
-export interface GridState {
+export interface GridStack {
   itemsPerLine: number;
 }
 
 export interface FileSystemEntry {
+  // Deprecate
   name: string;
   type: 'file' | 'directory';
   position?: Position;
   gridIndex?: number;
-  childGrid?: GridState;
+  childGrid?: GridStack;
 }
 
 export interface TransferData {
