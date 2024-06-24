@@ -5,12 +5,17 @@ import { type ProcessComponents, Processes, WindowState } from '@/types/processe
 export const iconDirectory = '/icons/system/';
 
 const processDirectory: ProcessComponents = {
+  test: {
+    title: 'Hello Title',
+    icon: 'folder',
+    Component: lazy(() => import('@/components/apps/hello-world')),
+  },
   HelloWorld: {
     title: 'Hello Title',
     icon: 'folder',
     Component: lazy(() => import('@/components/apps/hello-world')),
   },
-  Terminal: {
+  app: {
     title: 'Terminal',
     icon: 'executable',
     Component: lazy(() => import('@/components/apps/terminal')),

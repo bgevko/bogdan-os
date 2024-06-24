@@ -7,17 +7,17 @@ import useSelect from '@/hooks/use-fs/use-select';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { type TransferData } from '@/types/file-system';
-import cn from '@/utils/format';
+import cn, { parseFileInfo } from '@/utils/format';
 import { indexToPosition, positionToIndex } from '@/utils/grid';
 
 export const ICON_SIZE = 70;
 
-const FileSystemIconComponent = ({ id, path }: { id: string; path: string }): ReactElement => {
+const FileSystemIconComponent = ({ path }: { path: string }): ReactElement => {
   const parentPath = path.split('/').slice(0, -1).join('/');
   const processDirectory = useProcessesStore((state) => state.processDirectory);
-  const gridIndex = useFsStore((state) => state.getItemGridIndex(path));
-  const getGridIndex = useFsStore((state) => state.getItemGridIndex);
-  const gridState = useFsStore((state) => state.getDirectoryGrid(parentPath));
+  const gridIndex = useFsStore((state) => state.getGridIndex(path));
+  const getGridIndex = useFsStore((state) => state.getGridIndex);
+  const gridState = useFsStore((state) => state.getGridStack(parentPath));
   const { registerEvents } = useEvent();
 
   const {
@@ -30,8 +30,8 @@ const FileSystemIconComponent = ({ id, path }: { id: string; path: string }): Re
     allSelected,
   } = useSelect(path);
 
-  const iconSrc = `${iconDirectory}${processDirectory[id].icon}.png`;
-  const { title } = processDirectory[id];
+  const { fileName, fileExt } = parseFileInfo(path);
+  const iconSrc = `${iconDirectory}${processDirectory[fileExt].icon}.png`;
 
   const [dropGuideVisible, setDropGuideVisible] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
@@ -123,9 +123,9 @@ const FileSystemIconComponent = ({ id, path }: { id: string; path: string }): Re
             setDropGuideVisible(false);
           }}
         >
-          <img draggable="false" src={iconSrc} alt={title} width="48px" height="48px" />
-          <span className="text-sm">{title}</span>
-          {/* <span className={cn('text-sm', selected ? 'bg-surface text-onSurface' : '')}>{title}</span> */}
+          <img draggable="false" src={iconSrc} alt={fileName} width="48px" height="48px" />
+          <span className="text-sm">{fileName}</span>
+          {/* <span className={cn('text-sm', selected ? 'bg-surface text-onSurface' : '')}>{fileName}</span> */}
         </button>
       </li>
       <DropGuide
