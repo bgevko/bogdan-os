@@ -1,7 +1,27 @@
 import { lazy } from 'react';
 
-import { type FileSystem } from '@/types/file-system';
+import { type FileNodeData } from '@/globals/starting-directory';
 import { type ProcessComponents } from '@/types/processes';
+
+export const testDir: FileNodeData = {
+  path: '/',
+  children: [
+    {
+      path: '/Desktop',
+      children: [
+        {
+          path: '/Desktop/HelloWorld.test',
+        },
+        {
+          path: '/Desktop/MyFolder',
+        },
+      ],
+    },
+    {
+      path: '/Documents',
+    },
+  ],
+};
 
 const testProcesses: ProcessComponents = {
   Test1: {
@@ -21,26 +41,4 @@ const testProcesses: ProcessComponents = {
   },
 };
 
-export const testFileSystem: FileSystem = {
-  '/': {
-    name: 'root',
-    type: 'directory',
-  },
-  '/Desktop': {
-    name: 'Desktop',
-    type: 'directory',
-  },
-  '/Desktop/HelloWorld': {
-    name: 'HelloWorld.app',
-    type: 'file',
-  },
-  '/Desktop/MyFolder': {
-    name: 'MyFolder',
-    type: 'directory',
-  },
-  '/Documents': {
-    name: 'Documents',
-    type: 'directory',
-  },
-};
 export default testProcesses;

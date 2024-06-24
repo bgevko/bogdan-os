@@ -4,12 +4,14 @@ import { it, expect, describe, beforeEach } from 'vitest';
 
 import useFsStore from '@/stores/use-fs-store';
 
-import { testFileSystem } from './globals';
+import { testDir } from './globals';
+
+// TODO: Rewrite tests to use the new system
 
 beforeEach(() => {
   const { result } = renderHook(() => useFsStore());
   act(() => {
-    result.current.setFileSystem(testFileSystem);
+    result.current.root.loadFrom(testDir);
     result.current.setCurrentPath('/');
   });
 });
@@ -61,7 +63,7 @@ describe('useFsStore', () => {
 
     act(() => {
       result.current.setCurrentPath('/');
-      const rootChildren = result.current.getChildren('/Desktop', { filesOnly: true });
+      const rootChildren = result.current.getChildren('/Desktop');
       expect(rootChildren).toEqual(['/Desktop/HelloWorld']);
     });
 
@@ -69,33 +71,6 @@ describe('useFsStore', () => {
       result.current.setCurrentPath('/Documents');
       const documentsChildren = result.current.getChildren('/Documents');
       expect(documentsChildren).toEqual([]);
-    });
-  });
-  it('Should set directory item position correctly', () => {
-    const { result } = renderHook(() => useFsStore());
-    act(() => {
-      result.current.setItemPosition('/Desktop/HelloWorld', { x: 100, y: 100 });
-    });
-    act(() => {
-      const itemPosition = result.current.getItemPosition('/Desktop/HelloWorld');
-      expect(itemPosition).toEqual({ x: 100, y: 100 });
-    });
-
-    act(() => {
-      result.current.setItemPosition('/Desktop/HelloWorld', { x: 200, y: 200 });
-    });
-    act(() => {
-      const itemPosition = result.current.getItemPosition('/Desktop/HelloWorld');
-      expect(itemPosition).toEqual({ x: 200, y: 200 });
-    });
-
-    act(() => {
-      result.current.setItemPosition('/Desktop/MyFolder', { x: 300, y: 300 });
-    });
-
-    act(() => {
-      const itemPosition = result.current.getItemPosition('/Desktop/MyFolder');
-      expect(itemPosition).toEqual({ x: 300, y: 300 });
     });
   });
 });
