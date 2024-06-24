@@ -3,12 +3,29 @@ import { twMerge } from 'tailwind-merge';
 
 type ClassNameValue = string | null | undefined | 0 | 0n | false;
 
-export function parseFileName(filePath: string): string {
-  return filePath.split('/').pop() ?? '';
+interface FileInfo {
+  fileName: string;
+  fileExt: string;
 }
 
-export function parseFileNames(filePaths: string[]): string[] {
-  return filePaths.map((path) => parseFileName(path));
+export function parseFileInfo(filePath: string): FileInfo {
+  const match = filePath.match(/([^/\\]+)(\.[^/\\]+)?$/);
+
+  if (match) {
+    const fullFileName = match[1];
+    // split the above at the dot if it exists, otherwise default to 'test'
+    const nameParts = fullFileName.split('.');
+    const fileExt = nameParts.length > 1 ? nameParts.pop() : 'test';
+    const fileName = nameParts[0];
+    return { fileName, fileExt: fileExt ?? 'test' };
+  }
+
+  // If no match is found, return empty strings
+  return { fileName: '', fileExt: '' };
+}
+
+export function parseFileInfos(filePaths: string[]): FileInfo[] {
+  return filePaths.map((path) => parseFileInfo(path));
 }
 
 export default function cn(...inputs: ClassNameValue[]): string {
