@@ -1,257 +1,260 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-use-before-define */
 import { create } from 'zustand';
 
-import { getProcessDirectory } from '@/globals/process-directory';
-import { type Processes, Process } from '@/types/processes';
-import { Position, Size, Window } from '@/types/units';
+import useFsStore from '@/stores/use-fs-store';
+import { type Window, Size, Position } from '@/types/units';
+import { ProcessNode, ProcessOptions } from '@/utils/processes';
 
-const processDirectory = getProcessDirectory();
-interface ProcessStore {
-  processDirectory: Processes;
-  setProcessDirectory: (newProcesses: Processes) => void;
-  setProperty: <K extends keyof Process>(processId: string, property: K, value: Process[K]) => void;
-  getProperty: <K extends keyof Process>(processId: string, property: K) => Process[K];
-  openedProcesses: Processes;
-  open: (processId: string | string[]) => void;
-  close: (processId: string | string[]) => void;
-  setWindow: (processId: string, dimensions: Window) => void;
-  getWindow: (processId: string) => Window;
-  setWindowPosition: (processId: string, position: Position) => void;
-  getWindowPosition: (processId: string) => Position;
-  setWindowSize: (processId: string, size: Size) => void;
-  getWindowSize: (processId: string) => Size;
-  getWindowMinSize: (processId: string) => Size;
-  setDefaultWindow: (processId: string, dimensions: Window) => void;
-  getDefaultWindow: (processId: string) => Window;
-  setIsMaximized: (processId: string, maximized: boolean) => void;
-  getIsMaximized: (processId: string) => boolean;
-  setIsMinimized: (processId: string, isMinimized: boolean) => void;
-  getIsMinimized: (processId: string) => boolean;
-  setIsAnimating: (processId: string, isAnimating: boolean) => void;
-  getIsAnimating: (processId: string) => boolean;
-  getTitle: (processId: string) => string;
-  setMinimizedWindow: (processId: string, dimensions: Window) => void;
-  getMinimizedWindow: (processId: string) => Window;
-  setUnminimizedWindow: (processId: string, dimensions: Window) => void;
-  getUnminimizedWindow: (processId: string) => Window;
-  setOpacity: (processId: string, opacity: number) => void;
-  getOpacity: (processId: string) => number;
-  setMaximizedWindow: (processId: string, dimensions: Window) => void;
-  getMaximizedWindow: (processId: string) => Window;
-  setUnmaximizedWindow: (processId: string, dimensions: Window) => void;
-  getUnmaximizedWindow: (processId: string) => Window;
-  reset: (directory?: Processes) => void;
+function validatePath(path: string) {
+  const fsStore = useFsStore.getState();
+  fsStore.root.validatePath(path);
 }
 
-const setPropertyHelper = <K extends keyof Process>(
-  state: ProcessStore,
-  processId: string,
+function validateOpen(path: string) {
+  const opened = useProcessesStore.getState().openedProcesses;
+  if (!opened.has(path)) {
+    throw new Error(`Process at path ${path} is not open`);
+  }
+}
+
+const setPropertyHelper = <K extends keyof ProcessNode>(
+  filePath: string,
   property: K,
-  value: Process[K],
-): { openedProcesses: Processes } => {
-  if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-    throw new Error(`Attempted to set ${property} of a process that is not open: ${processId}.`);
+  value: ProcessNode[K],
+): { openedProcesses: Map<string, ProcessNode> } => {
+  const state = useProcessesStore.getState();
+  try {
+    validatePath(filePath);
+  } catch {
+    throw new Error(`Attempted to set ${property} of a process that does not exist: ${filePath}.`);
   }
 
-  const newProcesses = {
-    ...state.openedProcesses,
-    [processId]: {
-      ...state.openedProcesses[processId],
-      [property]: value,
-    },
+  try {
+    validateOpen(filePath);
+  } catch {
+    throw new Error(`Attempted to set ${property} of a process that is not open: ${filePath}.`);
+  }
+
+  const process = state.openedProcesses.get(filePath)!;
+  process[property] = value;
+
+  return {
+    openedProcesses: new Map(state.openedProcesses),
   };
-
-  return { openedProcesses: newProcesses };
 };
-const getPropertyHelper = <K extends keyof Process>(
-  state: ProcessStore,
-  processId: string,
+
+const getPropertyHelper = <K extends keyof ProcessNode>(
+  filePath: string,
   property: K,
-): Process[K] => {
-  if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, processId)) {
-    throw new Error(`Attempted to get ${property} of a process that is not open: ${processId}.`);
+): ProcessNode[K] => {
+  const state = useProcessesStore.getState();
+
+  try {
+    validatePath(filePath);
+  } catch {
+    throw new Error(`Attempted to get ${property} of a process that does not exist: ${filePath}.`);
   }
-  const process = state.openedProcesses[processId];
+
+  try {
+    validateOpen(filePath);
+  } catch {
+    throw new Error(`Attempted to get ${property} of a process that is not open: ${filePath}.`);
+  }
+
+  const process = state.openedProcesses.get(filePath)!;
   return process[property];
 };
 
-const cleanupProcesses = (closedProcesses: Processes) => {
-  for (const key of Object.keys(closedProcesses)) {
-    const process = closedProcesses[key];
-    // Unminimize the process and restore it to its unminimized dimensions
-    if (process.minimized) {
-      process.minimized = false;
-      process.position = process.unMinimizedWindow.position;
-      process.size = process.unMinimizedWindow.size;
-    }
-
-    if (process.isAnimating) {
-      process.isAnimating = false;
-    }
-
-    // Other cleanup tasks
-    process.opacity = 1;
-  }
-};
-
-const initiateProcesses = (processes: Processes) => {
-  for (const key of Object.keys(processes)) {
-    const process = processes[key];
-    // make sure defaultWindow.size >= minSize
-    if (process.defaultWindow.size.width < process.minSize.width) {
-      throw new Error(
-        `The default width of ${process.title} is less than the minimum width of ${process.minSize.width.toString()}. Either increase the default width or decrease the minimum width.`,
-      );
-    } else if (process.defaultWindow.size.height < process.minSize.height) {
-      throw new Error(
-        `The default height of ${process.title} is less than the minimum height of ${process.minSize.height.toString()}. Either increase the default height or decrease the minimum height.`,
-      );
-    }
-
-    // Make sure size and position are set to default size and position
-    process.size = process.defaultWindow.size;
-    process.position = process.defaultWindow.position;
-  }
-};
+interface ProcessStore {
+  openedProcesses: Map<string, ProcessNode>;
+  cachedProcesses: Map<string, ProcessOptions>;
+  open: (path: string | string[], options?: ProcessOptions) => void;
+  close: (path: string | string[]) => void;
+  setWindow: (path: string, dimensions: Window) => void;
+  getWindow: (path: string) => Window;
+  setWindowPosition: (path: string, position: Position) => void;
+  getWindowPosition: (path: string) => Position;
+  setWindowSize: (path: string, size: Size) => void;
+  getWindowSize: (path: string) => Size;
+  getWindowMinSize: (path: string) => Size;
+  setDefaultWindow: (path: string, dimensions: Window) => void;
+  getDefaultWindow: (path: string) => Window;
+  setIsMaximized: (path: string, maximized: boolean) => void;
+  getIsMaximized: (path: string) => boolean;
+  setIsMinimized: (path: string, isMinimized: boolean) => void;
+  getIsMinimized: (path: string) => boolean;
+  setIsAnimating: (path: string, isAnimating: boolean) => void;
+  getIsAnimating: (path: string) => boolean;
+  setMinimizedWindow: (path: string, dimensions: Window) => void;
+  getMinimizedWindow: (path: string) => Window;
+  setUnminimizedWindow: (path: string, dimensions: Window) => void;
+  getUnminimizedWindow: (path: string) => Window;
+  setOpacity: (path: string, opacity: number) => void;
+  getOpacity: (path: string) => number;
+  setMaximizedWindow: (path: string, dimensions: Window) => void;
+  getMaximizedWindow: (path: string) => Window;
+  setUnmaximizedWindow: (path: string, dimensions: Window) => void;
+  getUnmaximizedWindow: (path: string) => Window;
+  setIsUpdatingSize: (path: string, isResizing: boolean) => void;
+  getIsUpdatingSize: (path: string) => boolean;
+}
 
 const useProcessesStore = create<ProcessStore>((set, get) => ({
-  processDirectory,
-  openedProcesses: {},
-  setProcessDirectory: (newDirectory: Processes) => {
-    set({ processDirectory: newDirectory });
-  },
-  setProperty: (processId, property, value) => {
-    set((state) => setPropertyHelper(state, processId, property, value));
-  },
-  getProperty: (processId, property) => getPropertyHelper(get(), processId, property),
-  open: (processId) => {
-    const requested = Array.isArray(processId) ? processId : [processId];
+  openedProcesses: new Map(),
+  cachedProcesses: new Map(),
+  open: (filePath, options = {}) => {
+    const paths = Array.isArray(filePath) ? filePath : [filePath];
+    const toOpen = new Map<string, ProcessNode>();
+    for (const path of paths) {
+      validatePath(path);
+      const cachedOptions = get().cachedProcesses.get(path);
+      const defaultOptions = {
+        ...cachedOptions,
+        ...options,
+      };
+      const process = new ProcessNode(path, defaultOptions);
+      toOpen.set(path, process);
+    }
     set((state) => {
-      const toOpen: Processes = {};
-      for (const id of requested) {
-        if (!Object.prototype.hasOwnProperty.call(state.processDirectory, id)) {
-          throw new Error(`Attempted to open process with an unknown id: ${id}.`);
-        }
-        if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, id)) {
-          toOpen[id] = state.processDirectory[id];
-        }
-      }
-      initiateProcesses(toOpen);
-      return { openedProcesses: { ...state.openedProcesses, ...toOpen } };
-    });
-  },
-  close: (processId) => {
-    const requested = Array.isArray(processId) ? processId : [processId];
-    set((state) => {
-      const toClose: Processes = {};
-      for (const id of requested) {
-        if (!Object.prototype.hasOwnProperty.call(state.processDirectory, id)) {
-          throw new Error(`Attempted to close process with an unknown id: ${id}.`);
-        }
-        if (!Object.prototype.hasOwnProperty.call(state.openedProcesses, id)) {
-          throw new Error(`Attempted to close process that is not open: ${id}.`);
-        }
-        toClose[id] = state.openedProcesses[id];
-      }
-
-      // Clean up the state of all closed processes
-      cleanupProcesses(toClose);
-
-      // Update the main directory to reflect any changes to the closed processes
-      const oldDirectory = { ...state.processDirectory };
-      const newDirectory: Processes = {};
-      for (const key of Object.keys(oldDirectory)) {
-        newDirectory[key] = requested.includes(key) ? toClose[key] : oldDirectory[key];
-      }
-
-      const newOpened: Processes = {};
-      for (const key of Object.keys(state.openedProcesses)) {
-        if (!Object.prototype.hasOwnProperty.call(toClose, key)) {
-          newOpened[key] = state.openedProcesses[key];
-        }
-      }
-
+      const oldOpened = state.openedProcesses;
+      const newOpened = new Map([...oldOpened, ...toOpen]);
       return {
         openedProcesses: newOpened,
-        processDirectory: newDirectory,
       };
     });
   },
 
-  setWindow: (processId, dimensions) => {
-    const { size, position } = dimensions;
-    set((state) => setPropertyHelper(state, processId, 'size', size));
-    set((state) => setPropertyHelper(state, processId, 'position', position));
-  },
-  getWindow: (processId) => {
-    const size = getPropertyHelper(get(), processId, 'size');
-    const position = getPropertyHelper(get(), processId, 'position');
-    const dimensions = { size, position };
-    return dimensions;
-  },
-
-  setDefaultWindow: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'defaultWindow', dimensions));
-  },
-  getDefaultWindow: (processId) => getPropertyHelper(get(), processId, 'defaultWindow'),
-
-  setWindowPosition: (processId, position) => {
-    set((state) => setPropertyHelper(state, processId, 'position', position));
-  },
-  getWindowPosition: (processId) => getPropertyHelper(get(), processId, 'position'),
-
-  setWindowSize: (processId, size) => {
-    set((state) => setPropertyHelper(state, processId, 'size', size));
-  },
-  getWindowSize: (processId) => getPropertyHelper(get(), processId, 'size'),
-  getWindowMinSize: (processId) => getPropertyHelper(get(), processId, 'minSize'),
-
-  setIsMaximized: (processId, maximized) => {
-    set((state) => setPropertyHelper(state, processId, 'maximized', maximized));
-  },
-  getIsMaximized: (processId) => getPropertyHelper(get(), processId, 'maximized'),
-
-  setIsAnimating: (processId, isAnimating) => {
-    set((state) => setPropertyHelper(state, processId, 'isAnimating', isAnimating));
-  },
-  getIsAnimating: (processId) => getPropertyHelper(get(), processId, 'isAnimating'),
-
-  setIsMinimized: (processId, isMinimized) => {
-    set((state) => setPropertyHelper(state, processId, 'minimized', isMinimized));
-  },
-  getIsMinimized: (processId) => getPropertyHelper(get(), processId, 'minimized'),
-
-  setMinimizedWindow: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'minimizedWindow', dimensions));
-  },
-  getMinimizedWindow: (processId) => getPropertyHelper(get(), processId, 'minimizedWindow'),
-
-  setOpacity: (processId, opacity) => {
-    set((state) => setPropertyHelper(state, processId, 'opacity', opacity));
-  },
-  getOpacity: (processId) => getPropertyHelper(get(), processId, 'opacity'),
-
-  setMaximizedWindow: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'maximizedWindow', dimensions));
-  },
-  getMaximizedWindow: (processId) => getPropertyHelper(get(), processId, 'maximizedWindow'),
-
-  setUnmaximizedWindow: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'unMaximizedWindow', dimensions));
-  },
-  getUnmaximizedWindow: (processId) => getPropertyHelper(get(), processId, 'unMaximizedWindow'),
-
-  setUnminimizedWindow: (processId, dimensions) => {
-    set((state) => setPropertyHelper(state, processId, 'unMinimizedWindow', dimensions));
-  },
-  getUnminimizedWindow: (processId) => getPropertyHelper(get(), processId, 'unMinimizedWindow'),
-
-  getTitle: (processId) => getPropertyHelper(get(), processId, 'title'),
-
-  reset: (directory) => {
+  close: (filePath) => {
+    const paths = Array.isArray(filePath) ? filePath : [filePath];
+    const opened = new Map(get().openedProcesses);
+    const cached = new Map(get().cachedProcesses);
+    for (const path of paths) {
+      validatePath(path);
+      validateOpen(path);
+      cached.set(path, opened.get(path)!.dumpOptions());
+      opened.delete(path);
+    }
     set({
-      processDirectory: directory ?? processDirectory,
-      openedProcesses: {},
+      openedProcesses: opened,
+      cachedProcesses: cached,
     });
+  },
+  setWindow: (path, dimensions) => {
+    set(() => setPropertyHelper(path, 'position', dimensions.position));
+    set(() => setPropertyHelper(path, 'size', dimensions.size));
+  },
+
+  getWindow: (path) => {
+    try {
+      const position = getPropertyHelper(path, 'position');
+      const size = getPropertyHelper(path, 'size');
+      return { position, size };
+    } catch {
+      return { position: { x: 0, y: 0 }, size: { width: 0, height: 0 } };
+    }
+  },
+
+  getWindowPosition: (path) => {
+    return getPropertyHelper(path, 'position');
+  },
+
+  setWindowPosition: (path, position) => {
+    set(() => setPropertyHelper(path, 'position', position));
+  },
+
+  getWindowSize: (path) => {
+    return getPropertyHelper(path, 'size');
+  },
+
+  setWindowSize: (path, size) => {
+    set(() => setPropertyHelper(path, 'size', size));
+  },
+
+  getWindowMinSize: (path) => {
+    return getPropertyHelper(path, 'minSize');
+  },
+
+  setDefaultWindow: (path, dimensions) => {
+    set(() => setPropertyHelper(path, 'defaultWindow', dimensions));
+  },
+
+  getDefaultWindow: (path) => {
+    return getPropertyHelper(path, 'defaultWindow');
+  },
+
+  setIsMaximized: (path, maximized) => {
+    set(() => setPropertyHelper(path, 'isMaximized', maximized));
+  },
+
+  getIsMaximized: (path) => {
+    return getPropertyHelper(path, 'isMaximized');
+  },
+
+  setIsMinimized: (path, isMinimized) => {
+    set(() => setPropertyHelper(path, 'isMinimized', isMinimized));
+  },
+
+  getIsMinimized: (path) => {
+    return getPropertyHelper(path, 'isMinimized');
+  },
+
+  setIsAnimating: (path, isAnimating) => {
+    set(() => setPropertyHelper(path, 'isAnimating', isAnimating));
+  },
+
+  getIsAnimating: (path) => {
+    return getPropertyHelper(path, 'isAnimating');
+  },
+
+  setMinimizedWindow: (path, dimensions) => {
+    set(() => setPropertyHelper(path, 'minimizedWindow', dimensions));
+  },
+
+  getMinimizedWindow: (path) => {
+    return getPropertyHelper(path, 'minimizedWindow');
+  },
+
+  setUnminimizedWindow: (path, dimensions) => {
+    set(() => setPropertyHelper(path, 'unMinimizedWindow', dimensions));
+  },
+
+  getUnminimizedWindow: (path) => {
+    return getPropertyHelper(path, 'unMinimizedWindow');
+  },
+
+  setOpacity: (path, opacity) => {
+    set(() => setPropertyHelper(path, 'opacity', opacity));
+  },
+
+  getOpacity: (path) => {
+    return getPropertyHelper(path, 'opacity');
+  },
+
+  setMaximizedWindow: (path, dimensions) => {
+    set(() => setPropertyHelper(path, 'maximizedWindow', dimensions));
+  },
+
+  getMaximizedWindow: (path) => {
+    return getPropertyHelper(path, 'maximizedWindow');
+  },
+
+  setUnmaximizedWindow: (path, dimensions) => {
+    set(() => setPropertyHelper(path, 'unMaximizedWindow', dimensions));
+  },
+
+  getUnmaximizedWindow: (path) => {
+    return getPropertyHelper(path, 'unMaximizedWindow');
+  },
+  setIsUpdatingSize: (path, isResizing) => {
+    set(() => setPropertyHelper(path, 'isUpdatingSize', isResizing));
+  },
+  getIsUpdatingSize: (path) => {
+    try {
+      return getPropertyHelper(path, 'isUpdatingSize');
+    } catch {
+      return false;
+    }
   },
 }));
 

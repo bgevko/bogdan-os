@@ -11,28 +11,28 @@ interface ReturnTypes {
   toggleMinimizeWindow: () => void;
 }
 
-const useMaxMin = (id: string): ReturnTypes => {
-  const position = useProcessesStore((state) => state.getWindowPosition(id));
+const useMaxMin = (path: string): ReturnTypes => {
+  const position = useProcessesStore((state) => state.getWindowPosition(path));
 
-  const size = useProcessesStore((state) => state.getWindowSize(id));
-  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
+  const size = useProcessesStore((state) => state.getWindowSize(path));
+  const minSize = useProcessesStore((state) => state.getWindowMinSize(path));
 
-  const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(id));
+  const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(path));
 
-  const isMaximized = useProcessesStore((state) => state.getIsMaximized(id));
+  const isMaximized = useProcessesStore((state) => state.getIsMaximized(path));
   const setIsMaximized = useProcessesStore((state) => state.setIsMaximized);
 
-  const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
+  const isMinimized = useProcessesStore((state) => state.getIsMinimized(path));
   const setIsMinimized = useProcessesStore((state) => state.setIsMinimized);
 
-  const unMaximizedWindow = useProcessesStore((state) => state.getUnmaximizedWindow(id));
+  const unMaximizedWindow = useProcessesStore((state) => state.getUnmaximizedWindow(path));
   const setUnmaximizedWindow = useProcessesStore((state) => state.setUnmaximizedWindow);
   const setWindow = useProcessesStore((state) => state.setWindow);
 
-  const unMinimizedWindow = useProcessesStore((state) => state.getUnminimizedWindow(id));
+  const unMinimizedWindow = useProcessesStore((state) => state.getUnminimizedWindow(path));
   const setUnminimizedWindow = useProcessesStore((state) => state.setUnminimizedWindow);
 
-  const minimizedWindow = useProcessesStore((state) => state.getMinimizedWindow(id));
+  const minimizedWindow = useProcessesStore((state) => state.getMinimizedWindow(path));
 
   const setIsAnimating = useProcessesStore((state) => state.setIsAnimating);
   const setOpacity = useProcessesStore((state) => state.setOpacity);
@@ -71,32 +71,32 @@ const useMaxMin = (id: string): ReturnTypes => {
   }, []);
 
   const toggleMaximizeWindow = useCallback(() => {
-    setIsAnimating(id, true);
+    setIsAnimating(path, true);
     if (isMaximized) {
       if (WindowsEqualOrGreater(unMaximizedWindow, myViewport)) {
-        setWindow(id, defaultWindow);
+        setWindow(path, defaultWindow);
       } else {
-        setWindow(id, WindowMax(defaultWindow, unMaximizedWindow));
+        setWindow(path, WindowMax(defaultWindow, unMaximizedWindow));
       }
-      setIsMaximized(id, false);
+      setIsMaximized(path, false);
     } else {
       if (WindowsEqualOrGreater(unMaximizedWindow, myViewport)) {
         const minWindowSize = {
           position: myWindow.position,
           size: minSize,
         };
-        setUnmaximizedWindow(id, WindowMax(minWindowSize, myWindow));
+        setUnmaximizedWindow(path, WindowMax(minWindowSize, myWindow));
       } else {
-        setUnmaximizedWindow(id, myWindow);
+        setUnmaximizedWindow(path, myWindow);
       }
-      setWindow(id, myViewport);
-      setIsMaximized(id, true);
+      setWindow(path, myViewport);
+      setIsMaximized(path, true);
     }
     setTimeout(() => {
-      setIsAnimating(id, false);
+      setIsAnimating(path, false);
     }, 200);
   }, [
-    id,
+    path,
     isMaximized,
     myViewport,
     unMaximizedWindow,
@@ -110,26 +110,26 @@ const useMaxMin = (id: string): ReturnTypes => {
   ]);
 
   const toggleMinimizeWindow = useCallback(() => {
-    setIsAnimating(id, true);
+    setIsAnimating(path, true);
     if (isMinimized) {
-      setWindow(id, unMinimizedWindow);
-      setOpacity(id, 1);
-      setIsMinimized(id, false);
+      setWindow(path, unMinimizedWindow);
+      setOpacity(path, 1);
+      setIsMinimized(path, false);
     } else {
-      setUnminimizedWindow(id, myWindow);
-      setWindow(id, minimizedWindow);
-      setOpacity(id, 0);
-      setIsMinimized(id, true);
+      setUnminimizedWindow(path, myWindow);
+      setWindow(path, minimizedWindow);
+      setOpacity(path, 0);
+      setIsMinimized(path, true);
     }
     setTimeout(() => {
-      setIsAnimating(id, false);
+      setIsAnimating(path, false);
     }, 200);
   }, [
     setIsAnimating,
     setIsMinimized,
     setOpacity,
     setWindow,
-    id,
+    path,
     isMinimized,
     myWindow,
     unMinimizedWindow,

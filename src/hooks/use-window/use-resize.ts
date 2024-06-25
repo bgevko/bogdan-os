@@ -24,15 +24,17 @@ interface usewindowReturnTypes {
   resizeWindow: (event: MouseEvent, start: Position) => void;
 }
 
-const useWindowResize = (id: string): usewindowReturnTypes => {
-  const position = useProcessesStore((state) => state.getWindowPosition(id));
+const useWindowResize = (path: string): usewindowReturnTypes => {
+  const position = useProcessesStore((state) => state.getWindowPosition(path));
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
 
-  const size = useProcessesStore((state) => state.getWindowSize(id));
+  const size = useProcessesStore((state) => state.getWindowSize(path));
   const setSize = useProcessesStore((state) => state.setWindowSize);
-  const minSize = useProcessesStore((state) => state.getWindowMinSize(id));
+  const minSize = useProcessesStore((state) => state.getWindowMinSize(path));
 
   const setIsMaximized = useProcessesStore((state) => state.setIsMaximized);
+
+  const setIsUpdatingSize = useProcessesStore((state) => state.setIsUpdatingSize);
 
   const { registerEvents } = useEvents();
   const [start, setStart] = useState<Position>({ x: 0, y: 0 });
@@ -77,11 +79,11 @@ const useWindowResize = (id: string): usewindowReturnTypes => {
         newHeight = size.height + position.y - newY;
       }
 
-      setSize(id, { width: newWidth, height: newHeight });
-      setPosition(id, { x: newX, y: newY });
-      setIsMaximized(id, false);
+      setSize(path, { width: newWidth, height: newHeight });
+      setPosition(path, { x: newX, y: newY });
+      setIsMaximized(path, false);
     },
-    [id, start, minSize, position, size, resizeDirection, setIsMaximized, setPosition, setSize],
+    [path, start, minSize, position, size, resizeDirection, setIsMaximized, setPosition, setSize],
   );
 
   const handleSetResizeDirection = (direction: ResizeDirection) => {
@@ -90,7 +92,13 @@ const useWindowResize = (id: string): usewindowReturnTypes => {
 
   const handleStopResize = useCallback(() => {
     setResizeDirection(ResizeDirection.NONE);
-  }, [setResizeDirection]);
+
+    // This is used to update the grid size after the resize stops
+    setIsUpdatingSize(path, true);
+    setTimeout(() => {
+      setIsUpdatingSize(path, false);
+    }, 1);
+  }, [setResizeDirection, setIsUpdatingSize, path]);
 
   const handleWindowResize = useCallback(
     (event: MouseEvent) => {

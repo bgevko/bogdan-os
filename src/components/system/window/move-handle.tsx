@@ -8,17 +8,18 @@ import Button from '@/components/system/button';
 import useWindowState from '@/hooks/use-window';
 import useProcessesStore from '@/stores/use-processes-store';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
+import { parseFileInfo } from '@/utils/fs';
 
 interface WindowHandlesProperties {
-  id: string;
+  path: string;
 }
 
-const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
+const WindowMoveHandle = ({ path }: WindowHandlesProperties): ReactElement => {
   const { handleWindowFullSize, handleMouseDownMove, handleWindowMinimizeToggle } =
-    useWindowState(id);
+    useWindowState(path);
   const close = useProcessesStore((state) => state.close);
-  const title = useProcessesStore((state) => state.getTitle(id));
-  const isMaximized = useProcessesStore((state) => state.getIsMaximized(id));
+  const { fileName: title } = parseFileInfo(path);
+  const isMaximized = useProcessesStore((state) => state.getIsMaximized(path));
   return (
     <>
       <header
@@ -71,7 +72,7 @@ const WindowMoveHandle = ({ id }: WindowHandlesProperties): ReactElement => {
               data-testid="window-close"
               className="size-4"
               onMouseUpCapture={() => {
-                close(id);
+                close(path);
               }}
             >
               <img

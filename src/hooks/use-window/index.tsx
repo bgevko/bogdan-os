@@ -10,13 +10,13 @@ interface WindowState {
   handleWindowMinimizeToggle: () => void;
 }
 
-const useWindowState = (id: string): WindowState => {
-  const { handleSetResizeDirection } = useWindowResize(id);
-  const { handleMouseDownMove } = useWindowMove(id);
+const useWindowState = (path: string): WindowState => {
+  const { handleSetResizeDirection } = useWindowResize(path);
+  const { handleMouseDownMove } = useWindowMove(path);
   const {
     toggleMaximizeWindow: handleWindowFullSize,
     toggleMinimizeWindow: handleWindowMinimizeToggle,
-  } = useMaxMin(id);
+  } = useMaxMin(path);
 
   return {
     handleSetResizeDirection,

@@ -9,13 +9,13 @@ interface ReturnTypes {
   handleMouseDownMove: (event: React.MouseEvent) => void;
 }
 
-const useWindowMove = (id: string): ReturnTypes => {
-  const position = useProcessesStore((state) => state.getWindowPosition(id));
+const useWindowMove = (path: string): ReturnTypes => {
+  const position = useProcessesStore((state) => state.getWindowPosition(path));
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
-  const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(id));
+  const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(path));
   const setDefaultWindow = useProcessesStore((state) => state.setDefaultWindow);
 
-  const size = useProcessesStore((state) => state.getWindowSize(id));
+  const size = useProcessesStore((state) => state.getWindowSize(path));
 
   const { registerEvents } = useEvents();
   const [start, setStart] = useState<Position>({ x: 0, y: 0 });
@@ -40,9 +40,9 @@ const useWindowMove = (id: string): ReturnTypes => {
       const newY = event.clientY - start.y;
       const clampedX = Math.max(0, Math.min(newX, window.innerWidth - size.width));
       const clampedY = Math.max(0, Math.min(newY, window.innerHeight - size.height));
-      setPosition(id, { x: clampedX, y: clampedY });
+      setPosition(path, { x: clampedX, y: clampedY });
     },
-    [dragging, start, size, id, setPosition],
+    [dragging, start, size, path, setPosition],
   );
 
   const handlePreventSelect = useCallback((event: Event) => {
@@ -63,8 +63,8 @@ const useWindowMove = (id: string): ReturnTypes => {
       0,
       Math.min(position.y, window.innerHeight - size.height - TASKBAR_HEIGHT),
     );
-    setPosition(id, { x: clampedX, y: clampedY });
-    setDefaultWindow(id, { ...defaultWindow, position: { x: clampedX, y: clampedY } });
+    setPosition(path, { x: clampedX, y: clampedY });
+    setDefaultWindow(path, { ...defaultWindow, position: { x: clampedX, y: clampedY } });
     // NOTE: We don't need to run this effect on every render
     // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps

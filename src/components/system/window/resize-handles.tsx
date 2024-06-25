@@ -4,11 +4,11 @@ import useWindowState from '@/hooks/use-window';
 import { ResizeDirection } from '@/hooks/use-window/use-resize';
 
 interface WindowHandlesProperties {
-  id: string;
+  path: string;
 }
 
-const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
-  const { handleSetResizeDirection } = useWindowState(id);
+const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement => {
+  const { handleSetResizeDirection } = useWindowState(path);
   return (
     <>
       <span
@@ -16,7 +16,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute left-[-16px] h-full w-3 cursor-ew-resize"
         role="toolbar"
         aria-label="Window left resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.LEFT);
         }}
       />
@@ -25,7 +26,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute right-[-16px] h-full w-3 cursor-ew-resize"
         role="toolbar"
         aria-label="Window right resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.RIGHT);
         }}
       />
@@ -34,7 +36,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute top-[-16px] h-3 w-full cursor-ns-resize"
         role="toolbar"
         aria-label="Window top resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.TOP);
         }}
       />
@@ -43,7 +46,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute bottom-[-16px] h-3 w-full cursor-ns-resize"
         role="toolbar"
         aria-label="Window bottom resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.BOTTOM);
         }}
       />
@@ -52,7 +56,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute left-[-16px] top-[-16px] size-4 cursor-nwse-resize"
         role="toolbar"
         aria-label="Window top left corner resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.TOP_LEFT);
         }}
       />
@@ -61,7 +66,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute right-[-16px] top-[-16px] size-4 cursor-nesw-resize"
         role="toolbar"
         aria-label="Window top right corner resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.TOP_RIGHT);
         }}
       />
@@ -70,7 +76,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute bottom-[-16px] left-[-16px] size-4 cursor-nesw-resize"
         role="toolbar"
         aria-label="Window bottom left corner resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.BOTTOM_LEFT);
         }}
       />
@@ -79,7 +86,8 @@ const WindowResizeHandles = ({ id }: WindowHandlesProperties): ReactElement => {
         className="absolute bottom-[-16px] right-[-16px] size-4 cursor-nwse-resize"
         role="toolbar"
         aria-label="Window bottom right corner resize"
-        onMouseDown={() => {
+        onMouseDown={(event: React.MouseEvent) => {
+          event.stopPropagation();
           handleSetResizeDirection(ResizeDirection.BOTTOM_RIGHT);
         }}
       />

@@ -1,32 +1,14 @@
 import { type ComponentType, LazyExoticComponent } from 'react';
 
-import { type Size, Position, Window } from '@/types/units';
-
-export interface WindowState {
-  hasWindow: boolean;
-  position: Position;
-  size: Size;
-  minSize: Size;
-  defaultWindow: Window;
-  maximized: boolean;
-  maximizedWindow: Window;
-  unMaximizedWindow: Window;
-  minimized: boolean;
-  minimizedWindow: Window;
-  unMinimizedWindow: Window;
-  isAnimating: boolean;
-  opacity: number;
+interface AppComponent {
+  rootPath: string;
 }
+
+export type LazyAppComponent = LazyExoticComponent<ComponentType<AppComponent>>;
 
 export interface ProcessComponent {
-  Component: LazyExoticComponent<ComponentType>;
-  title: string;
+  component: LazyAppComponent;
   icon: string;
-  minSize?: Size;
-  defaultWindow?: Window;
 }
 
-export type Process = ProcessComponent & WindowState;
-
-export type Processes = Record<string, Process>;
-export type ProcessComponents = Record<string, ProcessComponent>;
+export type ProcessComponents = Map<string, ProcessComponent>;

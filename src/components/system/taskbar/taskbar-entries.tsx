@@ -8,19 +8,19 @@ import cn from '@/utils/format';
 interface taskbarEntryProperties {
   icon: string;
   title: string;
-  id: string;
+  path: string;
 }
 
-const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element => {
+const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Element => {
   const [imgError, setImgError] = useState(false);
   const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
-  const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
+  const isMinimized = useProcessesStore((state) => state.getIsMinimized(path));
   const close = useProcessesStore((state) => state.close);
   const setMinimizedDimensions = useProcessesStore((state) => state.setMinimizedWindow);
   const tabReference = useRef<HTMLButtonElement>(null);
 
-  const { handleWindowMinimizeToggle } = useWindowState(id);
+  const { handleWindowMinimizeToggle } = useWindowState(path);
 
   useEffect(() => {
     if (tabReference.current) {
@@ -35,9 +35,9 @@ const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element 
           y: rect.top,
         },
       };
-      setMinimizedDimensions(id, tabRect);
+      setMinimizedDimensions(path, tabRect);
     }
-  }, [id, setMinimizedDimensions]);
+  }, [path, setMinimizedDimensions]);
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -67,7 +67,7 @@ const TaskbarEntry = ({ icon, title, id }: taskbarEntryProperties): JSX.Element 
       onContextMenuCapture={(event) => {
         event.preventDefault();
         // debug
-        close(id);
+        close(path);
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
@@ -109,8 +109,8 @@ const TaskbarEntries = (): JSX.Element => {
 
   return (
     <ol className="flex size-full items-center justify-start bg-surface">
-      {Object.entries(opened).map(([process, { icon, title }]) => {
-        return <TaskbarEntry key={process} id={process} icon={icon} title={title} />;
+      {[...opened].map(([process, { icon, fileName }]) => {
+        return <TaskbarEntry key={process} path={process} icon={icon} title={fileName} />;
       })}
     </ol>
   );

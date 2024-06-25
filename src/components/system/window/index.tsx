@@ -6,16 +6,16 @@ import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
 
 interface WindowProperties {
-  id: string;
+  path: string;
   children: ReactNode;
 }
 
-const Window = ({ id, children }: WindowProperties): ReactElement => {
-  const isAnimating = useProcessesStore((state) => state.getIsAnimating(id));
-  const position = useProcessesStore((state) => state.getWindowPosition(id));
-  const size = useProcessesStore((state) => state.getWindowSize(id));
-  const opacity = useProcessesStore((state) => state.getOpacity(id));
-  const isMinimized = useProcessesStore((state) => state.getIsMinimized(id));
+const Window = ({ path, children }: WindowProperties): ReactElement => {
+  const isAnimating = useProcessesStore((state) => state.getIsAnimating(path));
+  const position = useProcessesStore((state) => state.getWindowPosition(path));
+  const size = useProcessesStore((state) => state.getWindowSize(path));
+  const opacity = useProcessesStore((state) => state.getOpacity(path));
+  const isMinimized = useProcessesStore((state) => state.getIsMinimized(path));
 
   return (
     <section
@@ -34,8 +34,8 @@ const Window = ({ id, children }: WindowProperties): ReactElement => {
     >
       {!isMinimized && (
         <>
-          <WindowResizeHandles id={id} />
-          <WindowMoveHandle id={id} />
+          <WindowResizeHandles path={path} />
+          <WindowMoveHandle path={path} />
           <article className={cn('relative flex flex-1 bg-surface pt-2 text-onSurface')}>
             <div className="absolute inset-x-[-5px] bottom-0 top-1">{children}</div>
           </article>
