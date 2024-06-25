@@ -10,13 +10,18 @@ const defaultDir: FileNodeData = {
       path: '/Desktop',
       children: [
         {
-          path: '/Desktop/HelloWorld.test',
-        },
-        {
-          path: '/Desktop/Test1',
+          path: '/Desktop/HelloWorld.default',
         },
         {
           path: '/Desktop/Terminal.app',
+        },
+        {
+          path: '/Desktop/MyFolder',
+          children: [
+            {
+              path: '/Desktop/MyFolder/MyFile.txt',
+            },
+          ],
         },
       ],
     },
