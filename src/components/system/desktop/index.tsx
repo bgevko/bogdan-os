@@ -6,8 +6,8 @@ import SelectRect from '@/components/system/fs/select-rect';
 const Desktop = (): React.ReactElement => {
   return (
     <>
-      <SelectRect />
-      <FileSystemIcons />
+      <SelectRect rootPath="/Desktop" />
+      <FileSystemIcons rootPath="/Desktop" />
     </>
   );
 };

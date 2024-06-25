@@ -1,8 +1,6 @@
-import { type FC } from 'react';
-
-const HelloWorld: FC = () => (
+const HelloWorld = ({ rootPath }: { rootPath: string }): React.ReactElement => (
   <div className="debossed-border flex size-full items-center justify-center">
-    <h1>Hello, world!</h1>
+    <h1>Hello, {rootPath}</h1>
   </div>
 );
 

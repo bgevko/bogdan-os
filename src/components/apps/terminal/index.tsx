@@ -1,8 +1,6 @@
-import { type FC } from 'react';
-
-const Terminal: FC = () => (
+const Terminal = ({ rootPath }: { rootPath: string }): React.ReactElement => (
   <div className="debossed-border flex size-full items-center justify-center">
-    <h1>Hello, terminal!</h1>
+    <h1>Hello, {rootPath}</h1>
   </div>
 );
 
