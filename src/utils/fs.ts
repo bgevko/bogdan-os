@@ -1,11 +1,15 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { lazy } from 'react';
+
 import { ICON_SIZE } from '@/components/system/fs/fs-icon';
+import { processComponents } from '@/globals/process-directory';
 import defaultDir, { type FileNodeData } from '@/globals/starting-directory';
 import { type GridStack } from '@/types/file-system';
+import { type LazyAppComponent } from '@/types/processes';
 import { type Position, Window } from '@/types/units';
 
-const selectionIntersectsElement = (selection: Window, element: Position): boolean => {
+export const selectionIntersectsElement = (selection: Window, element: Position): boolean => {
   if (
     element.x + ICON_SIZE + 20 < selection.position.x ||
     element.y + ICON_SIZE + 20 < selection.position.y ||
@@ -17,9 +21,45 @@ const selectionIntersectsElement = (selection: Window, element: Position): boole
   return true;
 };
 
-export default selectionIntersectsElement;
+export interface FileInfo {
+  fileName: string;
+  fileExt: string;
+  icon: string;
+  component: LazyAppComponent;
+}
+
+export function parseFileInfo(filePath: string): FileInfo {
+  const match = filePath.match(/([^/\\]+)(\.[^/\\]+)?$/);
+  if (!match) {
+    throw new Error(`Invalid file path: ${filePath}`);
+  }
+
+  const fullFileName = match[1];
+  const nameParts = fullFileName.split('.');
+  const fileExt = nameParts.length > 1 ? nameParts.pop() : '';
+  const fileName = nameParts[0];
+
+  const iconBaseUrl = '/icons/system/';
+  const iconName = processComponents.get(fileExt!)?.icon ?? 'default';
+  const icon = `${iconBaseUrl}${iconName}.png`;
+  const component =
+    processComponents.get(fileExt!)?.component ??
+    lazy(() => import('@/components/apps/hello-world'));
+
+  return {
+    fileName,
+    fileExt: fileExt ?? '',
+    icon,
+    component,
+  };
+}
 
 export const splitPath = (path: string): string[] => ['/', ...path.split('/').filter(Boolean)];
+
+export const getParentPath = (path: string): string => {
+  const components = splitPath(path);
+  return components.slice(0, -1).join('');
+};
 
 export interface FileOptions {
   path?: string;
@@ -30,6 +70,8 @@ export interface FileOptions {
 
 export class FileNode {
   path: string;
+
+  icon: string;
 
   isDirectory: boolean;
 
@@ -42,6 +84,7 @@ export class FileNode {
 
   constructor({ isDirectory, path, gridIndex }: FileOptions = {}) {
     this.path = path ?? '';
+    this.icon = path ? parseFileInfo(path).icon : '';
     this.isDirectory = isDirectory ?? true;
     this.gridIndex = gridIndex ?? 0;
     this.gridStack = { itemsPerLine: 0 };
@@ -119,6 +162,8 @@ export class FileSystemTrie {
     const childComponent = finalPath.split('/').at(-1);
     parent.addChild(childComponent!, { path: finalPath, ...options });
     this.allPaths.add(finalPath);
+    const { icon } = parseFileInfo(finalPath);
+    parent.children.get(childComponent!)!.icon = icon;
   }
 
   mkdir(path: string): void {
@@ -129,11 +174,6 @@ export class FileSystemTrie {
 
   getChildren(path: string): FileNode[] {
     const childrenMap = this.traverse(path).children;
-    for (const [component, child] of childrenMap) {
-      if (child.path === '') {
-        child.path = `${path}/${component}`;
-      }
-    }
     return [...childrenMap.values()];
   }
 
