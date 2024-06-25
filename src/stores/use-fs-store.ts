@@ -35,7 +35,9 @@ interface FileSystemState {
 const useFsStore = create<FileSystemState>((set, get) => ({
   root: new FileSystemTrie(),
   initRootFromData: (data) => {
-    get().root.loadFrom(data);
+    const { root } = get();
+    root.loadFrom(data);
+    set({ root });
   },
   currentPath: '/',
   selected: [],

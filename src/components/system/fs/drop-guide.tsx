@@ -8,6 +8,7 @@ interface DropGuideProps {
   index: number;
   itemsPerLine: number;
   offsets: number[];
+  padding: number;
 }
 
 const GuideSquare = ({ x, y }: { x: number; y: number }): ReactElement => (
@@ -21,7 +22,13 @@ const GuideSquare = ({ x, y }: { x: number; y: number }): ReactElement => (
   />
 );
 
-const DropGuide = ({ isVisible, index, offsets, itemsPerLine }: DropGuideProps): ReactElement => {
+const DropGuide = ({
+  padding,
+  isVisible,
+  index,
+  offsets,
+  itemsPerLine,
+}: DropGuideProps): ReactElement => {
   return (
     <>
       {isVisible &&
@@ -31,16 +38,16 @@ const DropGuide = ({ isVisible, index, offsets, itemsPerLine }: DropGuideProps):
             x={
               indexToPosition(index, itemsPerLine, {
                 multiplier: 100,
-                offsetX: 16,
-                offsetY: 16,
+                offsetX: padding,
+                offsetY: padding,
                 offsetIndex: offset,
               }).x
             }
             y={
               indexToPosition(index, itemsPerLine, {
                 multiplier: 100,
-                offsetX: 16,
-                offsetY: 16,
+                offsetX: padding,
+                offsetY: padding,
                 offsetIndex: offset,
               }).y
             }

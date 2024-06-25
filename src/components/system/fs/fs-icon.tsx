@@ -1,23 +1,28 @@
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 
 import DropGuide from '@/components/system/fs/drop-guide';
-import { iconDirectory } from '@/globals/process-directory';
 import useEvent from '@/hooks/use-events';
 import useSelect from '@/hooks/use-fs/use-select';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
+import useSelectStore from '@/stores/use-select-store';
 import { type TransferData } from '@/types/file-system';
-import cn, { parseFileInfo } from '@/utils/format';
+import cn from '@/utils/format';
+import { parseFileInfo } from '@/utils/fs';
 import { indexToPosition, positionToIndex } from '@/utils/grid';
 
 export const ICON_SIZE = 70;
 
-const FileSystemIconComponent = ({ path }: { path: string }): ReactElement => {
+const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string }): ReactElement => {
+  const open = useProcessesStore((state) => state.open);
   const parentPath = path.split('/').slice(0, -1).join('/');
-  const processDirectory = useProcessesStore((state) => state.processDirectory);
   const gridIndex = useFsStore((state) => state.getGridIndex(path));
   const getGridIndex = useFsStore((state) => state.getGridIndex);
   const gridState = useFsStore((state) => state.getGridStack(parentPath));
+  const getWindow = useProcessesStore((state) => state.getWindow);
+  const selectContext = useSelectStore((state) => state.context);
+
+  const context = parentPath === '/Desktop' ? 'desktop' : 'folder';
   const { registerEvents } = useEvent();
 
   const {
@@ -30,13 +35,11 @@ const FileSystemIconComponent = ({ path }: { path: string }): ReactElement => {
     allSelected,
   } = useSelect(path);
 
-  const { fileName, fileExt } = parseFileInfo(path);
-  const iconSrc = `${iconDirectory}${processDirectory[fileExt].icon}.png`;
+  const { fileName } = parseFileInfo(path);
 
   const [dropGuideVisible, setDropGuideVisible] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
   const [indexOffsets, setIndexOffsets] = useState<number[]>([]);
-
   const handleDragStart = useCallback(
     (event: React.DragEvent) => {
       const transferData: TransferData[] = [];
@@ -66,14 +69,34 @@ const FileSystemIconComponent = ({ path }: { path: string }): ReactElement => {
     [gridIndex, allSelected, getGridIndex, path],
   );
 
+  const getFolderPosition = useCallback(() => {
+    if (context === 'desktop') {
+      return {
+        folderX: 0,
+        folderY: 0,
+      };
+    }
+    const folder = getWindow(parentPath);
+    return {
+      folderX: folder.position.x,
+      folderY: folder.position.y,
+    };
+  }, [context, parentPath, getWindow]);
+
   const handleDrag = useCallback(
     (event: React.DragEvent) => {
-      const mouseGridIndex = positionToIndex(event.clientX, event.clientY, gridState.itemsPerLine, {
-        multiplier: 100,
-      });
+      const { folderX, folderY } = getFolderPosition();
+      const mouseGridIndex = positionToIndex(
+        event.clientX - folderX,
+        event.clientY - folderY,
+        gridState.itemsPerLine,
+        {
+          multiplier: 100,
+        },
+      );
       setGuideIndex(mouseGridIndex);
     },
-    [gridState.itemsPerLine],
+    [gridState.itemsPerLine, getFolderPosition],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -122,8 +145,11 @@ const FileSystemIconComponent = ({ path }: { path: string }): ReactElement => {
           onMouseLeave={() => {
             setDropGuideVisible(false);
           }}
+          onDoubleClickCapture={() => {
+            open(path);
+          }}
         >
-          <img draggable="false" src={iconSrc} alt={fileName} width="48px" height="48px" />
+          <img draggable="false" src={icon} alt={fileName} width="48px" height="48px" />
           <span className="text-sm">{fileName}</span>
           {/* <span className={cn('text-sm', selected ? 'bg-surface text-onSurface' : '')}>{fileName}</span> */}
         </button>
@@ -133,6 +159,7 @@ const FileSystemIconComponent = ({ path }: { path: string }): ReactElement => {
         index={guideIndex}
         offsets={indexOffsets}
         itemsPerLine={gridState.itemsPerLine}
+        padding={selectContext === 'desktop' ? 16 : 16}
       />
     </>
   );

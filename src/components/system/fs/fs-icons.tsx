@@ -4,13 +4,13 @@ import FileSystemIcon from '@/components/system/fs/fs-icon';
 import Grid from '@/components/system/fs/grid';
 import useFsStore from '@/stores/use-fs-store';
 
-const FileSystemIconComponents = (): ReactElement => {
-  const desktopItems = useFsStore((state) => state.getChildren('/Desktop'));
-
+const FileSystemIconComponents = ({ rootPath }: { rootPath: string }): ReactElement => {
+  const desktopItems = useFsStore((state) => state.getChildren(rootPath));
+  const isDesktop = rootPath === '/Desktop';
   return (
-    <Grid options={{ isDesktop: true }} path="/Desktop">
+    <Grid options={{ isDesktop }} path={rootPath}>
       {desktopItems.map((fileNode) => {
-        return <FileSystemIcon key={fileNode.path} path={fileNode.path} />;
+        return <FileSystemIcon key={fileNode.path} path={fileNode.path} icon={fileNode.icon} />;
       })}
     </Grid>
   );

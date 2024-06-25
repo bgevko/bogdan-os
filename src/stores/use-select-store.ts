@@ -6,12 +6,15 @@ interface SelectState {
   clickStart: Position;
   selecting: boolean;
   selectingRect: Window;
+  context: 'desktop' | 'folder';
   setClickStart: (clickStart: Position) => void;
   setSelecting: (selecting: boolean) => void;
   setSelectingRect: (selectingRect: Window) => void;
+  setContext: (context: 'desktop' | 'folder') => void;
 }
 
 const useSelectStore = create<SelectState>((set) => ({
+  context: 'desktop',
   clickStart: {
     x: 0,
     y: 0,
@@ -35,6 +38,9 @@ const useSelectStore = create<SelectState>((set) => ({
   },
   setSelectingRect: (selectingRect: Window) => {
     set({ selectingRect });
+  },
+  setContext: (context: 'desktop' | 'folder') => {
+    set({ context });
   },
 }));
 

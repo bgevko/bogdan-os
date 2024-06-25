@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import useEvents from '@/hooks/use-events';
 import useFsStore from '@/stores/use-fs-store';
 import useSelectStore from '@/stores/use-select-store';
-import selectionIntersectsElement from '@/utils/fs';
+import { selectionIntersectsElement, getParentPath } from '@/utils/fs';
 import { indexToPosition } from '@/utils/grid';
 
 interface UseSelectReturn {
@@ -31,9 +31,15 @@ const UseSelect = (path: string): UseSelectReturn => {
   const isSelected = allSelected.includes(path);
   const isMultipleSelected = allSelected.length > 1;
 
+  const selectContext = useSelectStore((state) => state.context);
+  const parentPath = getParentPath(path);
+  const localContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
+
   const { registerEvents } = useEvents();
 
   const [shiftIsPressed, setShiftIsPressed] = useState(false);
+
+  const isCorrectContext = selectContext === localContext;
 
   const handleShiftPress = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Shift') {
@@ -72,7 +78,7 @@ const UseSelect = (path: string): UseSelectReturn => {
   }, [shiftIsPressed, isSelected, addSelected, removeSelected, path]);
 
   const handleDragSelect = useCallback(() => {
-    if (!isUsingSelectRect) return;
+    if (!isUsingSelectRect || !isCorrectContext) return;
     const iconPosition = indexToPosition(gridIndex, itemsPerLine, { multiplier: 100 });
     if (selectionIntersectsElement(selectingRect, iconPosition)) {
       addSelected(path);
@@ -80,6 +86,7 @@ const UseSelect = (path: string): UseSelectReturn => {
       removeSelected(path);
     }
   }, [
+    isCorrectContext,
     isUsingSelectRect,
     selectingRect,
     addSelected,
