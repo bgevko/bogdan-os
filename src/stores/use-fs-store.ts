@@ -1,115 +1,205 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-param-reassign */
+import { enableMapSet } from 'immer';
 import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
 
-import { type FileNodeData } from '@/globals/starting-directory';
-import { type GridStack } from '@/types/file-system';
-import { FileSystemTrie, type FileNode } from '@/utils/fs';
+import { iconsPath } from '@/constants';
+import { type Paths, type Position } from '@/types';
+import {
+  splitPath,
+  parseParentPath,
+  normalizePath,
+  parseFileInfo,
+  parseFileName,
+} from '@/utils/fs';
 
-interface FileSystemState {
-  root: FileSystemTrie;
-  currentPath: string;
-  selected: string[];
+enableMapSet();
 
-  initRootFromData: (data: FileNodeData) => void;
-
-  setCurrentPath: (path: string) => void;
-
-  getCurrentDir: () => string;
-  getParentDir: (path: string) => string;
-
-  getChildren: (path: string) => FileNode[];
-
-  getGridStack: (path: string) => GridStack;
-  setGridStack: (path: string, grid: GridStack) => void;
-
-  getParentGridItemsPerLine: (path: string) => number; // Deprecate
-
-  getGridIndex: (path: string) => number;
-  setGridIndex: (path: string, index: number) => void;
-
-  getSelected: () => string[];
-  setSelected: (paths: string[]) => void;
-  addSelected: (path: string) => void;
-  removeSelected: (path: string) => void;
+interface FileNodeOptions {
+  path?: string;
+  isDir?: boolean;
+  position?: Position;
+  gridIndex?: number;
 }
 
-const useFsStore = create<FileSystemState>((set, get) => ({
-  root: new FileSystemTrie(),
-  initRootFromData: (data) => {
-    const { root } = get();
-    root.loadFrom(data);
-    set({ root });
-  },
-  currentPath: '/',
-  selected: [],
-  setCurrentPath: (path) => {
-    get().root.validatePath(path);
-    get().root.validateDirectory(path);
-    set({ currentPath: path });
-  },
-  getCurrentDir: () => get().currentPath,
-  getParentDir: (path) => {
-    get().root.validatePath(path);
-    if (path === '/') return '/';
-    const parentPath = path.split('/').slice(0, -1).join('/');
-    return parentPath === '' ? '/' : parentPath;
-  },
-  getChildren: (path) => {
-    return get().root.getChildren(path);
-  },
-  getGridStack: (path) => {
-    return get().root.getGridStack(path);
-  },
-  setGridStack: (path, grid) => {
-    const { root } = get();
-    root.setGridStack(path, grid);
-    set({ root });
-  },
-  getParentGridItemsPerLine: (path) => {
-    const parentPath = get().getParentDir(path);
-    const parentGrid = get().getGridStack(parentPath);
-    return parentGrid.itemsPerLine;
-  },
-  getGridIndex: (path) => {
-    return get().root.getGridIndex(path);
-  },
-  setGridIndex: (path, index) => {
-    const { root } = get();
-    root.setGridIndex(path, index);
-    set({ root });
-  },
-  setSelected: (paths) => {
-    set(() => {
-      for (const path of paths) {
-        get().root.validatePath(path);
+interface FileNode {
+  path: string;
+  icon: string;
+  isDir: boolean;
+  gridIndex: number;
+  gridItemsPerLine: number;
+  children: Map<string, FileNode>;
+}
+
+type DirectoryMap = Map<string, FileNode>;
+
+function newFileNode(options: FileNodeOptions = {}): FileNode {
+  const isDir = options.isDir ?? true;
+  const folderIcon = isDir ? `${iconsPath}/folder.png` : '';
+  const fileIcon = options.path ? parseFileInfo(options.path).icon : '';
+  const icon = isDir ? folderIcon : fileIcon;
+  return {
+    path: options.path ?? '',
+    icon,
+    isDir,
+    gridIndex: options.gridIndex ?? 0,
+    gridItemsPerLine: 0,
+    children: new Map<string, FileNode>(),
+  };
+}
+
+interface FileSystem {
+  dir: DirectoryMap;
+}
+
+interface FileSystemActions {
+  // Core operations
+  initDir: (source?: Paths) => void;
+  getNode(path: string): FileNode;
+  getPaths: () => Set<string>;
+  mkdir: (path: string) => void;
+  touch: (path: string) => void;
+  getChildren: (path: string) => FileNode[];
+
+  // Grid helpers
+  getGridIndex: (path: string) => number;
+  setGridIndex: (path: string, gridIndex: number) => void;
+  getGridItemsPerLine: (path: string) => number;
+  setGridItemsPerLine: (path: string, gridItemsPerLine: number) => void;
+
+  // Validation helpers
+  isDir: (path: string) => boolean;
+  hasPath: (path: string) => boolean;
+  hasPathDeep: (path: string) => boolean;
+  validatePath: (path: string) => void;
+  validateDir: (path: string) => void;
+  validatePathAndDir: (path: string) => void;
+}
+
+// Updated the store creator with correct typing for middleware
+const useFsStore = create<FileSystem & FileSystemActions>()(
+  immer((set, get) => ({
+    dir: new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]),
+
+    // Core operations
+    initDir: (source?: Paths) => {
+      if (!source) {
+        set((state) => {
+          state.dir = new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]);
+        });
+        return;
       }
-      return {
-        selected: paths,
-      };
-    });
-  },
-  getSelected: () => {
-    return get().selected;
-  },
-  addSelected: (path) => {
-    set((state) => {
-      const newSelected = new Set(state.selected);
-      get().root.validatePath(path);
-      newSelected.add(path);
-      return {
-        selected: [...newSelected],
-      };
-    });
-  },
-  removeSelected: (path) => {
-    set((state) => {
-      const newSelected = new Set(state.selected);
-      get().root.validatePath(path);
-      newSelected.delete(path);
-      return {
-        selected: [...newSelected],
-      };
-    });
-  },
-}));
+      for (const path of source) {
+        const isDir = path.endsWith('/');
+        if (isDir) {
+          get().mkdir(path);
+        } else {
+          get().touch(path);
+        }
+      }
+    },
+    getNode: (path: string) => {
+      get().validatePath(path);
+      return get().dir.get(path)!;
+    },
+    getPaths: () => {
+      return new Set(get().dir.keys());
+    },
+    mkdir: (path: string) => {
+      path = normalizePath(path);
+      set((state) => {
+        const { dir } = state;
+        const mkdirHelper = (filePath: string): void => {
+          if (filePath === '' || dir.has(filePath)) {
+            return;
+          }
+          const name = parseFileName(filePath);
+          const parentPath = parseParentPath(filePath) || '/';
+          mkdirHelper(parentPath);
+
+          const parent = dir.get(parentPath);
+          if (parent?.isDir) {
+            parent.children.set(name, newFileNode({ path: filePath }));
+            dir.set(filePath, newFileNode({ path: filePath, isDir: true }));
+          }
+        };
+        mkdirHelper(path);
+      });
+    },
+    touch: (path: string) => {
+      if (path.endsWith('/')) {
+        throw new Error(`Invalid path: ${path}. Use mkdir instead`);
+      }
+      path = normalizePath(path);
+      if (get().dir.has(path)) {
+        throw new Error(`File already exists: ${path}`);
+      }
+      get().mkdir(path);
+      set((state) => {
+        const file = state.getNode(path);
+        file.isDir = false;
+        file.icon = parseFileInfo(path).icon;
+      });
+    },
+    getChildren: (path: string) => {
+      const node = get().getNode(path);
+      return [...node.children.values()];
+    },
+
+    // Grid helpers
+    getGridIndex: (path: string) => {
+      return get().getNode(path).gridIndex;
+    },
+    setGridIndex: (path: string, gridIndex: number) => {
+      set((state) => {
+        const node = state.getNode(path);
+        node.gridIndex = gridIndex;
+      });
+    },
+    getGridItemsPerLine: (path: string) => {
+      return get().getNode(path).gridItemsPerLine;
+    },
+    setGridItemsPerLine: (path: string, gridItemsPerLine: number) => {
+      set((state) => {
+        const node = state.getNode(path);
+        node.gridItemsPerLine = gridItemsPerLine;
+      });
+    },
+
+    // Validation helpers
+    isDir: (path: string) => {
+      return get().getNode(path).isDir;
+    },
+    hasPath: (path: string) => {
+      return get().dir.has(path);
+    },
+    hasPathDeep: (path: string) => {
+      let subpath = '';
+      for (const component of splitPath(path)) {
+        subpath += `/${component}`;
+        if (!get().hasPath(subpath)) {
+          return false;
+        }
+      }
+      return true;
+    },
+    validatePath: (path: string) => {
+      if (!get().hasPath(path)) {
+        throw new Error(`No such file or directory: ${path}`);
+      }
+    },
+    validateDir: (path: string) => {
+      const node = get().dir.get(path);
+      if (!node?.isDir) {
+        throw new Error(`Not a directory: ${path}`);
+      }
+    },
+    validatePathAndDir: (path: string) => {
+      get().validatePath(path);
+      get().validateDir(path);
+    },
+  })),
+);
 
 export default useFsStore;
