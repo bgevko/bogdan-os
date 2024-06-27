@@ -1,7 +1,7 @@
 import { it, expect, describe } from 'vitest';
 
 import { iconsPath } from '@/constants';
-import { parseFileExt, parseFileName, parseFileInfo, splitPath, parseParentPath } from '@/utils/fs';
+import { parseFileExt, parseFileName, parseFileIcon, splitPath, parseParentPath } from '@/utils/fs';
 
 const root = '/';
 const path = '/path/to/file.app';
@@ -36,6 +36,10 @@ describe('Fs Helpers', () => {
     test = '/folder';
     res = parseParentPath(test);
     expect(res).toBe('/');
+
+    const other = '/Desktop/MyFolder/MyFile';
+    res = parseParentPath(other);
+    expect(res).toBe('/Desktop/MyFolder');
   });
 
   it('should return the file extension', () => {
@@ -51,15 +55,19 @@ describe('Fs Helpers', () => {
   });
 
   it('should return the file info', () => {
-    let res = parseFileInfo(path);
-    expect(res.fileName).toBe('file');
-    expect(res.fileExt).toBe('app');
-    expect(res.icon).toBe(`${iconsPath}/executable.png`);
+    let name = parseFileName(path);
+    let ext = parseFileExt(path);
+    let icon = parseFileIcon(path);
+    expect(name).toBe('file');
+    expect(ext).toBe('app');
+    expect(icon).toBe(`${iconsPath}/executable.png`);
 
-    res = parseFileInfo('/');
-    expect(res.fileName).toBe('');
-    expect(res.fileExt).toBe('');
-    expect(res.icon).toBe('');
+    name = parseFileName('/');
+    ext = parseFileExt('/');
+    icon = parseFileIcon('/');
+    expect(name).toBe('');
+    expect(ext).toBe('');
+    expect(icon).toBe('');
   });
 
   it('should correctly split a path into path components', () => {

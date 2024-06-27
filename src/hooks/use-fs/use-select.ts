@@ -18,12 +18,12 @@ interface UseSelectReturn {
 
 const UseSelect = (path: string): UseSelectReturn => {
   const gridIndex = useFsStore((state) => state.getGridIndex(path));
-  const itemsPerLine = useFsStore((state) => state.getParentGridItemsPerLine(path));
+  const itemsPerLine = useFsStore((state) => state.getGridItemsPerLine(getParentPath(path)));
 
-  const allSelected = useFsStore((state) => state.getSelected());
-  const addSelected = useFsStore((state) => state.addSelected);
-  const removeSelected = useFsStore((state) => state.removeSelected);
-  const setSelected = useFsStore((state) => state.setSelected);
+  const allSelected = useSelectStore((state) => state.getSelected());
+  const addSelected = useSelectStore((state) => state.addSelected);
+  const removeSelected = useSelectStore((state) => state.removeSelected);
+  const setSelected = useSelectStore((state) => state.setSelected);
 
   const isUsingSelectRect = useSelectStore((state) => state.selecting);
   const selectingRect = useSelectStore((state) => state.selectingRect);
