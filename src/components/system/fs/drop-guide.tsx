@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 
-import { ICON_SIZE } from '@/components/system/fs/fs-icon';
+import { ICON_SIZE } from '@/themes';
 import { indexToPosition } from '@/utils/grid';
 
 interface DropGuideProps {

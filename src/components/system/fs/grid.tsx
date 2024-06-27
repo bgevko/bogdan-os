@@ -6,7 +6,7 @@ import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { TASKBAR_HEIGHT } from '@/themes';
-import { type TransferData } from '@/types/file-system';
+import { type TransferData } from '@/types';
 import cn from '@/utils/format';
 import { positionToIndex } from '@/utils/grid';
 
@@ -23,13 +23,13 @@ interface GridProps {
 
 const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const { registerEvents } = useEvents();
-  const setGrid = useFsStore((state) => state.setGridStack);
+  const setGridItemsPerLine = useFsStore((state) => state.setGridItemsPerLine);
   const setGridIndex = useFsStore((state) => state.setGridIndex);
-  const gridState = useFsStore((state) => state.getGridStack(path));
-  const setSelected = useFsStore((state) => state.setSelected);
+  const gridItemsPerLine = useFsStore((state) => state.getGridItemsPerLine(path));
   const getWindow = useProcessesStore((state) => state.getWindow);
   const isUpdatingSize = useProcessesStore((state) => state.getIsUpdatingSize(path));
   const setContext = useSelectStore((state) => state.setContext);
+  const setSelected = useSelectStore((state) => state.setSelected);
 
   const [numColumns, setNumColumns] = useState(0);
   const [numRows, setNumRows] = useState(0);
@@ -46,7 +46,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       const { x: folderX, y: folderY } = getWindow(path).position;
       const dropX = event.clientX - folderX;
       const dropY = event.clientY - folderY;
-      const dropIndex = positionToIndex(dropX, dropY, gridState.itemsPerLine, {
+      const dropIndex = positionToIndex(dropX, dropY, gridItemsPerLine, {
         multiplier: GRID_SIZE,
       });
       // const elementPaths = event.dataTransfer.getData('text/plain');
@@ -60,7 +60,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         setGridIndex(element.path, elementIndex);
       }
     },
-    [gridState.itemsPerLine, setGridIndex, path, getWindow],
+    [gridItemsPerLine, setGridIndex, path, getWindow],
   );
 
   const setDesktopGridSize = useCallback(() => {
@@ -71,8 +71,8 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     setNumColumns(columns);
     setNumRows(rows);
     const itemsPerLine = columns;
-    setGrid(path, { itemsPerLine });
-  }, [setGrid, path]);
+    setGridItemsPerLine(path, itemsPerLine);
+  }, [setGridItemsPerLine, path]);
 
   const setFolderGridSize = useCallback(() => {
     const { width, height } = getWindow(path).size;
@@ -81,8 +81,8 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     setNumColumns(columns);
     setNumRows(rows);
     const itemsPerLine = rows;
-    setGrid(path, { itemsPerLine });
-  }, [getWindow, path, setGrid]);
+    setGridItemsPerLine(path, itemsPerLine);
+  }, [getWindow, path, setGridItemsPerLine]);
 
   const handleSelectRectContext = useCallback(() => {
     const localContext = options?.isDesktop ? 'desktop' : 'folder';

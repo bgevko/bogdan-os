@@ -1,4 +1,4 @@
-import { type Window, Size } from '@/types/units';
+import { type Window, Size } from '@/types';
 
 function isDimensions(item: Window | Size): item is Window {
   return 'size' in item && 'position' in item;

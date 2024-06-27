@@ -1,5 +1,5 @@
-import { LazyAppComponent } from '@/types/processes';
-import { type Size, Position, Window } from '@/types/units';
+import { DefaultApp } from '@/constants';
+import { type LazyAppComponent, Size, Position, Window } from '@/types';
 import { parseFileInfo } from '@/utils/fs';
 
 export interface ProcessOptions {
@@ -61,7 +61,7 @@ export class ProcessNode {
     this.path = path;
     this.fileName = fileName;
     this.fileExt = fileExt;
-    this.Component = component;
+    this.Component = component ?? DefaultApp;
     this.icon = icon;
     this.hasWindow = options.hasWindow ?? true;
     this.defaultWindow = options.defaultWindow ?? {

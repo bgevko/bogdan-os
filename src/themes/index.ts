@@ -20,4 +20,5 @@ export interface Theme {
 
 export const TASKBAR_HEIGHT = 54;
 export const WINDOW_HEADER_HEIGHT = 24;
+export const ICON_SIZE = 70;
 export const currentTheme: Theme = theme;

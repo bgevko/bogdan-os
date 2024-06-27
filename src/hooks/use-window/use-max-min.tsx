@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
-import { Window } from '@/types/units';
+import { Window } from '@/types';
 import { WindowMax, WindowsEqualOrGreater } from '@/utils/compare';
 
 interface ReturnTypes {

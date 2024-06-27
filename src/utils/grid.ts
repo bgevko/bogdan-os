@@ -1,4 +1,4 @@
-import { Position } from '@/types/units';
+import { Position } from '@/types';
 
 interface GridOptions {
   flow?: 'row' | 'col';

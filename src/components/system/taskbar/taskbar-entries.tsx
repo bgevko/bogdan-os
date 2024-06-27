@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-import { iconDirectory } from '@/globals/process-directory';
+import { iconsPath } from '@/constants';
 import useWindowState from '@/hooks/use-window';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
@@ -91,7 +91,7 @@ const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Elemen
     >
       {!imgError && (
         <img
-          src={`${iconDirectory}${icon}.png`}
+          src={`${iconsPath}/${icon}.png`}
           alt={title}
           width="24"
           onError={() => {

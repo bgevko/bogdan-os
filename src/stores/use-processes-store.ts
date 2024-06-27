@@ -3,12 +3,12 @@
 import { create } from 'zustand';
 
 import useFsStore from '@/stores/use-fs-store';
-import { type Window, Size, Position } from '@/types/units';
+import { type Window, Size, Position } from '@/types';
 import { ProcessNode, ProcessOptions } from '@/utils/processes';
 
 function validatePath(path: string) {
   const fsStore = useFsStore.getState();
-  fsStore.root.validatePath(path);
+  fsStore.validatePath(path);
 }
 
 function validateOpen(path: string) {

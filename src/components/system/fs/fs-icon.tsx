@@ -6,19 +6,18 @@ import useSelect from '@/hooks/use-fs/use-select';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
-import { type TransferData } from '@/types/file-system';
+import { ICON_SIZE } from '@/themes';
+import { type TransferData } from '@/types';
 import cn from '@/utils/format';
-import { parseFileInfo } from '@/utils/fs';
+import { parseFileName } from '@/utils/fs';
 import { indexToPosition, positionToIndex } from '@/utils/grid';
-
-export const ICON_SIZE = 70;
 
 const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string }): ReactElement => {
   const open = useProcessesStore((state) => state.open);
   const parentPath = path.split('/').slice(0, -1).join('/');
   const gridIndex = useFsStore((state) => state.getGridIndex(path));
   const getGridIndex = useFsStore((state) => state.getGridIndex);
-  const gridState = useFsStore((state) => state.getGridStack(parentPath));
+  const gridItemsPerLine = useFsStore((state) => state.getGridItemsPerLine(parentPath));
   const getWindow = useProcessesStore((state) => state.getWindow);
   const selectContext = useSelectStore((state) => state.context);
 
@@ -35,7 +34,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
     allSelected,
   } = useSelect(path);
 
-  const { fileName } = parseFileInfo(path);
+  const fileName = parseFileName(path);
 
   const [dropGuideVisible, setDropGuideVisible] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
@@ -89,14 +88,14 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
       const mouseGridIndex = positionToIndex(
         event.clientX - folderX,
         event.clientY - folderY,
-        gridState.itemsPerLine,
+        gridItemsPerLine,
         {
           multiplier: 100,
         },
       );
       setGuideIndex(mouseGridIndex);
     },
-    [gridState.itemsPerLine, getFolderPosition],
+    [gridItemsPerLine, getFolderPosition],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -112,8 +111,8 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
       <li
         className="flex items-center justify-center"
         style={{
-          gridColumnStart: (indexToPosition(gridIndex, gridState.itemsPerLine).x + 1).toString(),
-          gridRowStart: (indexToPosition(gridIndex, gridState.itemsPerLine).y + 1).toString(),
+          gridColumnStart: (indexToPosition(gridIndex, gridItemsPerLine).x + 1).toString(),
+          gridRowStart: (indexToPosition(gridIndex, gridItemsPerLine).y + 1).toString(),
         }}
       >
         <button
@@ -158,7 +157,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
         isVisible={dropGuideVisible}
         index={guideIndex}
         offsets={indexOffsets}
-        itemsPerLine={gridState.itemsPerLine}
+        itemsPerLine={gridItemsPerLine}
         padding={selectContext === 'desktop' ? 16 : 16}
       />
     </>

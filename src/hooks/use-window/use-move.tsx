@@ -3,7 +3,7 @@ import { useCallback, useState, useEffect } from 'react';
 import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
-import { Position } from '@/types/units';
+import { Position } from '@/types';
 
 interface ReturnTypes {
   handleMouseDownMove: (event: React.MouseEvent) => void;

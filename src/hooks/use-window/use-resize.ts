@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 
 import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
-import { Position } from '@/types/units';
+import { Position } from '@/types';
 
 // eslint-disable-next-line no-shadow
 export enum ResizeDirection {

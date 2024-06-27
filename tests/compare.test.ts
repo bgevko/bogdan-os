@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { type Window, Size } from '@/types/units';
+import { type Window, Size } from '@/types';
 import { WindowsEqualOrLess, WindowsEqualOrGreater } from '@/utils/compare';
 
 describe('WindowsEqualOrLess', () => {
