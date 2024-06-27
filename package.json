@@ -13,7 +13,7 @@
     "prepare": "husky",
     "test": "vitest --run",
     "test:w": "vitest --watch",
-    "test:current": "vitest grid",
+    "test:current": "vitest use-fs.test",
     "cy:window": "cypress run --spec 'cypress/e2e/window.cy.ts'",
     "test:ui": "vitest --ui"
   },
@@ -25,6 +25,7 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "fast-deep-equal": "^3.1.3",
+    "immer": "^10.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^2.3.0",

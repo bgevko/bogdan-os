@@ -44,6 +44,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'lines-between-class-members': 'off',
     'arrow-body-style': 'off',
     'tailwindcss/classnames-order': 'error',
     'tailwindcss/no-custom-classname': 'off',
