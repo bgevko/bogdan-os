@@ -89,6 +89,10 @@ describe('useFsStore', () => {
       expect(() => {
         fs.touch('/test3.txt/');
       }).toThrowError();
+
+      fs.initDir();
+      fs.touch('/test.app');
+      expect([...fs.getPaths()]).toEqual(['/', '/test.app']);
     });
   });
 
@@ -196,6 +200,9 @@ describe('useFsStore', () => {
       expect(paths).toEqual(['/', '/Desktop', '/Desktop/MyFolder', '/Documents']);
       fs.initDir();
       expect([...fs.getPaths()]).toEqual(['/']);
+
+      fs.initDir(['/test.app', '/file', '/folder/']);
+      expect([...fs.getPaths()]).toEqual(['/', '/test.app', '/file', '/folder']);
     });
   });
 
@@ -264,7 +271,7 @@ describe('useFsStore', () => {
       const folderGridIndex = fs.getGridIndex('/Desktop/folder');
       expect(folderGridIndex).toBe(0);
       const fileGridIndex = fs.getGridIndex('/Desktop/file');
-      expect(fileGridIndex).toBe(0);
+      expect(fileGridIndex).toBe(1);
       fs.setGridIndex('/Desktop/folder', 1);
       fs.setGridIndex('/Desktop/file', 2);
       expect(fs.getGridIndex('/Desktop/folder')).toBe(1);
