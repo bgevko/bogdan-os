@@ -1,8 +1,8 @@
 import { iconsPath, appDirectory, DefaultApp } from '@/constants';
 import { ICON_SIZE } from '@/themes';
-import { type FileInfo, Position, Window } from '@/types';
+import { Position, SizePos, LazyAppComponent } from '@/types';
 
-export const selectionIntersectsElement = (selection: Window, element: Position): boolean => {
+export const selectionIntersectsElement = (selection: SizePos, element: Position): boolean => {
   if (
     element.x + ICON_SIZE + 20 < selection.position.x ||
     element.y + ICON_SIZE + 20 < selection.position.y ||
@@ -56,33 +56,19 @@ export function parseFileExt(filePath: string): string {
   return filePath.search(/\.[\da-z]+$/i) === -1 ? '' : filePath.split('.').at(-1) ?? '';
 }
 
-export function parseFileInfo(filePath: string): FileInfo {
+export function parseFileIcon(filePath: string): string {
   if (filePath === '/') {
-    return {
-      fileName: '',
-      fileExt: '',
-      icon: '',
-    };
+    return '';
   }
-  const fileName = parseFileName(filePath);
   const fileExt = parseFileExt(filePath);
-
   const iconName = appDirectory.get(fileExt)?.icon ?? 'default';
   const icon = `${iconsPath}/${iconName}.png`;
-  const component = appDirectory.get(fileExt)?.component ?? DefaultApp;
-
-  return {
-    fileName,
-    fileExt,
-    icon,
-    component,
-  };
+  return icon;
 }
 
-export const splitPath = (path: string): string[] => ['/', ...path.split('/').filter(Boolean)];
-
-export const getParentPath = (path: string): string => {
-  const components = splitPath(path);
-  const parentPath = components.slice(0, -1).join('');
-  return parentPath === '' ? '/' : parentPath;
+export const parseFileComponent = (filePath: string): LazyAppComponent => {
+  const fileExt = parseFileExt(filePath);
+  return appDirectory.get(fileExt)?.component ?? DefaultApp;
 };
+
+export const splitPath = (path: string): string[] => ['/', ...path.split('/').filter(Boolean)];

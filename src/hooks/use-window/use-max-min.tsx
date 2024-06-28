@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
-import { Window } from '@/types';
+import { SizePos } from '@/types';
 import { WindowMax, WindowsEqualOrGreater } from '@/utils/compare';
 
 interface ReturnTypes {
@@ -11,7 +11,7 @@ interface ReturnTypes {
   toggleMinimizeWindow: () => void;
 }
 
-const useMaxMin = (path: string): ReturnTypes => {
+const UseMaxMin = (path: string): ReturnTypes => {
   const position = useProcessesStore((state) => state.getWindowPosition(path));
 
   const size = useProcessesStore((state) => state.getWindowSize(path));
@@ -39,7 +39,7 @@ const useMaxMin = (path: string): ReturnTypes => {
 
   const { registerEvents } = useEvents();
 
-  const [myViewport, setMyViewport] = useState<Window>({
+  const [myViewport, setMyViewport] = useState<SizePos>({
     size: {
       width: window.innerWidth,
       height: window.innerHeight - TASKBAR_HEIGHT,
@@ -147,4 +147,4 @@ const useMaxMin = (path: string): ReturnTypes => {
   };
 };
 
-export default useMaxMin;
+export default UseMaxMin;

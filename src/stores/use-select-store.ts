@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 
-import { type Window, Position } from '@/types';
+import { type SizePos, Position } from '@/types';
 
 interface SelectState {
   selected: Set<string>;
   clickStart: Position;
   selecting: boolean;
-  selectingRect: Window;
+  selectingRect: SizePos;
   context: 'desktop' | 'folder';
 }
 
@@ -17,7 +17,7 @@ interface SelectActions {
   removeSelected: (path: string) => void;
   setClickStart: (clickStart: Position) => void;
   setSelecting: (selecting: boolean) => void;
-  setSelectingRect: (selectingRect: Window) => void;
+  setSelectingRect: (selectingRect: SizePos) => void;
   setContext: (context: 'desktop' | 'folder') => void;
 }
 
@@ -69,7 +69,7 @@ const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
   setSelecting: (selecting: boolean) => {
     set({ selecting });
   },
-  setSelectingRect: (selectingRect: Window) => {
+  setSelectingRect: (selectingRect: SizePos) => {
     set({ selectingRect });
   },
   setContext: (context: 'desktop' | 'folder') => {

@@ -1,7 +1,7 @@
 import { type ReactElement, ReactNode } from 'react';
 
-import WindowMoveHandle from '@/components/system/window/move-handle';
 import WindowResizeHandles from '@/components/system/window/resize-handles';
+import WindowHeader from '@/components/system/window/window-header';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
 
@@ -35,7 +35,7 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
       {!isMinimized && (
         <>
           <WindowResizeHandles path={path} />
-          <WindowMoveHandle path={path} />
+          <WindowHeader path={path} />
           <article className={cn('relative flex flex-1 bg-surface pt-2 text-onSurface')}>
             <div className="absolute inset-x-[-5px] bottom-0 top-1">{children}</div>
           </article>

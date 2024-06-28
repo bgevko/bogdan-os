@@ -1,14 +1,13 @@
 import { ReactElement } from 'react';
 
-import useWindowState from '@/hooks/use-window';
-import { ResizeDirection } from '@/hooks/use-window/use-resize';
+import UseWindowState from '@/hooks/use-window';
 
 interface WindowHandlesProperties {
   path: string;
 }
 
 const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement => {
-  const { handleSetResizeDirection } = useWindowState(path);
+  const { handleSetResizeDirection } = UseWindowState(path);
   return (
     <>
       <span
@@ -18,7 +17,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window left resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.LEFT);
+          handleSetResizeDirection('LEFT');
         }}
       />
       <span
@@ -28,7 +27,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window right resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.RIGHT);
+          handleSetResizeDirection('RIGHT');
         }}
       />
       <span
@@ -38,7 +37,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window top resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.TOP);
+          handleSetResizeDirection('TOP');
         }}
       />
       <span
@@ -48,7 +47,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window bottom resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.BOTTOM);
+          handleSetResizeDirection('BOTTOM');
         }}
       />
       <span
@@ -58,7 +57,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window top left corner resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.TOP_LEFT);
+          handleSetResizeDirection('TOP_LEFT');
         }}
       />
       <span
@@ -68,7 +67,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window top right corner resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.TOP_RIGHT);
+          handleSetResizeDirection('TOP_RIGHT');
         }}
       />
       <span
@@ -78,7 +77,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window bottom left corner resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.BOTTOM_LEFT);
+          handleSetResizeDirection('BOTTOM_LEFT');
         }}
       />
       <span
@@ -88,7 +87,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         aria-label="Window bottom right corner resize"
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
-          handleSetResizeDirection(ResizeDirection.BOTTOM_RIGHT);
+          handleSetResizeDirection('BOTTOM_RIGHT');
         }}
       />
     </>

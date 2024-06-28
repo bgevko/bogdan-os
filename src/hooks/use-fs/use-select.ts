@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import useEvents from '@/hooks/use-events';
 import useFsStore from '@/stores/use-fs-store';
 import useSelectStore from '@/stores/use-select-store';
-import { selectionIntersectsElement, getParentPath } from '@/utils/fs';
+import { selectionIntersectsElement, parseParentPath } from '@/utils/fs';
 import { indexToPosition } from '@/utils/grid';
 
 interface UseSelectReturn {
@@ -18,7 +18,8 @@ interface UseSelectReturn {
 
 const UseSelect = (path: string): UseSelectReturn => {
   const gridIndex = useFsStore((state) => state.getGridIndex(path));
-  const itemsPerLine = useFsStore((state) => state.getGridItemsPerLine(getParentPath(path)));
+  const parentPath = parseParentPath(path);
+  const itemsPerLine = useFsStore((state) => state.getGridItemsPerLine(parentPath));
 
   const allSelected = useSelectStore((state) => state.getSelected());
   const addSelected = useSelectStore((state) => state.addSelected);
@@ -32,7 +33,6 @@ const UseSelect = (path: string): UseSelectReturn => {
   const isMultipleSelected = allSelected.length > 1;
 
   const selectContext = useSelectStore((state) => state.context);
-  const parentPath = getParentPath(path);
   const localContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
 
   const { registerEvents } = useEvents();

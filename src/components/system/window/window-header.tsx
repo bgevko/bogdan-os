@@ -5,20 +5,20 @@ import MaxIcon from '@/assets/icons/max-icon.svg';
 import MinIcon from '@/assets/icons/min-icon.svg';
 import UnmaxIcon from '@/assets/icons/unmax-icon.svg';
 import Button from '@/components/system/button';
-import useWindowState from '@/hooks/use-window';
+import UseWindowState from '@/hooks/use-window';
 import useProcessesStore from '@/stores/use-processes-store';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
-import { parseFileInfo } from '@/utils/fs';
+import { parseFileName } from '@/utils/fs';
 
 interface WindowHandlesProperties {
   path: string;
 }
 
-const WindowMoveHandle = ({ path }: WindowHandlesProperties): ReactElement => {
+const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
   const { handleWindowFullSize, handleMouseDownMove, handleWindowMinimizeToggle } =
-    useWindowState(path);
+    UseWindowState(path);
   const close = useProcessesStore((state) => state.close);
-  const { fileName: title } = parseFileInfo(path);
+  const title = parseFileName(path);
   const isMaximized = useProcessesStore((state) => state.getIsMaximized(path));
   return (
     <>
@@ -90,4 +90,4 @@ const WindowMoveHandle = ({ path }: WindowHandlesProperties): ReactElement => {
   );
 };
 
-export default WindowMoveHandle;
+export default WindowHeader;

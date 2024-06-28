@@ -10,7 +10,7 @@ interface UseEventReturnTypes {
   ) => void;
 }
 
-const useEvent = (): UseEventReturnTypes => {
+const UseEvents = (): UseEventReturnTypes => {
   const eventCallbacks = useRef<Record<DOMEventTypes, EventCallback<Event>[]>>(
     {} as Record<DOMEventTypes, EventCallback<Event>[]>,
   );
@@ -61,4 +61,4 @@ const useEvent = (): UseEventReturnTypes => {
   return { registerEvents };
 };
 
-export default useEvent;
+export default UseEvents;

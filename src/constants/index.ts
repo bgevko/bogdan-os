@@ -31,5 +31,5 @@ export const appDirectory: AppDirectory = new Map([
 export const FileExplorer = lazy(() => import('@/components/apps/file-explorer'));
 export const DefaultApp = lazy(() => import('@/components/apps/hello-world'));
 
-// Static paths
+// Other
 export const iconsPath = '/icons/system';

@@ -25,7 +25,7 @@ export interface Position {
   y: number;
 }
 
-export interface Window {
+export interface SizePos {
   size: Size;
   position: Position;
 }
@@ -37,11 +37,42 @@ export interface TransferData {
   isHead: boolean;
 }
 
-export interface FileInfo {
+// Processes
+export interface WindowState {
+  minSize: Size;
+  size: Size;
+  position: Position;
+  defaultSizePos: SizePos;
+  isMaximized: boolean;
+  isMinimized: boolean;
+  maximizedSizePos: SizePos;
+  unMaximizedSizePos: SizePos;
+  minimizedSizePos: SizePos;
+  unMinimizedSizePos: SizePos;
+  isAnimating: boolean;
+  isUpdatingSize: boolean;
+  opacity: number;
+}
+
+export interface ProcessNode {
+  path: string;
   fileName: string;
   fileExt: string;
   icon: string;
-  component?: LazyAppComponent;
+  hasWindow: boolean;
+  window: WindowState;
 }
 
+export type ResizeDirection =
+  | 'NONE'
+  | 'RIGHT'
+  | 'BOTTOM'
+  | 'LEFT'
+  | 'TOP'
+  | 'TOP_LEFT'
+  | 'TOP_RIGHT'
+  | 'BOTTOM_LEFT'
+  | 'BOTTOM_RIGHT';
+
+// Other statics
 export type Paths = string[];

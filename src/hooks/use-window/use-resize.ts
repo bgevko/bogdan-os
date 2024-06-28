@@ -2,20 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 
 import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
-import { Position } from '@/types';
-
-// eslint-disable-next-line no-shadow
-export enum ResizeDirection {
-  NONE = 'NONE',
-  RIGHT = 'RIGHT',
-  BOTTOM = 'BOTTOM',
-  LEFT = 'LEFT',
-  TOP = 'TOP',
-  TOP_LEFT = 'TOP_LEFT',
-  TOP_RIGHT = 'TOP_RIGHT',
-  BOTTOM_LEFT = 'BOTTOM_LEFT',
-  BOTTOM_RIGHT = 'BOTTOM_RIGHT',
-}
+import { Position, ResizeDirection } from '@/types';
 
 interface usewindowReturnTypes {
   handleWindowResize: (event: MouseEvent) => void;
@@ -24,7 +11,7 @@ interface usewindowReturnTypes {
   resizeWindow: (event: MouseEvent, start: Position) => void;
 }
 
-const useWindowResize = (path: string): usewindowReturnTypes => {
+const UseWindowResize = (path: string): usewindowReturnTypes => {
   const position = useProcessesStore((state) => state.getWindowPosition(path));
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
 
@@ -46,11 +33,11 @@ const useWindowResize = (path: string): usewindowReturnTypes => {
     [position],
   );
 
-  const [resizeDirection, setResizeDirection] = useState<ResizeDirection>(ResizeDirection.NONE);
+  const [resizeDirection, setResizeDirection] = useState<ResizeDirection>('NONE');
 
   const resizeWindow = useCallback(
     (event: MouseEvent) => {
-      if (resizeDirection === ResizeDirection.NONE) return;
+      if (resizeDirection === 'NONE') return;
       let newWidth = size.width;
       let newHeight = size.height;
       let newX = position.x;
@@ -91,7 +78,7 @@ const useWindowResize = (path: string): usewindowReturnTypes => {
   };
 
   const handleStopResize = useCallback(() => {
-    setResizeDirection(ResizeDirection.NONE);
+    setResizeDirection('NONE');
 
     // This is used to update the grid size after the resize stops
     setIsUpdatingSize(path, true);
@@ -121,4 +108,4 @@ const useWindowResize = (path: string): usewindowReturnTypes => {
   };
 };
 
-export default useWindowResize;
+export default UseWindowResize;

@@ -1,7 +1,7 @@
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 
 import DropGuide from '@/components/system/fs/drop-guide';
-import useEvent from '@/hooks/use-events';
+import UseEvents from '@/hooks/use-events';
 import useSelect from '@/hooks/use-fs/use-select';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
@@ -22,7 +22,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const selectContext = useSelectStore((state) => state.context);
 
   const context = parentPath === '/Desktop' ? 'desktop' : 'folder';
-  const { registerEvents } = useEvent();
+  const { registerEvents } = UseEvents();
 
   const {
     handleFocusSelect,

@@ -9,7 +9,7 @@ interface ReturnTypes {
   handleMouseDownMove: (event: React.MouseEvent) => void;
 }
 
-const useWindowMove = (path: string): ReturnTypes => {
+const UseWindowMove = (path: string): ReturnTypes => {
   const position = useProcessesStore((state) => state.getWindowPosition(path));
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
   const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(path));
@@ -75,4 +75,4 @@ const useWindowMove = (path: string): ReturnTypes => {
   };
 };
 
-export default useWindowMove;
+export default UseWindowMove;
