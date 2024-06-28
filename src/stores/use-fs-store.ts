@@ -6,13 +6,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import { iconsPath } from '@/constants';
 import { type Paths, type Position } from '@/types';
-import {
-  splitPath,
-  parseParentPath,
-  normalizePath,
-  parseFileInfo,
-  parseFileName,
-} from '@/utils/fs';
+import { splitPath, parseParentPath, normalizePath, parseFileIcon } from '@/utils/fs';
 
 enableMapSet();
 
@@ -37,7 +31,7 @@ type DirectoryMap = Map<string, FileNode>;
 function newFileNode(options: FileNodeOptions = {}): FileNode {
   const isDir = options.isDir ?? true;
   const folderIcon = isDir ? `${iconsPath}/folder.png` : '';
-  const fileIcon = options.path ? parseFileInfo(options.path).icon : '';
+  const fileIcon = options.path ? parseFileIcon(options.path) : '';
   const icon = isDir ? folderIcon : fileIcon;
   return {
     path: options.path ?? '',
@@ -61,6 +55,7 @@ interface FileSystemActions {
   mkdir: (path: string) => void;
   touch: (path: string) => void;
   getChildren: (path: string) => FileNode[];
+  getChildrenCount: (path: string) => number;
 
   // Grid helpers
   getGridIndex: (path: string) => number;
@@ -95,7 +90,11 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
         if (isDir) {
           get().mkdir(path);
         } else {
-          get().touch(path);
+          try {
+            get().touch(path);
+          } catch {
+            // skip
+          }
         }
       }
     },
@@ -114,14 +113,15 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
           if (filePath === '' || dir.has(filePath)) {
             return;
           }
-          const name = parseFileName(filePath);
           const parentPath = parseParentPath(filePath) || '/';
           mkdirHelper(parentPath);
 
           const parent = dir.get(parentPath);
           if (parent?.isDir) {
-            parent.children.set(name, newFileNode({ path: filePath }));
-            dir.set(filePath, newFileNode({ path: filePath, isDir: true }));
+            const gridIndex = get().getChildrenCount(parentPath);
+            const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
+            parent.children.set(filePath, newDir);
+            dir.set(filePath, newDir);
           }
         };
         mkdirHelper(path);
@@ -135,16 +135,25 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
       if (get().dir.has(path)) {
         throw new Error(`File already exists: ${path}`);
       }
-      get().mkdir(path);
+      const parentPath = parseParentPath(path);
+      get().mkdir(parentPath);
       set((state) => {
-        const file = state.getNode(path);
-        file.isDir = false;
-        file.icon = parseFileInfo(path).icon;
+        const gridIndex = get().getChildrenCount(parentPath);
+        const newFile = newFileNode({ path, isDir: false, gridIndex });
+        state.dir.get(parentPath)!.children.set(path, newFile);
+        state.dir.set(path, newFile);
       });
     },
     getChildren: (path: string) => {
       const node = get().getNode(path);
       return [...node.children.values()];
+    },
+    getChildrenCount: (path: string) => {
+      try {
+        return get().getNode(path).children.size;
+      } catch {
+        return 0;
+      }
     },
 
     // Grid helpers
@@ -153,7 +162,8 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
     },
     setGridIndex: (path: string, gridIndex: number) => {
       set((state) => {
-        const node = state.getNode(path);
+        get().validatePath(path);
+        const node = state.dir.get(path)!;
         node.gridIndex = gridIndex;
       });
     },
@@ -162,7 +172,8 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
     },
     setGridItemsPerLine: (path: string, gridItemsPerLine: number) => {
       set((state) => {
-        const node = state.getNode(path);
+        get().validatePath(path);
+        const node = state.dir.get(path)!;
         node.gridItemsPerLine = gridItemsPerLine;
       });
     },
@@ -186,7 +197,9 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
     },
     validatePath: (path: string) => {
       if (!get().hasPath(path)) {
-        throw new Error(`No such file or directory: ${path}`);
+        throw new Error(
+          `No such file or directory: ${path}\n Current directories: ${[...get().getPaths()].toString()}`,
+        );
       }
     },
     validateDir: (path: string) => {
