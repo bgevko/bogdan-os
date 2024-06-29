@@ -13,6 +13,9 @@ export function indexToPosition(
   itemsPerLine: number,
   options?: GridOptions,
 ): Position {
+  if (itemsPerLine <= 0) {
+    return { x: 0, y: 0 };
+  }
   const { flow = 'col' } = options ?? {};
   const multiplier = options?.multiplier ?? 1;
   const offsetX = options?.offsetX ?? 0;
@@ -34,6 +37,9 @@ export function positionToIndex(
   itemsPerLine: number,
   options?: GridOptions,
 ): number {
+  if (itemsPerLine <= 0) {
+    return 0;
+  }
   const { flow = 'col' } = options ?? {};
   const multiplier = options?.multiplier ?? 1;
   const adjustedX = Math.floor(x / multiplier);
