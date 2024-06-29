@@ -39,6 +39,8 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const [dropGuideVisible, setDropGuideVisible] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
   const [indexOffsets, setIndexOffsets] = useState<number[]>([]);
+  const [gridPosition, setGridPosition] = useState({ x: 0, y: 0 });
+
   const handleDragStart = useCallback(
     (event: React.DragEvent) => {
       const transferData: TransferData[] = [];
@@ -106,13 +108,18 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
     registerEvents('mouseup', [handleDragEnd]);
   }, [registerEvents, handleDragEnd]);
 
+  useEffect(() => {
+    const { x, y } = indexToPosition(gridIndex, gridItemsPerLine);
+    setGridPosition({ x: x + 1, y: y + 1 });
+  }, [gridIndex, gridItemsPerLine]);
+
   return (
     <>
       <li
         className="flex items-center justify-center"
         style={{
-          gridColumnStart: (indexToPosition(gridIndex, gridItemsPerLine).x + 1).toString(),
-          gridRowStart: (indexToPosition(gridIndex, gridItemsPerLine).y + 1).toString(),
+          gridColumnStart: gridPosition.x.toString(),
+          gridRowStart: gridPosition.y.toString(),
         }}
       >
         <button
