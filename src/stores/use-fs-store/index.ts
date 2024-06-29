@@ -18,6 +18,7 @@ interface FileSystemActions {
   mkdir: (path: string) => void;
   touch: (path: string) => void;
   getChildren: (path: string) => FileNode[];
+  getChildPaths: (path: string) => string[];
   getChildrenCount: (path: string) => number;
 
   // Grid helpers
@@ -110,6 +111,11 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
     getChildren: (path: string) => {
       const node = get().getNode(path);
       return [...node.children.values()];
+    },
+    getChildPaths: (path: string) => {
+      return get()
+        .getChildren(path)
+        .map((child) => child.path);
     },
     getChildrenCount: (path: string) => {
       try {
