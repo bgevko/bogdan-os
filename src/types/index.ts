@@ -37,6 +37,28 @@ export interface TransferData {
   isHead: boolean;
 }
 
+export interface FileNode {
+  path: string;
+  icon: string;
+  isDir: boolean;
+  gridIndex: number;
+  gridItemsPerLine: number;
+  children: Map<string, FileNode>;
+}
+
+export type DirectoryMap = Map<string, FileNode>;
+
+export interface FileSystem {
+  dir: DirectoryMap;
+}
+
+export interface FileNodeOptions {
+  path?: string;
+  isDir?: boolean;
+  position?: Position;
+  gridIndex?: number;
+}
+
 // Processes
 export interface WindowState {
   minSize: Size;

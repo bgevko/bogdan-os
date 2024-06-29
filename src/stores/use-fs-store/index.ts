@@ -4,48 +4,11 @@ import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import { iconsPath } from '@/constants';
-import { type Paths, type Position } from '@/types';
-import { splitPath, parseParentPath, normalizePath, parseFileIcon } from '@/utils/fs';
+import { newFileNode, InitHelper } from '@/stores/use-fs-store/init-helper';
+import { type Paths, FileNode, FileSystem } from '@/types';
+import { splitPath, parseParentPath, normalizePath } from '@/utils/fs';
 
 enableMapSet();
-
-interface FileNodeOptions {
-  path?: string;
-  isDir?: boolean;
-  position?: Position;
-  gridIndex?: number;
-}
-
-interface FileNode {
-  path: string;
-  icon: string;
-  isDir: boolean;
-  gridIndex: number;
-  gridItemsPerLine: number;
-  children: Map<string, FileNode>;
-}
-
-type DirectoryMap = Map<string, FileNode>;
-
-function newFileNode(options: FileNodeOptions = {}): FileNode {
-  const isDir = options.isDir ?? true;
-  const folderIcon = isDir ? `${iconsPath}/folder.png` : '';
-  const fileIcon = options.path ? parseFileIcon(options.path) : '';
-  const icon = isDir ? folderIcon : fileIcon;
-  return {
-    path: options.path ?? '',
-    icon,
-    isDir,
-    gridIndex: options.gridIndex ?? 0,
-    gridItemsPerLine: 0,
-    children: new Map<string, FileNode>(),
-  };
-}
-
-interface FileSystem {
-  dir: DirectoryMap;
-}
 
 interface FileSystemActions {
   // Core operations
@@ -75,7 +38,7 @@ interface FileSystemActions {
 // Updated the store creator with correct typing for middleware
 const useFsStore = create<FileSystem & FileSystemActions>()(
   immer((set, get) => ({
-    dir: new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]),
+    dir: new InitHelper().getDir(),
 
     // Core operations
     initDir: (source?: Paths) => {
@@ -113,12 +76,12 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
           if (filePath === '' || dir.has(filePath)) {
             return;
           }
-          const parentPath = parseParentPath(filePath) || '/';
+          const parentPath = parseParentPath(filePath);
           mkdirHelper(parentPath);
 
           const parent = dir.get(parentPath);
           if (parent?.isDir) {
-            const gridIndex = get().getChildrenCount(parentPath);
+            const gridIndex = parent.children.size;
             const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
             parent.children.set(filePath, newDir);
             dir.set(filePath, newDir);
@@ -138,7 +101,7 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
       const parentPath = parseParentPath(path);
       get().mkdir(parentPath);
       set((state) => {
-        const gridIndex = get().getChildrenCount(parentPath);
+        const gridIndex = state.dir.get(parentPath)!.children.size;
         const newFile = newFileNode({ path, isDir: false, gridIndex });
         state.dir.get(parentPath)!.children.set(path, newFile);
         state.dir.set(path, newFile);
