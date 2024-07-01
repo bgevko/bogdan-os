@@ -15,8 +15,6 @@ export function newFileNode(options: FileNodeOptions = {}): FileNode {
     path: options.path ?? '',
     icon,
     isDir,
-    gridIndex: options.gridIndex ?? 0,
-    gridItemsPerLine: 0,
     children: new Map<string, FileNode>(),
   };
 }

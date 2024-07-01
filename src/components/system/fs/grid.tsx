@@ -1,8 +1,8 @@
-import { type ReactElement, ReactNode, useState } from 'react';
+import { type ReactElement, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
 
 import useEvents from '@/hooks/use-events';
-import useFsStore from '@/stores/use-fs-store';
+import useGridStore from '@/stores/use-grid-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { TASKBAR_HEIGHT } from '@/themes';
@@ -23,16 +23,13 @@ interface GridProps {
 
 const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const { registerEvents } = useEvents();
-  const setGridItemsPerLine = useFsStore((state) => state.setGridItemsPerLine);
-  const setGridIndex = useFsStore((state) => state.setGridIndex);
-  const gridItemsPerLine = useFsStore((state) => state.getGridItemsPerLine(path));
+  const setGridIndex = useGridStore((state) => state.setIndex);
+  const grid = useGridStore((state) => state.getGrid(path));
+  const updateGridSize = useGridStore((state) => state.updateSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
   const isUpdatingSize = useProcessesStore((state) => state.getIsUpdatingSize(path));
   const setContext = useSelectStore((state) => state.setContext);
   const setSelected = useSelectStore((state) => state.setSelected);
-
-  const [numColumns, setNumColumns] = useState(0);
-  const [numRows, setNumRows] = useState(0);
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -46,7 +43,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       const { x: folderX, y: folderY } = getWindow(path).position;
       const dropX = event.clientX - folderX;
       const dropY = event.clientY - folderY;
-      const dropIndex = positionToIndex(dropX, dropY, gridItemsPerLine, {
+      const dropIndex = positionToIndex(dropX, dropY, grid.lineSize, {
         multiplier: GRID_SIZE,
       });
       // const elementPaths = event.dataTransfer.getData('text/plain');
@@ -60,29 +57,17 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         setGridIndex(element.path, elementIndex);
       }
     },
-    [gridItemsPerLine, setGridIndex, path, getWindow],
+    [grid.lineSize, setGridIndex, path, getWindow],
   );
 
   const setDesktopGridSize = useCallback(() => {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const rows = Math.floor((viewportHeight - TASKBAR_HEIGHT) / GRID_SIZE);
-    const columns = Math.floor(viewportWidth / GRID_SIZE);
-    setNumColumns(columns);
-    setNumRows(rows);
-    const itemsPerLine = columns;
-    setGridItemsPerLine(path, itemsPerLine);
-  }, [setGridItemsPerLine, path]);
+    updateGridSize(path, window.innerWidth, window.innerHeight - TASKBAR_HEIGHT);
+  }, [updateGridSize, path]);
 
   const setFolderGridSize = useCallback(() => {
     const { width, height } = getWindow(path).size;
-    const rows = Math.floor(height / GRID_SIZE);
-    const columns = Math.floor(width / GRID_SIZE);
-    setNumColumns(columns);
-    setNumRows(rows);
-    const itemsPerLine = rows;
-    setGridItemsPerLine(path, itemsPerLine);
-  }, [getWindow, path, setGridItemsPerLine]);
+    updateGridSize(path, width, height);
+  }, [getWindow, path, updateGridSize]);
 
   const handleSelectRectContext = useCallback(() => {
     const localContext = options?.isDesktop ? 'desktop' : 'folder';
@@ -113,8 +98,8 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       className={cn('grid grid-flow-col', options?.isDesktop ? 'p-4' : 'p-0')}
       style={{
         height: options?.isDesktop ? `calc(100vh - ${TASKBAR_HEIGHT.toString()}px)` : '100%',
-        gridTemplateColumns: `repeat(${numColumns.toString()}, ${GRID_SIZE.toString()}px)`,
-        gridTemplateRows: `repeat(${numRows.toString()}, ${GRID_SIZE.toString()}px)`,
+        gridTemplateColumns: `repeat(${grid.columns.toString()}, ${GRID_SIZE.toString()}px)`,
+        gridTemplateRows: `repeat(${grid.rows.toString()}, ${GRID_SIZE.toString()}px)`,
       }}
       onDragOver={handleDragOver}
       onDrop={handleDrop}

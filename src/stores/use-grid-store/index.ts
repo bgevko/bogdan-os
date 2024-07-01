@@ -29,7 +29,9 @@ interface GridActions {
   createGrid: (path: string, options: GridOptions) => void;
   appendParent: (finalPath: string) => void;
   setIndex: (path: string, index: number) => void;
+  getIndex: (path: string) => number;
   sort: (gridPath: string, order: 'asc' | 'desc') => void;
+  updateSize: (path: string, width: number, height: number) => void;
   reset: () => void;
 }
 
@@ -77,6 +79,11 @@ const useGridStore = create<GridSystem & GridActions>()(
         grid.items.set(path, index);
       });
     },
+    getIndex: (path) => {
+      validateGridChild(path);
+      const parentPath = parseParentPath(path);
+      return get().gridMap.get(parentPath)!.items.get(path)!;
+    },
     sort: (gridPath, order) => {
       validateParentPath(gridPath);
       set((state) => {
@@ -90,6 +97,15 @@ const useGridStore = create<GridSystem & GridActions>()(
         });
         const newItems = new Map(items.map(([path], index) => [path, index]));
         grid.items = newItems;
+      });
+    },
+    updateSize: (path, width, height) => {
+      validateParentPath(path);
+      set((state) => {
+        const grid = state.gridMap.get(path)!;
+        grid.columns = Math.floor(width / GRID_CELL_SIZE);
+        grid.rows = Math.floor(height / GRID_CELL_SIZE);
+        grid.lineSize = grid.flow === 'row' ? grid.rows : grid.columns;
       });
     },
     reset: () => {

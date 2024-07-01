@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 
 import useEvents from '@/hooks/use-events';
-import useFsStore from '@/stores/use-fs-store';
+import useGridStore from '@/stores/use-grid-store';
 import useSelectStore from '@/stores/use-select-store';
 import { selectionIntersectsElement, parseParentPath } from '@/utils/fs';
 import { indexToPosition } from '@/utils/grid';
@@ -17,9 +17,9 @@ interface UseSelectReturn {
 }
 
 const UseSelect = (path: string): UseSelectReturn => {
-  const gridIndex = useFsStore((state) => state.getGridIndex(path));
+  const gridIndex = useGridStore((state) => state.getIndex(path));
   const parentPath = parseParentPath(path);
-  const itemsPerLine = useFsStore((state) => state.getGridItemsPerLine(parentPath));
+  const lineSize = useGridStore((state) => state.getGrid(parentPath).lineSize);
 
   const allSelected = useSelectStore((state) => state.getSelected());
   const addSelected = useSelectStore((state) => state.addSelected);
@@ -79,7 +79,7 @@ const UseSelect = (path: string): UseSelectReturn => {
 
   const handleDragSelect = useCallback(() => {
     if (!isUsingSelectRect || !isCorrectContext) return;
-    const iconPosition = indexToPosition(gridIndex, itemsPerLine, { multiplier: 100 });
+    const iconPosition = indexToPosition(gridIndex, lineSize, { multiplier: 100 });
     if (selectionIntersectsElement(selectingRect, iconPosition)) {
       addSelected(path);
     } else if (!shiftIsPressed) {
@@ -93,7 +93,7 @@ const UseSelect = (path: string): UseSelectReturn => {
     removeSelected,
     shiftIsPressed,
     path,
-    itemsPerLine,
+    lineSize,
     gridIndex,
   ]);
 

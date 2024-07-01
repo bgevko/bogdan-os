@@ -41,8 +41,6 @@ export interface FileNode {
   path: string;
   icon: string;
   isDir: boolean;
-  gridIndex: number;
-  gridItemsPerLine: number;
   children: Map<string, FileNode>;
 }
 

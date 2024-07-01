@@ -3,7 +3,7 @@ import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import DropGuide from '@/components/system/fs/drop-guide';
 import UseEvents from '@/hooks/use-events';
 import useSelect from '@/hooks/use-fs/use-select';
-import useFsStore from '@/stores/use-fs-store';
+import useGridStore from '@/stores/use-grid-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { ICON_SIZE } from '@/themes';
@@ -15,9 +15,9 @@ import { indexToPosition, positionToIndex } from '@/utils/grid';
 const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string }): ReactElement => {
   const open = useProcessesStore((state) => state.open);
   const parentPath = path.split('/').slice(0, -1).join('/');
-  const gridIndex = useFsStore((state) => state.getGridIndex(path));
-  const getGridIndex = useFsStore((state) => state.getGridIndex);
-  const gridItemsPerLine = useFsStore((state) => state.getGridItemsPerLine(parentPath));
+  const gridIndex = useGridStore((state) => state.getIndex(path));
+  const getGridIndex = useGridStore((state) => state.getIndex);
+  const gridItemsPerLine = useGridStore((state) => state.getGrid(parentPath).lineSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
   const selectContext = useSelectStore((state) => state.context);
 

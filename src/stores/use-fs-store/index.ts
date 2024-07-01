@@ -27,12 +27,6 @@ interface FileSystemActions {
   getChildPaths: (path: string) => string[];
   getChildrenCount: (path: string) => number;
 
-  // Grid helpers
-  getGridIndex: (path: string) => number;
-  setGridIndex: (path: string, gridIndex: number) => void;
-  getGridItemsPerLine: (path: string) => number;
-  setGridItemsPerLine: (path: string, gridItemsPerLine: number) => void;
-
   // Validation helpers
   isDir: (path: string) => boolean;
   hasPath: (path: string) => boolean;
@@ -133,28 +127,6 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
       } catch {
         return 0;
       }
-    },
-
-    // Grid helpers
-    getGridIndex: (path: string) => {
-      return get().getNode(path).gridIndex;
-    },
-    setGridIndex: (path: string, gridIndex: number) => {
-      set((state) => {
-        get().validatePath(path);
-        const node = state.dir.get(path)!;
-        node.gridIndex = gridIndex;
-      });
-    },
-    getGridItemsPerLine: (path: string) => {
-      return get().getNode(path).gridItemsPerLine;
-    },
-    setGridItemsPerLine: (path: string, gridItemsPerLine: number) => {
-      set((state) => {
-        get().validatePath(path);
-        const node = state.dir.get(path)!;
-        node.gridItemsPerLine = gridItemsPerLine;
-      });
     },
 
     // Validation helpers

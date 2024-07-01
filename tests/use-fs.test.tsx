@@ -263,24 +263,4 @@ describe('useFsStore', () => {
       expect(myFileChildren).toEqual([]);
     });
   });
-
-  it('should have working getters and setters for various attributes', () => {
-    act(() => {
-      fs.initDir(['/', '/Desktop/folder/', '/Desktop/file']);
-
-      const folderGridIndex = fs.getGridIndex('/Desktop/folder');
-      expect(folderGridIndex).toBe(0);
-      const fileGridIndex = fs.getGridIndex('/Desktop/file');
-      expect(fileGridIndex).toBe(1);
-      fs.setGridIndex('/Desktop/folder', 1);
-      fs.setGridIndex('/Desktop/file', 2);
-      expect(fs.getGridIndex('/Desktop/folder')).toBe(1);
-      expect(fs.getGridIndex('/Desktop/file')).toBe(2);
-
-      const folderGridItemsPerLine = fs.getGridItemsPerLine('/Desktop/folder');
-      expect(folderGridItemsPerLine).toBe(0);
-      fs.setGridItemsPerLine('/Desktop/folder', 3);
-      expect(fs.getGridItemsPerLine('/Desktop/folder')).toBe(3);
-    });
-  });
 });
