@@ -59,6 +59,22 @@ export interface FileNodeOptions {
   gridIndex?: number;
 }
 
+export interface GridOptions {
+  parentWidth: number;
+  parentHeight: number;
+  cellSize: number;
+  flow: 'row' | 'col';
+  childPaths: string[];
+}
+
+export interface GridState {
+  columns: number;
+  rows: number;
+  flow: 'row' | 'col';
+  lineSize: number;
+  items: Map<string, number>;
+}
+
 // Processes
 export interface WindowState {
   minSize: Size;

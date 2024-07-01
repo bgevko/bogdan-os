@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-param-reassign */
 import { iconsPath, startingDir } from '@/constants';
+import useGridStore from '@/stores/use-grid-store';
+import { GRID_CELL_SIZE, DEFAULT_WINDOW_SIZE, TASKBAR_HEIGHT } from '@/themes';
 import { type Paths, FileNode, FileNodeOptions, DirectoryMap } from '@/types';
 import { parseParentPath, normalizePath, parseFileIcon } from '@/utils/fs';
 
@@ -17,6 +19,23 @@ export function newFileNode(options: FileNodeOptions = {}): FileNode {
     gridItemsPerLine: 0,
     children: new Map<string, FileNode>(),
   };
+}
+
+export function newGrid(filePath: string, dir: FileNode): void {
+  const { createGrid } = useGridStore.getState();
+  createGrid(filePath, {
+    parentWidth: filePath === '/Desktop' ? window.innerWidth : DEFAULT_WINDOW_SIZE.width,
+    parentHeight:
+      filePath === '/Desktop' ? window.innerHeight - TASKBAR_HEIGHT : DEFAULT_WINDOW_SIZE.height,
+    cellSize: GRID_CELL_SIZE,
+    childPaths: [...dir.children.keys()],
+    flow: filePath === '/Desktop' ? 'row' : 'col',
+  });
+}
+
+export function addToParentGrid(finalPath: string): void {
+  const { appendParent } = useGridStore.getState();
+  appendParent(finalPath);
 }
 
 export class InitHelper {
@@ -64,6 +83,8 @@ export class InitHelper {
         const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
         parent.children.set(filePath, newDir);
         dir.set(filePath, newDir);
+        newGrid(filePath, newDir);
+        addToParentGrid(filePath);
       }
     };
     mkdirHelper(path);
@@ -83,5 +104,6 @@ export class InitHelper {
     const newFile = newFileNode({ path, isDir: false, gridIndex });
     this.dir.get(parentPath)!.children.set(path, newFile);
     this.dir.set(path, newFile);
+    addToParentGrid(path);
   }
 }

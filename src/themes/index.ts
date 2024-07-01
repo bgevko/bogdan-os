@@ -30,4 +30,5 @@ export const DEFAULT_WINDOW_SIZEPOS: SizePos = {
   size: DEFAULT_WINDOW_SIZE,
   position: DEFAULT_WINDOW_POSITION,
 };
+export const GRID_CELL_SIZE = 100;
 export const currentTheme: Theme = theme;

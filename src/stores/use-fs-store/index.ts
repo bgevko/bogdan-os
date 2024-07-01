@@ -4,7 +4,13 @@ import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import { newFileNode, InitHelper } from '@/stores/use-fs-store/init-helper';
+import {
+  newGrid,
+  addToParentGrid,
+  newFileNode,
+  InitHelper,
+} from '@/stores/use-fs-store/init-helper';
+import useGridStore from '@/stores/use-grid-store';
 import { type Paths, FileNode, FileSystem } from '@/types';
 import { splitPath, parseParentPath, normalizePath } from '@/utils/fs';
 
@@ -43,12 +49,11 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
 
     // Core operations
     initDir: (source?: Paths) => {
-      if (!source) {
-        set((state) => {
-          state.dir = new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]);
-        });
-        return;
-      }
+      set((state) => {
+        state.dir = new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]);
+      });
+      useGridStore.getState().reset();
+      if (!source) return;
       for (const path of source) {
         const isDir = path.endsWith('/');
         if (isDir) {
@@ -86,6 +91,10 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
             const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
             parent.children.set(filePath, newDir);
             dir.set(filePath, newDir);
+
+            // Set the grid
+            newGrid(filePath, newDir);
+            addToParentGrid(filePath);
           }
         };
         mkdirHelper(path);
@@ -106,6 +115,7 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
         const newFile = newFileNode({ path, isDir: false, gridIndex });
         state.dir.get(parentPath)!.children.set(path, newFile);
         state.dir.set(path, newFile);
+        addToParentGrid(path);
       });
     },
     getChildren: (path: string) => {
