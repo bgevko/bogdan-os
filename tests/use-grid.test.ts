@@ -146,4 +146,11 @@ describe('useGridStore', () => {
       ]);
     });
   });
+
+  it('should have reasonable default settings for desktop grid', () => {
+    fs.initDir(['/Desktop/']);
+    const desktopGrid = store.getGrid('/Desktop');
+    expect(desktopGrid.columns).toBeLessThan(20);
+    expect(desktopGrid.rows).toBeLessThan(20);
+  });
 });

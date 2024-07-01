@@ -6,9 +6,9 @@
 
 ### Window
 
-- If the viewport is smaller than the Window's minimum size, a different window should render to tell the user that the given program does not support the current viewport size.
-- Implement window focus, which should affect both the z-index of the window and the appearance of the taskbar entry.
 - Grid size should update on window maximize and unmaximize.
+- Implement window focus, which should affect both the z-index of the window and the appearance of the taskbar entry.
+- If the viewport is smaller than the Window's minimum size, a different window should render to tell the user that the given program does not support the current viewport size.
 
 ### File Explorer
 

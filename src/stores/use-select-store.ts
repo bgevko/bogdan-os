@@ -2,12 +2,15 @@ import { create } from 'zustand';
 
 import { type SizePos, Position } from '@/types';
 
+type Context = 'desktop' | 'folder';
+
 interface SelectState {
   selected: Set<string>;
   clickStart: Position;
   selecting: boolean;
   selectingRect: SizePos;
-  context: 'desktop' | 'folder';
+  selectContext: Context;
+  dropContext: Context;
 }
 
 interface SelectActions {
@@ -18,12 +21,14 @@ interface SelectActions {
   setClickStart: (clickStart: Position) => void;
   setSelecting: (selecting: boolean) => void;
   setSelectingRect: (selectingRect: SizePos) => void;
-  setContext: (context: 'desktop' | 'folder') => void;
+  setSelectContext: (selectContext: 'desktop' | 'folder') => void;
+  setDropContext: (dropContext: 'desktop' | 'folder') => void;
 }
 
 const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
   selected: new Set(),
-  context: 'desktop',
+  selectContext: 'desktop',
+  dropContext: 'desktop',
   clickStart: {
     x: 0,
     y: 0,
@@ -72,8 +77,11 @@ const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
   setSelectingRect: (selectingRect: SizePos) => {
     set({ selectingRect });
   },
-  setContext: (context: 'desktop' | 'folder') => {
-    set({ context });
+  setSelectContext: (selectContext: 'desktop' | 'folder') => {
+    set({ selectContext });
+  },
+  setDropContext: (dropContext: 'desktop' | 'folder') => {
+    set({ dropContext });
   },
 }));
 

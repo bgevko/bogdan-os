@@ -11,16 +11,18 @@ interface DropGuideProps {
   padding: number;
 }
 
-const GuideSquare = ({ x, y }: { x: number; y: number }): ReactElement => (
-  <span
-    className="pointer-events-none absolute border-2 border-dashed border-accent-400 transition-all"
-    style={{
-      width: `${ICON_SIZE.toString()}px`,
-      height: `${ICON_SIZE.toString()}px`,
-      transform: `translate(${x.toString()}px, ${y.toString()}px)`,
-    }}
-  />
-);
+const GuideSquare = ({ x, y }: { x: number; y: number }): ReactElement => {
+  return (
+    <span
+      className="pointer-events-none absolute border-2 border-dashed border-accent-400 transition-all"
+      style={{
+        width: `${ICON_SIZE.toString()}px`,
+        height: `${ICON_SIZE.toString()}px`,
+        transform: `translate(${x.toString()}px, ${y.toString()}px)`,
+      }}
+    />
+  );
+};
 
 const DropGuide = ({
   padding,

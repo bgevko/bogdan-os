@@ -1,9 +1,10 @@
+import { TASKBAR_HEIGHT } from '@/themes';
 import { GridOptions, GridState } from '@/types';
 
 function newGridState(options: GridOptions): GridState {
-  const { parentWidth, parentHeight, cellSize, childPaths } = options;
-  const rows = Math.floor(parentHeight / cellSize);
-  const columns = Math.floor(parentWidth / cellSize);
+  const { cellSize, childPaths } = options;
+  const rows = Math.floor((window.innerHeight - TASKBAR_HEIGHT) / cellSize);
+  const columns = Math.floor(window.innerWidth / cellSize);
   const items = new Map<string, number>();
 
   // Any sort logic can be applied to items here

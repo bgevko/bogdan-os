@@ -68,6 +68,7 @@ interface ProcessesActions {
   open: (filePaths: string | string[], options?: ProcessOptions) => void;
   close: (filePaths: string | string[]) => void;
   closeAll: () => void;
+  isOpen: (path: string) => boolean;
   validatedOpen: (path: string) => void;
   getOpened: () => Map<string, ProcessNode>;
   getProcess(path: string): ProcessNode;
@@ -148,6 +149,8 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
       }
     },
 
+    isOpen: (path) => get().openedProcesses.has(path),
+
     // window helpers
     setWindow: (path, sizePos) => {
       setWindowPropHelper('size', path, sizePos.size);
@@ -188,13 +191,21 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
       setWindowPropHelper('isMaximized', path, maximized);
     },
     getIsMaximized: (path) => {
-      return getWindowPropHelper('isMaximized', path);
+      try {
+        return getWindowPropHelper('isMaximized', path);
+      } catch {
+        return false;
+      }
     },
     setIsMinimized: (path, isMinimized) => {
       setWindowPropHelper('isMinimized', path, isMinimized);
     },
     getIsMinimized: (path) => {
-      return getWindowPropHelper('isMinimized', path);
+      try {
+        return getWindowPropHelper('isMinimized', path);
+      } catch {
+        return false;
+      }
     },
     setIsAnimating: (path, isAnimating) => {
       setWindowPropHelper('isAnimating', path, isAnimating);

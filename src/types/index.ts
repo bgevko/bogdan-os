@@ -58,8 +58,6 @@ export interface FileNodeOptions {
 }
 
 export interface GridOptions {
-  parentWidth: number;
-  parentHeight: number;
   cellSize: number;
   flow: 'row' | 'col';
   childPaths: string[];

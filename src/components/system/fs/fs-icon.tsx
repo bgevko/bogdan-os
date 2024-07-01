@@ -19,7 +19,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const getGridIndex = useGridStore((state) => state.getIndex);
   const gridItemsPerLine = useGridStore((state) => state.getGrid(parentPath).lineSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
-  const selectContext = useSelectStore((state) => state.context);
+  const selectContext = useSelectStore((state) => state.selectContext);
 
   const context = parentPath === '/Desktop' ? 'desktop' : 'folder';
   const { registerEvents } = UseEvents();

@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 import { iconsPath, startingDir } from '@/constants';
 import useGridStore from '@/stores/use-grid-store';
-import { GRID_CELL_SIZE, DEFAULT_WINDOW_SIZE, TASKBAR_HEIGHT } from '@/themes';
+import { GRID_CELL_SIZE } from '@/themes';
 import { type Paths, FileNode, FileNodeOptions, DirectoryMap } from '@/types';
 import { parseParentPath, normalizePath, parseFileIcon } from '@/utils/fs';
 
@@ -22,9 +22,6 @@ export function newFileNode(options: FileNodeOptions = {}): FileNode {
 export function newGrid(filePath: string, dir: FileNode): void {
   const { createGrid } = useGridStore.getState();
   createGrid(filePath, {
-    parentWidth: filePath === '/Desktop' ? window.innerWidth : DEFAULT_WINDOW_SIZE.width,
-    parentHeight:
-      filePath === '/Desktop' ? window.innerHeight - TASKBAR_HEIGHT : DEFAULT_WINDOW_SIZE.height,
     cellSize: GRID_CELL_SIZE,
     childPaths: [...dir.children.keys()],
     flow: filePath === '/Desktop' ? 'row' : 'col',

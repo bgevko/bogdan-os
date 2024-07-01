@@ -11,7 +11,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const setSelectRect = useSelectStore((state) => state.setSelectingRect);
   const start = useSelectStore((state) => state.clickStart);
   const setStart = useSelectStore((state) => state.setClickStart);
-  const globalContext = useSelectStore((state) => state.context);
+  const selectContext = useSelectStore((state) => state.selectContext);
 
   const getWindow = useProcessesStore((state) => state.getWindow);
 
@@ -24,7 +24,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   }, [setSelecting, setSelectRect]);
 
   const getFolderPosition = useCallback(() => {
-    if (globalContext === 'desktop') {
+    if (selectContext === 'desktop') {
       return {
         folderX: 0,
         folderY: 0,
@@ -35,18 +35,18 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
       folderX: folder.position.x,
       folderY: folder.position.y,
     };
-  }, [globalContext, rootPath, getWindow]);
+  }, [selectContext, rootPath, getWindow]);
 
   const getMouseClickStart = useCallback(
     (event: MouseEvent) => {
       event.stopPropagation();
-      if (localContext !== globalContext) return;
+      if (localContext !== selectContext) return;
       const { folderX, folderY } = getFolderPosition();
       const x = event.clientX - folderX;
       const y = event.clientY - folderY;
       setStart({ x, y });
     },
-    [setStart, getFolderPosition, localContext, globalContext],
+    [setStart, getFolderPosition, localContext, selectContext],
   );
 
   const drawSelectRect = useCallback(
@@ -64,13 +64,13 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
       const rectSize = { width, height };
       const rectPos = {
-        x: globalContext === 'folder' ? x - 6 : x,
-        y: globalContext === 'folder' ? y - 40 : y,
+        x: selectContext === 'folder' ? x - 6 : x,
+        y: selectContext === 'folder' ? y - 40 : y,
       };
 
       setSelectRect({ size: rectSize, position: rectPos });
     },
-    [selecting, start, setSelectRect, getFolderPosition, globalContext],
+    [selecting, start, setSelectRect, getFolderPosition, selectContext],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -85,7 +85,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
   return (
     <>
-      {localContext === globalContext && (
+      {localContext === selectContext && (
         <span
           className="absolute z-10 border border-dashed border-accent bg-accent/10"
           style={{

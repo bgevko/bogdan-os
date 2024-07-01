@@ -27,8 +27,8 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const grid = useGridStore((state) => state.getGrid(path));
   const updateGridSize = useGridStore((state) => state.updateSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
-  const isUpdatingSize = useProcessesStore((state) => state.getIsUpdatingSize(path));
-  const setContext = useSelectStore((state) => state.setContext);
+  const setSelectContext = useSelectStore((state) => state.setSelectContext);
+  const setDropContext = useSelectStore((state) => state.setDropContext);
   const setSelected = useSelectStore((state) => state.setSelected);
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
@@ -36,6 +36,14 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     // eslint-disable-next-line no-param-reassign
     event.dataTransfer.dropEffect = 'move';
   }, []);
+
+  const handleDragEnter = useCallback(() => {
+    if (options?.isDesktop) {
+      setDropContext('desktop');
+    } else {
+      setDropContext('folder');
+    }
+  }, [options?.isDesktop, setDropContext]);
 
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
@@ -46,7 +54,6 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       const dropIndex = positionToIndex(dropX, dropY, grid.lineSize, {
         multiplier: GRID_SIZE,
       });
-      // const elementPaths = event.dataTransfer.getData('text/plain');
       const elementPaths: TransferData[] = JSON.parse(
         event.dataTransfer.getData('text/plain'),
       ) as TransferData[];
@@ -60,37 +67,18 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     [grid.lineSize, setGridIndex, path, getWindow],
   );
 
-  const setDesktopGridSize = useCallback(() => {
+  const handleUpdateGridSize = useCallback(() => {
     updateGridSize(path, window.innerWidth, window.innerHeight - TASKBAR_HEIGHT);
   }, [updateGridSize, path]);
 
-  const setFolderGridSize = useCallback(() => {
-    const { width, height } = getWindow(path).size;
-    updateGridSize(path, width, height);
-  }, [getWindow, path, updateGridSize]);
-
   const handleSelectRectContext = useCallback(() => {
     const localContext = options?.isDesktop ? 'desktop' : 'folder';
-    setContext(localContext);
-  }, [setContext, options?.isDesktop]);
+    setSelectContext(localContext);
+  }, [setSelectContext, options?.isDesktop]);
 
   useEffect(() => {
-    if (options?.isDesktop) {
-      setDesktopGridSize();
-    } else {
-      setFolderGridSize();
-    }
-  }, [setDesktopGridSize, options?.isDesktop, setFolderGridSize]);
-
-  useEffect(() => {
-    if (isUpdatingSize) {
-      setFolderGridSize();
-    }
-  }, [isUpdatingSize, setFolderGridSize]);
-
-  useEffect(() => {
-    registerEvents('resize', [setDesktopGridSize]);
-  }, [registerEvents, setDesktopGridSize]);
+    registerEvents('resize', [handleUpdateGridSize]);
+  }, [registerEvents, handleUpdateGridSize]);
 
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
@@ -102,6 +90,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         gridTemplateRows: `repeat(${grid.rows.toString()}, ${GRID_SIZE.toString()}px)`,
       }}
       onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
       onDrop={handleDrop}
       onMouseDown={() => {
         setSelected([]);

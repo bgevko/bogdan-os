@@ -32,7 +32,7 @@ const UseSelect = (path: string): UseSelectReturn => {
   const isSelected = allSelected.includes(path);
   const isMultipleSelected = allSelected.length > 1;
 
-  const selectContext = useSelectStore((state) => state.context);
+  const selectContext = useSelectStore((state) => state.selectContext);
   const localContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
 
   const { registerEvents } = useEvents();

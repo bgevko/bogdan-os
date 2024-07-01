@@ -37,6 +37,8 @@ const UseMaxMin = (path: string): ReturnTypes => {
   const setIsAnimating = useProcessesStore((state) => state.setIsAnimating);
   const setOpacity = useProcessesStore((state) => state.setOpacity);
 
+  const setIsUpdatingSize = useProcessesStore((state) => state.setIsUpdatingSize);
+
   const { registerEvents } = useEvents();
 
   const [myViewport, setMyViewport] = useState<SizePos>({
@@ -94,8 +96,15 @@ const UseMaxMin = (path: string): ReturnTypes => {
     }
     setTimeout(() => {
       setIsAnimating(path, false);
+      setIsUpdatingSize(path, true);
     }, 200);
+
+    setIsUpdatingSize(path, true);
+    setTimeout(() => {
+      setIsUpdatingSize(path, false);
+    }, 201);
   }, [
+    setIsUpdatingSize,
     path,
     isMaximized,
     myViewport,
@@ -123,8 +132,14 @@ const UseMaxMin = (path: string): ReturnTypes => {
     }
     setTimeout(() => {
       setIsAnimating(path, false);
+      setIsUpdatingSize(path, true);
     }, 200);
+
+    setTimeout(() => {
+      setIsUpdatingSize(path, false);
+    }, 201);
   }, [
+    setIsUpdatingSize,
     setIsAnimating,
     setIsMinimized,
     setOpacity,

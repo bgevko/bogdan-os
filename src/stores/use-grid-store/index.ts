@@ -30,6 +30,8 @@ interface GridActions {
   appendParent: (finalPath: string) => void;
   setIndex: (path: string, index: number) => void;
   getIndex: (path: string) => number;
+  getLineSize: (path: string) => number;
+  getNumColumns: (path: string) => number;
   sort: (gridPath: string, order: 'asc' | 'desc') => void;
   updateSize: (path: string, width: number, height: number) => void;
   reset: () => void;
@@ -42,8 +44,6 @@ const useGridStore = create<GridSystem & GridActions>()(
       [
         '/',
         newGridState({
-          parentWidth: 0,
-          parentHeight: 0,
           cellSize: GRID_CELL_SIZE,
           flow: 'col',
           childPaths: [],
@@ -84,6 +84,14 @@ const useGridStore = create<GridSystem & GridActions>()(
       const parentPath = parseParentPath(path);
       return get().gridMap.get(parentPath)!.items.get(path)!;
     },
+    getLineSize: (path) => {
+      validateParentPath(path);
+      return get().gridMap.get(path)!.lineSize;
+    },
+    getNumColumns: (path) => {
+      validateParentPath(path);
+      return get().gridMap.get(path)!.columns;
+    },
     sort: (gridPath, order) => {
       validateParentPath(gridPath);
       set((state) => {
@@ -114,8 +122,6 @@ const useGridStore = create<GridSystem & GridActions>()(
           [
             '/',
             newGridState({
-              parentWidth: 0,
-              parentHeight: 0,
               cellSize: GRID_CELL_SIZE,
               flow: 'col',
               childPaths: [],
