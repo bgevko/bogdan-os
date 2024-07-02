@@ -29,3 +29,7 @@
 ### Tests
 
 - Write new cypress tests for the new features
+
+### Issues
+
+Drop guide shouldn't clip its parent boundary

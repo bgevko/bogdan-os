@@ -9,7 +9,7 @@ interface SelectState {
   clickStart: Position;
   selecting: boolean;
   selectingRect: SizePos;
-  selectContext: Context;
+  selectRectContext: Context;
   dropContext: Context;
 }
 
@@ -27,7 +27,7 @@ interface SelectActions {
 
 const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
   selected: new Set(),
-  selectContext: 'desktop',
+  selectRectContext: 'desktop',
   dropContext: 'desktop',
   clickStart: {
     x: 0,
@@ -78,7 +78,7 @@ const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
     set({ selectingRect });
   },
   setSelectContext: (selectContext: 'desktop' | 'folder') => {
-    set({ selectContext });
+    set({ selectRectContext: selectContext });
   },
   setDropContext: (dropContext: 'desktop' | 'folder') => {
     set({ dropContext });

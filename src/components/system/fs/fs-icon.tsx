@@ -19,9 +19,10 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const getGridIndex = useGridStore((state) => state.getIndex);
   const gridItemsPerLine = useGridStore((state) => state.getGrid(parentPath).lineSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
-  const selectContext = useSelectStore((state) => state.selectContext);
+  const selectRectContext = useSelectStore((state) => state.selectRectContext);
 
   const context = parentPath === '/Desktop' ? 'desktop' : 'folder';
+  const dropContext = useSelectStore((state) => state.dropContext);
   const { registerEvents } = UseEvents();
 
   const {
@@ -71,7 +72,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   );
 
   const getFolderPosition = useCallback(() => {
-    if (context === 'desktop') {
+    if (context === 'desktop' || dropContext === 'desktop') {
       return {
         folderX: 0,
         folderY: 0,
@@ -82,7 +83,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
       folderX: folder.position.x,
       folderY: folder.position.y,
     };
-  }, [context, parentPath, getWindow]);
+  }, [context, dropContext, parentPath, getWindow]);
 
   const handleDrag = useCallback(
     (event: React.DragEvent) => {
@@ -164,11 +165,13 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
         </button>
       </li>
       <DropGuide
+        path={parentPath}
+        context={context}
         isVisible={dropGuideVisible}
-        index={guideIndex}
+        mouseIndex={guideIndex}
         offsets={indexOffsets}
         itemsPerLine={gridItemsPerLine}
-        padding={selectContext === 'desktop' ? 16 : 16}
+        padding={selectRectContext === 'desktop' ? 16 : 16}
       />
     </>
   );

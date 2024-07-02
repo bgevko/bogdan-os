@@ -11,7 +11,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const setSelectRect = useSelectStore((state) => state.setSelectingRect);
   const start = useSelectStore((state) => state.clickStart);
   const setStart = useSelectStore((state) => state.setClickStart);
-  const selectContext = useSelectStore((state) => state.selectContext);
+  const selectContext = useSelectStore((state) => state.selectRectContext);
 
   const getWindow = useProcessesStore((state) => state.getWindow);
 
