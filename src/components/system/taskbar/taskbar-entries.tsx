@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 import { iconsPath } from '@/constants';
 import UseWindowState from '@/hooks/use-window';
@@ -19,8 +19,18 @@ const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Elemen
   const close = useProcessesStore((state) => state.close);
   const setMinimizedDimensions = useProcessesStore((state) => state.setMinimizedWindow);
   const tabReference = useRef<HTMLButtonElement>(null);
+  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
+  const setFocused = useProcessesStore((state) => state.setFocused);
 
   const { handleWindowMinimizeToggle } = UseWindowState(path);
+
+  const handleTabFocus = useCallback(() => {
+    if (isFocused || isMinimized) {
+      handleWindowMinimizeToggle();
+    } else {
+      setFocused(path);
+    }
+  }, [handleWindowMinimizeToggle, isFocused, isMinimized, path, setFocused]);
 
   useEffect(() => {
     if (tabReference.current) {
@@ -58,11 +68,12 @@ const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Elemen
       data-testid="taskbar-entry"
       className={cn(
         'flex h-full items-center justify-center gap-1 text-onSurface cursor-pointer select-none',
-        isMinimized ? 'embossed-border' : 'debossed-border',
+        isMinimized && 'embossed-border',
+        isFocused && 'debossed-border',
         buttonDown ? 'debossed-border ' : 'embossed-border',
       )}
       onClick={() => {
-        handleWindowMinimizeToggle();
+        handleTabFocus();
       }}
       onContextMenuCapture={(event) => {
         event.preventDefault();
@@ -108,7 +119,7 @@ const TaskbarEntries = (): JSX.Element => {
   const opened = useProcessesStore((state) => state.openedProcesses);
 
   return (
-    <ol className="flex size-full items-center justify-start bg-surface">
+    <ol className="flex size-full items-center justify-start gap-1 bg-surface">
       {[...opened].map(([process, { icon, fileName }]) => {
         return <TaskbarEntry key={process} path={process} icon={icon} title={fileName} />;
       })}

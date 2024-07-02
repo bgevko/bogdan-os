@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-use-before-define */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { enableMapSet } from 'immer';
@@ -83,6 +84,8 @@ interface ProcessesActions {
   appendFocused: (path: string) => void;
   popFocused: () => void;
   setFocused: (path: string) => void;
+  getIsFocused: (path: string) => boolean;
+  setBlurFocus: (blurred: boolean) => void;
 
   // window stuff
   setWindow: (path: string, sizePos: SizePos) => void;
@@ -119,6 +122,7 @@ interface ProcessesState {
   openedProcesses: Map<string, ProcessNode>;
   cachedOptions: Map<string, ProcessOptions>;
   focused: string[];
+  blurred: boolean;
 }
 
 function normalizeArgs(args: string | string[]): string[] {
@@ -130,6 +134,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     openedProcesses: new Map<string, ProcessNode>(),
     cachedOptions: new Map<string, ProcessOptions>(),
     focused: [],
+    blurred: false,
     open: (filePaths, options = {}) => {
       const paths = normalizeArgs(filePaths);
 
@@ -139,6 +144,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
           const defaultOptions = { ...cachedOptions, ...options };
           const node = newProcessNode(path, defaultOptions);
           state.openedProcesses.set(path, node);
+          state.focused.push(path);
         }
       });
     },
@@ -150,6 +156,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
           const toClose = get().getProcess(path);
           state.cachedOptions.set(path, dumpOptions(toClose));
           state.openedProcesses.delete(path);
+          state.focused.pop();
         }
       });
     },
@@ -183,6 +190,16 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
           state.focused.splice(index, 1);
         }
         state.focused.push(path);
+        if (state.blurred) state.blurred = false;
+      });
+    },
+    getIsFocused: (path) => {
+      const focused = get().getFocused().at(-1);
+      return focused === path && !get().blurred;
+    },
+    setBlurFocus: (blurred) => {
+      set((state) => {
+        state.blurred = blurred;
       });
     },
 
@@ -234,6 +251,13 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     },
     setIsMinimized: (path, isMinimized) => {
       setWindowPropHelper('isMinimized', path, isMinimized);
+
+      // Side effect: append and pop focused stack
+      if (isMinimized) {
+        get().popFocused();
+      } else {
+        get().appendFocused(path);
+      }
     },
     getIsMinimized: (path) => {
       try {
@@ -306,7 +330,11 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     getCached: () => get().cachedOptions,
     getCachedPaths: () => [...get().cachedOptions.keys()],
     reset: () => {
-      set(() => ({ openedProcesses: new Map(), cachedOptions: new Map() }));
+      set(() => ({
+        openedProcesses: new Map(),
+        cachedOptions: new Map(),
+        focused: [],
+      }));
     },
     getOpenedPaths: () => [...get().openedProcesses.keys()],
   })),

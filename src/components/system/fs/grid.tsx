@@ -31,6 +31,8 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const setDropContext = useSelectStore((state) => state.setDropContext);
   const setSelected = useSelectStore((state) => state.setSelected);
 
+  const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
+
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     // eslint-disable-next-line no-param-reassign
@@ -80,6 +82,13 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     registerEvents('resize', [handleUpdateGridSize]);
   }, [registerEvents, handleUpdateGridSize]);
 
+  const handleBlurWindowFocus = useCallback(() => {
+    const localContext = options?.isDesktop ? 'desktop' : 'folder';
+    if (localContext === 'desktop') {
+      setBlurFocus(true);
+    }
+  }, [setBlurFocus, options?.isDesktop]);
+
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ol
@@ -95,6 +104,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       onMouseDown={() => {
         setSelected([]);
         handleSelectRectContext();
+        handleBlurWindowFocus();
       }}
     >
       {children}

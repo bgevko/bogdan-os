@@ -1,4 +1,5 @@
-import { type ReactElement, ReactNode } from 'react';
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+import { type ReactElement, ReactNode, useCallback } from 'react';
 
 import WindowResizeHandles from '@/components/system/window/resize-handles';
 import WindowHeader from '@/components/system/window/window-header';
@@ -16,9 +17,24 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const size = useProcessesStore((state) => state.getWindowSize(path));
   const opacity = useProcessesStore((state) => state.getOpacity(path));
   const isMinimized = useProcessesStore((state) => state.getIsMinimized(path));
+  const setFocused = useProcessesStore((state) => state.setFocused);
+  const allFocused = useProcessesStore((state) => state.getFocused());
+  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
+  const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
+
+  const handleWindowFocus = useCallback(() => {
+    setFocused(path);
+  }, [path, setFocused, setBlurFocus]);
+
+  const calcZIndex = useCallback(() => {
+    if (isMinimized) return -1;
+    const myZIndex = allFocused.indexOf(path);
+    return myZIndex + 1;
+  }, [isMinimized, allFocused, path]);
 
   return (
     <section
+      role="application"
       data-testid="window"
       className={cn(
         'z-10 embossed-border absolute flex flex-col',
@@ -29,8 +45,10 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
         width: size.width,
         height: size.height,
         opacity,
-        zIndex: isMinimized ? -1 : 1,
+        zIndex: calcZIndex(),
+        filter: isFocused ? 'none' : 'saturate(0.0)',
       }}
+      onMouseDownCapture={handleWindowFocus}
     >
       {!isMinimized && (
         <>
