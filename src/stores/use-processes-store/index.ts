@@ -27,8 +27,28 @@ const validatePath = (path: string): void => {
   state.validatePath(path);
 };
 
+function offsetWindowPos(position: Position, size: Size): Position {
+  const offset = 30;
+
+  const { width, height } = size;
+  const { x, y } = position;
+  const newX = x + offset;
+  const newY = y + offset;
+  const adjustedX = newX + width > window.innerWidth ? window.innerWidth - width : newX;
+  const adjustedY = newY + height > window.innerHeight ? window.innerHeight - height : newY;
+
+  return { x: adjustedX, y: adjustedY };
+}
+
 function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode {
   const zeroSizePos = { size: { width: 0, height: 0 }, position: { x: 0, y: 0 } };
+  // We're going to try and get the window in the center of the screen when first opened
+  let pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  pos = options.position ?? {
+    x: window.innerWidth / 2 - DEFAULT_WINDOW_SIZE.width / 2,
+    y: window.innerHeight / 2 - DEFAULT_WINDOW_SIZE.height / 2,
+  };
+
   return {
     path,
     fileName: parseFileName(path),
@@ -38,7 +58,7 @@ function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode
     window: {
       minSize: options.minSize ?? MIN_WINDOW_SIZE,
       size: options.size ?? DEFAULT_WINDOW_SIZE,
-      position: options.position ?? DEFAULT_WINDOW_POSITION,
+      position: pos,
       defaultSizePos: { size: DEFAULT_WINDOW_SIZE, position: DEFAULT_WINDOW_POSITION },
       isMaximized: false,
       isMinimized: false,
@@ -78,6 +98,7 @@ interface ProcessesActions {
   getCached(): Map<string, ProcessOptions>;
   getCachedProcess(path: string): ProcessOptions;
   getCachedPaths: () => string[];
+  isCached(path: string): boolean;
 
   // focus context
   getFocused: () => string[];
@@ -137,12 +158,22 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     blurred: false,
     open: (filePaths, options = {}) => {
       const paths = normalizeArgs(filePaths);
+      if (get().openedProcesses.has(paths[0])) return;
 
       set((state) => {
         for (const path of paths) {
           const cachedOptions = get().getCachedProcess(path);
           const defaultOptions = { ...cachedOptions, ...options };
           const node = newProcessNode(path, defaultOptions);
+
+          if (!state.isCached(path) && state.openedProcesses.size > 0) {
+            const lastOpened = [...state.openedProcesses.values()].pop()!;
+            const offsetPosition = offsetWindowPos(
+              lastOpened.window.position,
+              lastOpened.window.size,
+            );
+            node.window.position = offsetPosition;
+          }
           state.openedProcesses.set(path, node);
           state.focused.push(path);
         }
@@ -329,6 +360,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     },
     getCached: () => get().cachedOptions,
     getCachedPaths: () => [...get().cachedOptions.keys()],
+    isCached: (path) => get().cachedOptions.has(path),
     reset: () => {
       set(() => ({
         openedProcesses: new Map(),

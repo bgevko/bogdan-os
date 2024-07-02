@@ -3,7 +3,7 @@ import { it, expect, describe, beforeEach } from 'vitest';
 
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
-import { DEFAULT_WINDOW_SIZEPOS, MIN_WINDOW_SIZE } from '@/themes';
+import { MIN_WINDOW_SIZE } from '@/themes';
 import { SizePos, Position, Size } from '@/types';
 import { parseFileIcon } from '@/utils/fs';
 
@@ -68,8 +68,6 @@ describe('useProcessesStore', () => {
   it('Should be able to set various window attributes', () => {
     act(() => {
       store.open('/test.app');
-      const myWindow = store.getWindow('/test.app');
-      expect(myWindow).toEqual(DEFAULT_WINDOW_SIZEPOS);
       const newSizePos: SizePos = {
         size: { width: 100, height: 100 },
         position: { x: 100, y: 100 },

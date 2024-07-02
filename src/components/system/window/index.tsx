@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { type ReactElement, ReactNode, useCallback } from 'react';
 
 import WindowResizeHandles from '@/components/system/window/resize-handles';
@@ -20,11 +19,10 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const setFocused = useProcessesStore((state) => state.setFocused);
   const allFocused = useProcessesStore((state) => state.getFocused());
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
-  const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
 
   const handleWindowFocus = useCallback(() => {
     setFocused(path);
-  }, [path, setFocused, setBlurFocus]);
+  }, [path, setFocused]);
 
   const calcZIndex = useCallback(() => {
     if (isMinimized) return -1;
