@@ -8,7 +8,6 @@ import { immer } from 'zustand/middleware/immer';
 import useFsStore from '@/stores/use-fs-store';
 import { MIN_WINDOW_SIZE, DEFAULT_WINDOW_SIZE, DEFAULT_WINDOW_POSITION } from '@/themes';
 import { type Position, Size, SizePos, ProcessNode, WindowState } from '@/types';
-import { parseFileExt, parseFileName, parseFileIcon } from '@/utils/fs';
 
 enableMapSet();
 
@@ -51,9 +50,6 @@ function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode
 
   return {
     path,
-    fileName: parseFileName(path),
-    fileExt: parseFileExt(path),
-    icon: parseFileIcon(path),
     hasWindow: options.hasWindow ?? true,
     window: {
       minSize: options.minSize ?? MIN_WINDOW_SIZE,
@@ -75,8 +71,6 @@ function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode
 
 function dumpOptions(node: ProcessNode): ProcessOptions {
   return {
-    fileName: node.fileName,
-    fileExt: node.fileExt,
     hasWindow: node.hasWindow,
     position: node.window.position,
     minSize: node.window.minSize,
@@ -176,6 +170,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
           }
           state.openedProcesses.set(path, node);
           state.focused.push(path);
+          state.blurred = false;
         }
       });
     },

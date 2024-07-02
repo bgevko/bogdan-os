@@ -5,7 +5,6 @@ import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { MIN_WINDOW_SIZE } from '@/themes';
 import { SizePos, Position, Size } from '@/types';
-import { parseFileIcon } from '@/utils/fs';
 
 beforeEach(() => {
   const { result } = renderHook(() => useProcessesStore());
@@ -46,22 +45,6 @@ describe('useProcessesStore', () => {
       store.close(['/test.app', '/file']);
       openedPaths = store.getOpenedPaths();
       expect(openedPaths).toEqual(['/folder']);
-    });
-  });
-  it('should open with a correct icon', () => {
-    act(() => {
-      store.open(['/test.app', '/file', '/folder']);
-      let process = store.getProcess('/test.app');
-      let expectedIcon = parseFileIcon('/test.app');
-      expect(process.icon).toEqual(expectedIcon);
-
-      process = store.getProcess('/file');
-      expectedIcon = parseFileIcon('/file');
-      expect(process.icon).toEqual(expectedIcon);
-
-      process = store.getProcess('/folder');
-      expectedIcon = parseFileIcon('/folder');
-      expect(process.icon).toEqual(expectedIcon);
     });
   });
 

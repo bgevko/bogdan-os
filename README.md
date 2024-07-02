@@ -1,14 +1,9 @@
 ### Tasks
 
-### Taskbar
-
-- Taskbar entry should appear closed when the window is not in focus and open when it is in focus.
-
 ### Window
 
-- Grid size should update on window maximize and unmaximize.
-- Implement window focus, which should affect both the z-index of the window and the appearance of the taskbar entry.
 - If the viewport is smaller than the Window's minimum size, a different window should render to tell the user that the given program does not support the current viewport size.
+- More robust system for window position
 
 ### File Explorer
 
@@ -27,8 +22,8 @@
 
 ### File System
 
-- Implement rmdir and rm
 - Implement mv (rename)
+- Implement rmdir and rm
 - Implement cp (copy)
 
 ### Tests

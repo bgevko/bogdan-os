@@ -33,3 +33,4 @@ export const DefaultApp = lazy(() => import('@/components/apps/hello-world'));
 
 // Other
 export const iconsPath = '/icons/system';
+export const folderIconPath = '/icons/system/folder.png';

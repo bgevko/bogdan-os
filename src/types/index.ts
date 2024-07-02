@@ -90,9 +90,6 @@ export interface WindowState {
 
 export interface ProcessNode {
   path: string;
-  fileName: string;
-  fileExt: string;
-  icon: string;
   hasWindow: boolean;
   window: WindowState;
 }

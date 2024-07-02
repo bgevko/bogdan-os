@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
@@ -16,6 +16,8 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const getWindow = useProcessesStore((state) => state.getWindow);
 
   const { registerEvents } = useEvents();
+
+  const [isVisible, setIsVisible] = useState(false);
 
   const localContext = rootPath === '/Desktop' ? 'desktop' : 'folder';
   const handleMouseDown = useCallback(() => {
@@ -53,6 +55,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
     (event: MouseEvent) => {
       event.stopPropagation();
       if (!selecting) return;
+      setIsVisible(true);
       const { folderX, folderY } = getFolderPosition();
       const adjustedX = event.clientX - folderX;
       const adjustedY = event.clientY - folderY;
@@ -64,8 +67,8 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
       const rectSize = { width, height };
       const rectPos = {
-        x: selectContext === 'folder' ? x - 6 : x,
-        y: selectContext === 'folder' ? y - 40 : y,
+        x: selectContext === 'folder' ? x - 16 : x,
+        y: selectContext === 'folder' ? y - 48 : y,
       };
 
       setSelectRect({ size: rectSize, position: rectPos });
@@ -75,6 +78,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
   const handleMouseUp = useCallback(() => {
     setSelecting(false);
+    setIsVisible(false);
   }, [setSelecting]);
 
   useEffect(() => {
@@ -89,7 +93,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
         <span
           className="absolute z-10 border border-dashed border-accent bg-accent/10"
           style={{
-            display: selecting ? 'block' : 'none',
+            display: selecting && isVisible ? 'block' : 'none',
             width: selectRect.size.width,
             height: selectRect.size.height,
             transform: `translate(${selectRect.position.x.toString()}px, ${selectRect.position.y.toString()}px)`,

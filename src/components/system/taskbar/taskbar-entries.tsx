@@ -1,17 +1,17 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
-import { iconsPath } from '@/constants';
+import { folderIconPath } from '@/constants';
 import UseWindowState from '@/hooks/use-window';
+import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
+import { parseFileName, parseFileIcon } from '@/utils/fs';
 
 interface taskbarEntryProperties {
-  icon: string;
-  title: string;
   path: string;
 }
 
-const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Element => {
+const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
   const [imgError, setImgError] = useState(false);
   const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
@@ -19,8 +19,12 @@ const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Elemen
   const close = useProcessesStore((state) => state.close);
   const setMinimizedDimensions = useProcessesStore((state) => state.setMinimizedWindow);
   const tabReference = useRef<HTMLButtonElement>(null);
-  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
   const setFocused = useProcessesStore((state) => state.setFocused);
+  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
+  const isDir = useFsStore((state) => state.isDir(path));
+
+  const title = parseFileName(path);
+  const icon = isDir ? folderIconPath : parseFileIcon(path);
 
   const { handleWindowMinimizeToggle } = UseWindowState(path);
 
@@ -102,7 +106,7 @@ const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Elemen
     >
       {!imgError && (
         <img
-          src={`${iconsPath}/${icon}.png`}
+          src={icon}
           alt={title}
           width="24"
           onError={() => {
@@ -116,12 +120,13 @@ const TaskbarEntry = ({ icon, title, path }: taskbarEntryProperties): JSX.Elemen
 };
 
 const TaskbarEntries = (): JSX.Element => {
-  const opened = useProcessesStore((state) => state.openedProcesses);
+  const opened = useProcessesStore((state) => state.getOpenedPaths());
 
   return (
     <ol className="flex size-full items-center justify-start gap-1 bg-surface">
-      {[...opened].map(([process, { icon, fileName }]) => {
-        return <TaskbarEntry key={process} path={process} icon={icon} title={fileName} />;
+      {/* {[...opened].map(([process, { icon, fileName }]) => { */}
+      {opened.map((processPath) => {
+        return <TaskbarEntry key={processPath} path={processPath} />;
       })}
     </ol>
   );
