@@ -212,4 +212,71 @@ describe('useProcessesStore', () => {
       expect(store.getFocused()).toEqual(['/2', '/5', '/3', '/4', '/1', '/Desktop']);
     });
   });
+
+  it('should correctly determine if a path is focused', () => {
+    act(() => {
+      fs.initDir(['/1', '/2', '/3']);
+
+      store.setFocused('/1');
+      expect(store.getIsFocused('/1')).toBe(true);
+      expect(store.getIsFocused('/2')).toBe(false);
+      expect(store.getIsFocused('/3')).toBe(false);
+
+      store.setFocused('/2');
+      expect(store.getIsFocused('/1')).toBe(false);
+      expect(store.getIsFocused('/2')).toBe(true);
+      expect(store.getIsFocused('/3')).toBe(false);
+
+      store.setFocused('/3');
+      expect(store.getIsFocused('/1')).toBe(false);
+      expect(store.getIsFocused('/2')).toBe(false);
+      expect(store.getIsFocused('/3')).toBe(true);
+
+      store.popFocused();
+      expect(store.getIsFocused('/1')).toBe(false);
+      expect(store.getIsFocused('/2')).toBe(true);
+      expect(store.getIsFocused('/3')).toBe(false);
+
+      store.popFocused();
+      expect(store.getIsFocused('/1')).toBe(true);
+      expect(store.getIsFocused('/2')).toBe(false);
+      expect(store.getIsFocused('/3')).toBe(false);
+
+      store.popFocused();
+      expect(store.getIsFocused('/1')).toBe(false);
+      expect(store.getIsFocused('/2')).toBe(false);
+      expect(store.getIsFocused('/3')).toBe(false);
+    });
+  });
+
+  it('should set focused and popped focused when opening and closing processes', () => {
+    act(() => {
+      store.reset();
+      fs.initDir(['/1', '/2', '/3']);
+
+      // Open and focus processes
+      store.open('/1');
+      expect(store.getIsFocused('/1')).toBe(true);
+
+      store.open('/2');
+      expect(store.getIsFocused('/2')).toBe(true);
+      expect(store.getIsFocused('/1')).toBe(false);
+
+      store.open('/3');
+      expect(store.getIsFocused('/3')).toBe(true);
+      expect(store.getIsFocused('/2')).toBe(false);
+      expect(store.getIsFocused('/1')).toBe(false);
+
+      store.close('/3');
+      expect(store.getIsFocused('/2')).toBe(true);
+      expect(store.getIsFocused('/1')).toBe(false);
+
+      store.close('/2');
+      expect(store.getIsFocused('/1')).toBe(true);
+      expect(store.getIsFocused('/2')).toBe(false);
+
+      store.close('/1');
+      expect(store.getIsFocused('/1')).toBe(false);
+    });
+  });
 });
