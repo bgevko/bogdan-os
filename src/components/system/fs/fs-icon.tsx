@@ -127,8 +127,11 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
           draggable
           className={cn(
             'background-transparent cursor-default flex flex-col items-center focus:outline-none',
-            isSelected && 'bg-accent-50/20',
-            !isSelected && !isUsingSelectRect && 'hover:bg-accent-50/10',
+            isSelected && (context === 'desktop' ? 'bg-accent-50/20' : 'bg-primary-300/80'),
+            // !isSelected && !isUsingSelectRect && 'hover:bg-accent-50/10',
+            !isSelected &&
+              !isUsingSelectRect &&
+              (context === 'desktop' ? 'hover:bg-accent-50/10' : 'hover:bg-primary-300/40'),
           )}
           style={{
             width: `${ICON_SIZE.toString()}px`,

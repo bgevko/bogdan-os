@@ -65,6 +65,7 @@ function dumpOptions(node: ProcessNode): ProcessOptions {
 }
 
 interface ProcessesActions {
+  // Open/close operations
   open: (filePaths: string | string[], options?: ProcessOptions) => void;
   close: (filePaths: string | string[]) => void;
   closeAll: () => void;
@@ -76,6 +77,14 @@ interface ProcessesActions {
   getCached(): Map<string, ProcessOptions>;
   getCachedProcess(path: string): ProcessOptions;
   getCachedPaths: () => string[];
+
+  // focus context
+  getFocused: () => string[];
+  appendFocused: (path: string) => void;
+  popFocused: () => void;
+  setFocused: (path: string) => void;
+
+  // window stuff
   setWindow: (path: string, sizePos: SizePos) => void;
   getWindow: (path: string) => SizePos;
   setWindowPosition: (path: string, position: Position) => void;
@@ -109,6 +118,7 @@ interface ProcessesActions {
 interface ProcessesState {
   openedProcesses: Map<string, ProcessNode>;
   cachedOptions: Map<string, ProcessOptions>;
+  focused: string[];
 }
 
 function normalizeArgs(args: string | string[]): string[] {
@@ -119,6 +129,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
   immer((set, get) => ({
     openedProcesses: new Map<string, ProcessNode>(),
     cachedOptions: new Map<string, ProcessOptions>(),
+    focused: [],
     open: (filePaths, options = {}) => {
       const paths = normalizeArgs(filePaths);
 
@@ -150,6 +161,30 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     },
 
     isOpen: (path) => get().openedProcesses.has(path),
+
+    // focus context
+    getFocused: () => get().focused,
+    appendFocused: (path) => {
+      set((state) => {
+        if (!state.focused.includes(path)) {
+          state.focused.push(path);
+        }
+      });
+    },
+    popFocused: () => {
+      set((state) => {
+        state.focused.pop();
+      });
+    },
+    setFocused: (path) => {
+      set((state) => {
+        const index: number = state.focused.indexOf(path);
+        if (index !== -1) {
+          state.focused.splice(index, 1);
+        }
+        state.focused.push(path);
+      });
+    },
 
     // window helpers
     setWindow: (path, sizePos) => {

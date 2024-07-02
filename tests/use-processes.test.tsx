@@ -21,7 +21,9 @@ beforeEach(() => {
 
 describe('useProcessesStore', () => {
   const { result } = renderHook(() => useProcessesStore());
+  const { result: fsResult } = renderHook(() => useFsStore());
   const store = result.current;
+  const fs = fsResult.current;
   it('should initialize', () => {
     act(() => {
       expect(store).toBeDefined();
@@ -145,6 +147,69 @@ describe('useProcessesStore', () => {
       expect(store.getWindow('/test.app')).toEqual(sizePos1);
       expect(store.getWindow('/file')).toEqual(sizePos2);
       expect(store.getWindow('/folder')).toEqual(sizePos3);
+    });
+  });
+  it('should initialize with an empty focus stack', () => {
+    act(() => {
+      expect(store.getFocused()).toEqual([]);
+    });
+  });
+  it('should append a focused path correctly', () => {
+    act(() => {
+      store.appendFocused('/test.app');
+      expect(store.getFocused()).toEqual(['/test.app']);
+
+      store.appendFocused('/file');
+      expect(store.getFocused()).toEqual(['/test.app', '/file']);
+
+      store.appendFocused('/test.app'); // Should not duplicate
+      expect(store.getFocused()).toEqual(['/test.app', '/file']);
+    });
+  });
+  it('should pop the focused path correctly', () => {
+    act(() => {
+      store.appendFocused('/test.app');
+      store.appendFocused('/file');
+      store.appendFocused('/folder');
+      expect(store.getFocused()).toEqual(['/test.app', '/file', '/folder']);
+
+      store.popFocused();
+      expect(store.getFocused()).toEqual(['/test.app', '/file']);
+
+      store.popFocused();
+      expect(store.getFocused()).toEqual(['/test.app']);
+
+      store.popFocused();
+      expect(store.getFocused()).toEqual([]);
+    });
+  });
+
+  it('should set the focused path correctly', () => {
+    act(() => {
+      fs.initDir(['/1', '/2', '/3', '/4', '/5']);
+
+      store.setFocused('/1');
+      store.setFocused('/2');
+      store.setFocused('/3');
+      store.setFocused('/4');
+      store.setFocused('/5');
+
+      expect(store.getFocused()).toEqual(['/1', '/2', '/3', '/4', '/5']);
+
+      store.setFocused('/3');
+      expect(store.getFocused()).toEqual(['/1', '/2', '/4', '/5', '/3']);
+
+      store.setFocused('/1');
+      expect(store.getFocused()).toEqual(['/2', '/4', '/5', '/3', '/1']);
+
+      store.setFocused('/4');
+      expect(store.getFocused()).toEqual(['/2', '/5', '/3', '/1', '/4']);
+
+      store.setFocused('/1');
+      expect(store.getFocused()).toEqual(['/2', '/5', '/3', '/4', '/1']);
+
+      store.setFocused('/Desktop');
+      expect(store.getFocused()).toEqual(['/2', '/5', '/3', '/4', '/1', '/Desktop']);
     });
   });
 });
