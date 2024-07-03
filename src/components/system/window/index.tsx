@@ -2,6 +2,7 @@ import { type ReactElement, ReactNode, useCallback } from 'react';
 
 import WindowResizeHandles from '@/components/system/window/resize-handles';
 import WindowHeader from '@/components/system/window/window-header';
+import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
 
@@ -19,6 +20,8 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const setFocused = useProcessesStore((state) => state.setFocused);
   const allFocused = useProcessesStore((state) => state.getFocused());
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
+  const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
+  const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
 
   const handleWindowFocus = useCallback(() => {
     setFocused(path);
@@ -47,6 +50,13 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
         filter: isFocused ? 'none' : 'saturate(0.0)',
       }}
       onMouseDownCapture={handleWindowFocus}
+      onMouseEnter={(event: React.MouseEvent) => {
+        event.stopPropagation();
+        appendMouseContext('window');
+      }}
+      onMouseLeave={() => {
+        popMouseContext();
+      }}
     >
       {!isMinimized && (
         <>

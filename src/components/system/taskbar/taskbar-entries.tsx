@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { folderIconPath } from '@/constants';
 import UseWindowState from '@/hooks/use-window';
 import useFsStore from '@/stores/use-fs-store';
+import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
 import { parseFileName, parseFileIcon } from '@/utils/fs';
@@ -22,6 +23,8 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
   const setFocused = useProcessesStore((state) => state.setFocused);
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
   const isDir = useFsStore((state) => state.isDir(path));
+  const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
+  const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
 
   const title = parseFileName(path);
   const icon = isDir ? folderIconPath : parseFileIcon(path);
@@ -92,13 +95,17 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
       onMouseUp={() => {
         setButtonDown(false);
       }}
-      onMouseLeave={() => {
+      onMouseLeave={(event: React.MouseEvent) => {
+        event.stopPropagation();
         setButtonDown(false);
+        popMouseContext();
       }}
-      onMouseEnter={() => {
+      onMouseEnter={(event: React.MouseEvent) => {
+        event.stopPropagation();
         if (mouseDown) {
           setButtonDown(true);
         }
+        appendMouseContext('taskbar-entry');
       }}
       onDoubleClick={(event) => {
         event.stopPropagation();

@@ -53,7 +53,7 @@ const DropGuide = ({
         offsets.map((offset) => (
           <span
             key={offset}
-            className="pointer-events-none absolute border-2 border-dashed border-accent-400 transition-all"
+            className="pointer-events-none absolute z-50 border-2 border-dashed border-accent-400 transition-all"
             style={{
               width: `${ICON_SIZE.toString()}px`,
               height: `${ICON_SIZE.toString()}px`,

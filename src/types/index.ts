@@ -110,5 +110,14 @@ export type ResizeDirection =
   | 'BOTTOM_LEFT'
   | 'BOTTOM_RIGHT';
 
+// Mouse Global Context
+export type MouseContext =
+  | 'desktop'
+  | 'file-icon'
+  | 'taskbar'
+  | 'window'
+  | 'taskbar-entry'
+  | 'context-menu';
+
 // Other statics
 export type Paths = string[];

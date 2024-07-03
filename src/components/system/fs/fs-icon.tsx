@@ -4,6 +4,7 @@ import DropGuide from '@/components/system/fs/drop-guide';
 import UseEvents from '@/hooks/use-events';
 import useSelect from '@/hooks/use-fs/use-select';
 import useGridStore from '@/stores/use-grid-store';
+import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { ICON_SIZE } from '@/themes';
@@ -20,6 +21,9 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const gridItemsPerLine = useGridStore((state) => state.getGrid(parentPath).lineSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
   const selectRectContext = useSelectStore((state) => state.selectRectContext);
+  const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
+  const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
+  const setDragContext = useMouseStore((state) => state.setDragContext);
 
   const context = parentPath === '/Desktop' ? 'desktop' : 'folder';
   const dropContext = useSelectStore((state) => state.dropContext);
@@ -139,12 +143,16 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
             height: `${ICON_SIZE.toString()}px`,
           }}
           onDragStart={handleDragStart}
+          onDragEnter={(event: React.DragEvent) => {
+            event.stopPropagation();
+            setDragContext('file-icon');
+          }}
           onDrag={handleDrag}
           onDragEnd={handleDragEnd}
-          onMouseDown={(e) => {
+          onMouseDown={(e: React.MouseEvent) => {
             e.stopPropagation();
             handleToggleSelect();
-            handleMouseDownSelect();
+            handleMouseDownSelect(e);
           }}
           onFocus={() => {
             handleFocusSelect();
@@ -152,8 +160,14 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
           onMouseUp={() => {
             handleMouseUpSelect();
           }}
-          onMouseLeave={() => {
+          onMouseLeave={(event: React.MouseEvent) => {
+            event.stopPropagation();
             setDropGuideVisible(false);
+            popMouseContext();
+          }}
+          onMouseEnter={(event: React.MouseEvent) => {
+            event.stopPropagation();
+            appendMouseContext('file-icon');
           }}
           onDoubleClickCapture={() => {
             open(path);

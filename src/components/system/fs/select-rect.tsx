@@ -20,10 +20,14 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const [isVisible, setIsVisible] = useState(false);
 
   const localContext = rootPath === '/Desktop' ? 'desktop' : 'folder';
-  const handleMouseDown = useCallback(() => {
-    setSelecting(true);
-    setSelectRect({ size: { width: 0, height: 0 }, position: { x: 0, y: 0 } });
-  }, [setSelecting, setSelectRect]);
+  const handleMouseDown = useCallback(
+    (event: MouseEvent) => {
+      if (event.button !== 0) return;
+      setSelecting(true);
+      setSelectRect({ size: { width: 0, height: 0 }, position: { x: 0, y: 0 } });
+    },
+    [setSelecting, setSelectRect],
+  );
 
   const getFolderPosition = useCallback(() => {
     if (selectContext === 'desktop') {
@@ -91,7 +95,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
     <>
       {localContext === selectContext && (
         <span
-          className="absolute z-10 border border-dashed border-accent bg-accent/10"
+          className="fixed z-50 border border-dashed border-accent bg-accent/10"
           style={{
             display: selecting && isVisible ? 'block' : 'none',
             width: selectRect.size.width,

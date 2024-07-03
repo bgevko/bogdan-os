@@ -4,6 +4,7 @@ import { useEffect, useCallback } from 'react';
 import useEvents from '@/hooks/use-events';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
+import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { TASKBAR_HEIGHT } from '@/themes';
@@ -33,6 +34,8 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const setDropContext = useSelectStore((state) => state.setDropContext);
   const setSelected = useSelectStore((state) => state.setSelected);
   const mv = useFsStore((state) => state.mv);
+  const resetMouseContext = useMouseStore((state) => state.reset);
+  const setDragContext = useMouseStore((state) => state.setDragContext);
 
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
 
@@ -45,10 +48,12 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const handleDragEnter = useCallback(() => {
     if (options?.isDesktop) {
       setDropContext('desktop');
+      setDragContext('desktop');
     } else {
       setDropContext('folder');
+      setDragContext('window');
     }
-  }, [options?.isDesktop, setDropContext]);
+  }, [options?.isDesktop, setDropContext, setDragContext]);
 
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
@@ -120,6 +125,12 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         setSelected([]);
         handleSelectRectContext();
         handleBlurWindowFocus();
+      }}
+      onMouseEnter={(event: React.MouseEvent) => {
+        event.stopPropagation();
+        if (options?.isDesktop) {
+          resetMouseContext();
+        }
       }}
     >
       {children}
