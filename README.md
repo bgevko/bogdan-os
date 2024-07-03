@@ -1,17 +1,26 @@
 ### Tasks
 
+- Fix the issue where dragging items across different contexts doesn't set the correct grid index and position of the dropped item.
+- Fix the issue where the drop guide doesn't align to the folder's grid when dragging from desktop to folder.
+- Fix the issue where dragging an item over an unfocused folder doesn't focus the folder.
+
 ### Window
 
 - If the viewport is smaller than the Window's minimum size, a different window should render to tell the user that the given program does not support the current viewport size.
-- More robust system for window position
+- Better default positions and offset system
 
 ### File Explorer
 
-- Dragging icons from a folder to the desktop should move the icon to the desktop. Same should happen when dragging from the desktop to a folder, or from one folder to another.
-- Dragging icons on top of another folder should move the icon to the folder. If the drop target is not a folder, the icon should return to its original position.
-- Style the folder background
-- Right clicking on a file or folder should open a context menu with options to rename, delete, and copy.
-- Right clicking on the desktop / folder should open a context menu with options to create a new folder and paste.
+- Right clicking on a file or folder should open a context menu with options:
+  - Open
+  - Rename
+  - Delete
+  - Copy
+- Right clicking on the desktop / folder should open a context menu with options:
+  - Sort icons
+  - Create a new folder
+  - Create a new file
+  - Paste
 
 ### Theme
 
@@ -22,9 +31,8 @@
 
 ### File System
 
-- Implement mv (rename)
-- Implement rmdir and rm
 - Implement cp (copy)
+- Implement option for custom icons
 
 ### Tests
 
@@ -32,4 +40,8 @@
 
 ### Issues
 
-Drop guide shouldn't clip its parent boundary
+- Dragging items across different contexts doesn't set the correct grid index and position of the dropped item.
+- Drop guide shouldn't clip its parent boundary
+- Dragging an item over an unfocused folder doesn't focus the folder.
+- Dropguide doesn't align to the folder's grid when dragging from desktop to folder.
+- HMR crashes the app when a folder is opened.

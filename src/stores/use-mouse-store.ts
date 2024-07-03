@@ -38,7 +38,6 @@ const useMouseStore = create<MouseState & MouseActions>((set, get) => ({
   },
   setDragContext: (context) => {
     set({ dragContext: context });
-    console.log('set drag context. New context is', get().dragContext);
   },
   reset: () => {
     const { mouseoverContext: contextStack } = get();

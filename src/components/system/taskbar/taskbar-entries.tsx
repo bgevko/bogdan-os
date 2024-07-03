@@ -17,7 +17,6 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
   const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
   const isMinimized = useProcessesStore((state) => state.getIsMinimized(path));
-  const close = useProcessesStore((state) => state.close);
   const setMinimizedDimensions = useProcessesStore((state) => state.setMinimizedWindow);
   const tabReference = useRef<HTMLButtonElement>(null);
   const setFocused = useProcessesStore((state) => state.setFocused);
@@ -81,11 +80,6 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
       )}
       onClick={() => {
         handleTabFocus();
-      }}
-      onContextMenuCapture={(event) => {
-        event.preventDefault();
-        // debug
-        close(path);
       }}
       onMouseDown={(event) => {
         event.stopPropagation();
