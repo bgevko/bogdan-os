@@ -13,7 +13,7 @@
     "prepare": "husky",
     "test": "vitest --run",
     "test:w": "vitest --watch",
-    "test:current": "vitest use-processes.test",
+    "test:current": "vitest use-fs.test",
     "cy:window": "cypress run --spec 'cypress/e2e/window.cy.ts'",
     "test:ui": "vitest --ui"
   },

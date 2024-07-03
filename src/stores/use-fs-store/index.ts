@@ -9,23 +9,28 @@ import {
   addToParentGrid,
   newFileNode,
   InitHelper,
-} from '@/stores/use-fs-store/init-helper';
+} from '@/stores/use-fs-store/fs-helpers';
 import useGridStore from '@/stores/use-grid-store';
-import { type Paths, FileNode, FileSystem } from '@/types';
+import { type Paths, FileNode, FileSystem, FileRemoveOptions } from '@/types';
 import { splitPath, parseParentPath, normalizePath } from '@/utils/fs';
 
 enableMapSet();
 
 interface FileSystemActions {
-  // Core operations
-  initDir: (source?: Paths) => void;
+  // Getters and setters
   getNode(path: string): FileNode;
   getPaths: () => Set<string>;
-  mkdir: (path: string) => void;
-  touch: (path: string) => void;
   getChildren: (path: string) => FileNode[];
   getChildPaths: (path: string) => string[];
+  getChildPathsDeep: (path: string) => string[];
   getChildrenCount: (path: string) => number;
+
+  // File operations
+  initDir: (sourcePath?: Paths) => void;
+  mkdir: (path: string) => void;
+  touch: (path: string) => void;
+  rm: (path: string, options?: FileRemoveOptions) => void;
+  mv: (sourcePath: string, targetPath: string) => void;
 
   // Validation helpers
   isDir: (path: string) => boolean;
@@ -41,14 +46,56 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
   immer((set, get) => ({
     dir: new InitHelper().getDir(),
 
-    // Core operations
-    initDir: (source?: Paths) => {
+    // Getters and setters
+    getNode: (path: string) => {
+      path = normalizePath(path);
+      get().validatePath(path);
+      return get().dir.get(path)!;
+    },
+    getPaths: () => {
+      return new Set(get().dir.keys());
+    },
+    getChildren: (path: string) => {
+      path = normalizePath(path);
+      const node = get().getNode(path);
+      return [...node.children.values()];
+    },
+    getChildPaths: (path: string) => {
+      path = normalizePath(path);
+      return get()
+        .getChildren(path)
+        .map((child) => child.path);
+    },
+    getChildPathsDeep: (path: string) => {
+      path = normalizePath(path);
+      const paths = new Set<string>();
+      const helper = (filePath: string): void => {
+        const node = get().getNode(filePath);
+        if (filePath !== path) paths.add(filePath);
+        for (const child of node.children.values()) {
+          helper(child.path);
+        }
+      };
+      helper(path);
+      return [...paths];
+    },
+    getChildrenCount: (path: string) => {
+      path = normalizePath(path);
+      try {
+        return get().getNode(path).children.size;
+      } catch {
+        return 0;
+      }
+    },
+
+    // File operations
+    initDir: (sourcePath?: Paths) => {
       set((state) => {
         state.dir = new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]);
       });
       useGridStore.getState().reset();
-      if (!source) return;
-      for (const path of source) {
+      if (!sourcePath) return;
+      for (const path of sourcePath) {
         const isDir = path.endsWith('/');
         if (isDir) {
           get().mkdir(path);
@@ -61,14 +108,25 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
         }
       }
     },
-    getNode: (path: string) => {
-      get().validatePath(path);
-      return get().dir.get(path)!;
+    touch: (path) => {
+      if (path.endsWith('/')) {
+        throw new Error(`Invalid path: ${path}. Use mkdir instead`);
+      }
+      path = normalizePath(path);
+      if (get().dir.has(path)) {
+        throw new Error(`File already exists: ${path}`);
+      }
+      const parentPath = parseParentPath(path);
+      get().mkdir(parentPath);
+      set((state) => {
+        const gridIndex = state.dir.get(parentPath)!.children.size;
+        const newFile = newFileNode({ path, isDir: false, gridIndex });
+        state.dir.get(parentPath)!.children.set(path, newFile);
+        state.dir.set(path, newFile);
+        addToParentGrid(path);
+      });
     },
-    getPaths: () => {
-      return new Set(get().dir.keys());
-    },
-    mkdir: (path: string) => {
+    mkdir: (path) => {
       path = normalizePath(path);
       set((state) => {
         const { dir } = state;
@@ -94,38 +152,61 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
         mkdirHelper(path);
       });
     },
-    touch: (path: string) => {
-      if (path.endsWith('/')) {
-        throw new Error(`Invalid path: ${path}. Use mkdir instead`);
-      }
+
+    rm: (path: string, options?: FileRemoveOptions) => {
       path = normalizePath(path);
-      if (get().dir.has(path)) {
-        throw new Error(`File already exists: ${path}`);
+      if (path === '/') return;
+      const opts: FileRemoveOptions = { filesOnly: false, emptyDirsOnly: false, ...options };
+      if (opts.filesOnly && get().isDir(path)) {
+        throw new Error(`${path} is a directory`);
       }
-      const parentPath = parseParentPath(path);
-      get().mkdir(parentPath);
+      if (opts.emptyDirsOnly && get().getChildrenCount(path) > 0) {
+        throw new Error(`${path} is not empty`);
+      }
       set((state) => {
-        const gridIndex = state.dir.get(parentPath)!.children.size;
-        const newFile = newFileNode({ path, isDir: false, gridIndex });
-        state.dir.get(parentPath)!.children.set(path, newFile);
-        state.dir.set(path, newFile);
-        addToParentGrid(path);
+        const parentPath = parseParentPath(path);
+        if (parentPath) {
+          const parent = state.dir.get(parentPath)!;
+          parent.children.delete(path);
+        }
+        for (const dirPath of state.dir.keys()) {
+          if (dirPath.startsWith(path)) {
+            state.dir.delete(dirPath);
+          }
+        }
       });
     },
-    getChildren: (path: string) => {
-      const node = get().getNode(path);
-      return [...node.children.values()];
-    },
-    getChildPaths: (path: string) => {
-      return get()
-        .getChildren(path)
-        .map((child) => child.path);
-    },
-    getChildrenCount: (path: string) => {
-      try {
-        return get().getNode(path).children.size;
-      } catch {
-        return 0;
+
+    mv: (sourcePath: string, targetPath: string) => {
+      const { dir } = get();
+      sourcePath = normalizePath(sourcePath);
+      targetPath = normalizePath(targetPath);
+
+      get().validatePath(sourcePath);
+
+      if (sourcePath === targetPath) {
+        throw new Error('Source and target paths are the same');
+      }
+      if (dir.has(targetPath)) {
+        throw new Error(`Target path already exists: ${targetPath}`);
+      }
+
+      // Replace the source path with the target path in all children
+      const sourceDeepPaths = get().getChildPathsDeep(sourcePath);
+      const newPaths = sourceDeepPaths.map((path) => path.replace(sourcePath, targetPath));
+
+      // Remove the source path
+      const sourceNode = dir.get(sourcePath)!;
+      get().rm(sourcePath);
+
+      // NOTE: Once paths are associated with content, we need to update the content as well
+      if (sourceNode.isDir) {
+        get().mkdir(targetPath);
+        for (const path of newPaths) {
+          get().mkdir(path);
+        }
+      } else {
+        get().touch(targetPath);
       }
     },
 

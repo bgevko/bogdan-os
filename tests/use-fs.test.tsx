@@ -263,4 +263,189 @@ describe('useFsStore', () => {
       expect(myFileChildren).toEqual([]);
     });
   });
+
+  it('should get deep child paths correctly', () => {
+    act(() => {
+      fs.initDir();
+      fs.mkdir('/test/1/2/3');
+      expect(fs.getChildPathsDeep('/')).toEqual(['/test', '/test/1', '/test/1/2', '/test/1/2/3']);
+      expect(fs.getChildPathsDeep('/test')).toEqual(['/test/1', '/test/1/2', '/test/1/2/3']);
+      expect(fs.getChildPathsDeep('/test/1')).toEqual(['/test/1/2', '/test/1/2/3']);
+      expect(fs.getChildPathsDeep('/test/1/2')).toEqual(['/test/1/2/3']);
+      expect(fs.getChildPathsDeep('/test/1/2/3')).toEqual([]);
+
+      fs.initDir();
+      fs.mkdir('/test/1/2/3');
+      fs.mkdir('/test2/1/2/3');
+      fs.mkdir('/test3/1/2/3');
+      expect(fs.getChildPathsDeep('/')).toEqual([
+        '/test',
+        '/test/1',
+        '/test/1/2',
+        '/test/1/2/3',
+        '/test2',
+        '/test2/1',
+        '/test2/1/2',
+        '/test2/1/2/3',
+        '/test3',
+        '/test3/1',
+        '/test3/1/2',
+        '/test3/1/2/3',
+      ]);
+
+      fs.initDir();
+      fs.mkdir('/test/1/2/3');
+      fs.mkdir('/test/1/4/5');
+      expect(fs.getChildPathsDeep('/')).toEqual([
+        '/test',
+        '/test/1',
+        '/test/1/2',
+        '/test/1/2/3',
+        '/test/1/4',
+        '/test/1/4/5',
+      ]);
+      expect(fs.getChildPathsDeep('/test')).toEqual([
+        '/test/1',
+        '/test/1/2',
+        '/test/1/2/3',
+        '/test/1/4',
+        '/test/1/4/5',
+      ]);
+    });
+  });
+  it('should remove a file with rm', () => {
+    act(() => {
+      fs.initDir();
+      fs.touch('/test.txt');
+      expect([...fs.getPaths()]).toEqual(['/', '/test.txt']);
+      expect(fs.getChildPaths('/')).toEqual(['/test.txt']);
+
+      fs.rm('/test.txt');
+      expect([...fs.getPaths()]).toEqual(['/']);
+      expect(fs.getChildPaths('/')).toEqual([]);
+    });
+  });
+
+  it('should throw an error if attempting to rm with constraint options set', () => {
+    act(() => {
+      fs.initDir();
+      fs.mkdir('/test/hi.txt');
+      expect([...fs.getPaths()]).toEqual(['/', '/test', '/test/hi.txt']);
+
+      expect(() => {
+        fs.rm('/test', { filesOnly: true });
+      }).toThrowError();
+
+      expect(() => {
+        fs.rm('/test', { emptyDirsOnly: true });
+      }).toThrowError();
+    });
+  });
+
+  it('should remove a directory with rm', () => {
+    act(() => {
+      fs.initDir();
+      fs.mkdir('/test/1/2/3');
+      fs.mkdir('/test/1/2/4');
+      fs.mkdir('/test2');
+
+      expect([...fs.getPaths()]).toEqual([
+        '/',
+        '/test',
+        '/test/1',
+        '/test/1/2',
+        '/test/1/2/3',
+        '/test/1/2/4',
+        '/test2',
+      ]);
+
+      fs.rm('test2');
+      expect([...fs.getPaths()]).toEqual([
+        '/',
+        '/test',
+        '/test/1',
+        '/test/1/2',
+        '/test/1/2/3',
+        '/test/1/2/4',
+      ]);
+
+      fs.rm('/test/1/2');
+      expect([...fs.getPaths()]).toEqual(['/', '/test', '/test/1']);
+
+      fs.rm('/test');
+      expect([...fs.getPaths()]).toEqual(['/']);
+    });
+  });
+});
+
+describe('useFsStore - mv function', () => {
+  const { result } = renderHook(() => useFsStore());
+  const fs = result.current;
+
+  it('should move a file or empty directory in the same directory', () => {
+    act(() => {
+      fs.initDir();
+      fs.touch('/file.txt');
+      fs.mv('/file.txt', '/newfile.txt');
+      expect([...fs.getPaths()]).toEqual(['/', '/newfile.txt']);
+      expect(fs.getNode('/newfile.txt')).toBeDefined();
+      expect(() => fs.getNode('/file.txt')).toThrowError();
+
+      fs.mkdir('/test');
+      fs.mv('/test', '/test2');
+      expect([...fs.getPaths()]).toEqual(['/', '/newfile.txt', '/test2']);
+      expect(fs.getNode('/test2')).toBeDefined();
+      expect(() => fs.getNode('/test')).toThrowError();
+    });
+  });
+  it('should move a file or empty directory to a different directory', () => {
+    act(() => {
+      fs.initDir();
+      fs.touch('/file.txt');
+      fs.mkdir('/test');
+      fs.mv('/file.txt', '/test/file.txt');
+      expect([...fs.getPaths()]).toEqual(['/', '/test', '/test/file.txt']);
+      expect(fs.getNode('/test/file.txt')).toBeDefined();
+      expect(() => fs.getNode('/file.txt')).toThrowError();
+
+      fs.mkdir('/test2');
+      fs.mv('/test2', '/test/test2');
+      expect([...fs.getPaths()]).toEqual(['/', '/test', '/test/file.txt', '/test/test2']);
+      expect(fs.getNode('/test/test2')).toBeDefined();
+      expect(() => fs.getNode('/test2')).toThrowError();
+    });
+  });
+
+  it('should move a non-empty directory correctly', () => {
+    act(() => {
+      fs.initDir();
+      fs.mkdir('/test/1');
+      fs.mv('/test', '/test2');
+      expect([...fs.getPaths()]).toEqual(['/', '/test2', '/test2/1']);
+
+      fs.initDir();
+      fs.mkdir('/1/2/3/4/5/');
+      fs.mv('/1', '/2');
+      expect([...fs.getPaths()]).toEqual(['/', '/2', '/2/2', '/2/2/3', '/2/2/3/4', '/2/2/3/4/5']);
+      fs.mv('/2', '/1');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/1/2', '/1/2/3', '/1/2/3/4', '/1/2/3/4/5']);
+      fs.mv('/1/2', '/2');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/2/3', '/2/3/4', '/2/3/4/5']);
+      fs.mv('/2/3', '/3');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/3', '/3/4', '/3/4/5']);
+      fs.mv('/3/4', '/4');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/3', '/4', '/4/5']);
+      fs.mv('/4/5', '/5');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/3', '/4', '/5']);
+
+      fs.mv('/5', '/4/5');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/3', '/4', '/4/5']);
+      fs.mv('/4', '/3/4');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/3', '/3/4', '/3/4/5']);
+      fs.mv('/3', '/2/3');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/2/3', '/2/3/4', '/2/3/4/5']);
+      fs.mv('/2', '/1/2');
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/1/2', '/1/2/3', '/1/2/3/4', '/1/2/3/4/5']);
+    });
+  });
 });

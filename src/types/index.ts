@@ -57,6 +57,11 @@ export interface FileNodeOptions {
   gridIndex?: number;
 }
 
+export interface FileRemoveOptions {
+  filesOnly?: boolean;
+  emptyDirsOnly?: boolean;
+}
+
 export interface GridOptions {
   cellSize: number;
   flow: 'row' | 'col';

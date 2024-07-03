@@ -8,7 +8,7 @@ const path = '/path/to/file.app';
 const folder = '/path/to/folder/';
 const folder2 = '/path/to/folder';
 
-describe('Fs Helpers', () => {
+describe('Fs Utils', () => {
   it('should return the file name', () => {
     const fileName = parseFileName(path);
     const folderName = parseFileName(folder);
