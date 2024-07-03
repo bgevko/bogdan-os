@@ -56,6 +56,12 @@ export function parseFileExt(filePath: string): string {
   return filePath.search(/\.[\da-z]+$/i) === -1 ? '' : filePath.split('.').at(-1) ?? '';
 }
 
+export function parseFullFileName(filePath: string): string {
+  const fileName = parseFileName(filePath);
+  const fileExt = parseFileExt(filePath);
+  return fileExt ? `${fileName}.${fileExt}` : fileName;
+}
+
 export function parseFileIcon(filePath: string): string {
   if (filePath === '/') {
     return '';

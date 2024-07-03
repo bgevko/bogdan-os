@@ -2,12 +2,14 @@ import { type ReactElement, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
 
 import useEvents from '@/hooks/use-events';
+import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { TASKBAR_HEIGHT } from '@/themes';
 import { type TransferData } from '@/types';
 import cn from '@/utils/format';
+import { parseFullFileName } from '@/utils/fs';
 import { positionToIndex } from '@/utils/grid';
 
 const GRID_SIZE = 100;
@@ -30,6 +32,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const setSelectContext = useSelectStore((state) => state.setSelectContext);
   const setDropContext = useSelectStore((state) => state.setDropContext);
   const setSelected = useSelectStore((state) => state.setSelected);
+  const mv = useFsStore((state) => state.mv);
 
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
 
@@ -62,11 +65,23 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       const headElement = elementPaths.find((element) => element.isHead) ?? elementPaths[0];
       const indexDifference = dropIndex - headElement.startingGridIndex;
       for (const element of elementPaths) {
+        const sourcePath = element.path;
+        const sourceName = parseFullFileName(sourcePath);
+        const desinationName = parseFullFileName(path);
+        if (sourceName === desinationName) {
+          // eslint-disable-next-line no-continue
+          continue;
+        }
         const elementIndex = element.startingGridIndex + indexDifference;
+        const destinationPath = `${path}/${parseFullFileName(sourcePath)}`;
+        if (sourcePath !== destinationPath) {
+          mv(sourcePath, destinationPath);
+        }
+
         setGridIndex(element.path, elementIndex);
       }
     },
-    [grid.lineSize, setGridIndex, path, getWindow],
+    [grid.lineSize, setGridIndex, path, getWindow, mv],
   );
 
   const handleUpdateGridSize = useCallback(() => {
