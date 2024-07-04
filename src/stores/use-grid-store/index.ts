@@ -1,3 +1,4 @@
+/* eslint-disable no-continue */
 /* eslint-disable no-use-before-define */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { enableMapSet } from 'immer';
@@ -27,7 +28,9 @@ interface GridActions {
   getGrid: (path: string) => GridState;
   getItems: (path: string) => Map<string, number>;
   createGrid: (path: string, options: GridOptions) => void;
-  appendParent: (finalPath: string) => void;
+  removeGrid: (path: string) => void;
+  addItem: (finalPath: string) => void;
+  removeItem: (path: string) => void;
   setIndex: (path: string, index: number) => void;
   getIndex: (path: string) => number;
   getLineSize: (path: string) => number;
@@ -59,16 +62,42 @@ const useGridStore = create<GridSystem & GridActions>()(
         state.gridMap.set(path, newGridState(options));
       });
     },
+    removeGrid: (path) => {
+      validateParentPath(path);
+      set((state) => {
+        for (const dirPath of state.gridMap.keys()) {
+          if (dirPath.startsWith(path)) {
+            state.gridMap.delete(dirPath);
+          }
+        }
+      });
+    },
     getItems: (path) => {
       validateParentPath(path);
       return get().gridMap.get(path)!.items;
     },
-    appendParent: (finalPath) => {
+    addItem: (finalPath) => {
       if (finalPath === '/') return;
       const parentPath = parseParentPath(finalPath);
       set((state) => {
         const grid = state.gridMap.get(parentPath)!;
-        grid.items.set(finalPath, grid.items.size);
+        let nextIndex = 0;
+        for (const index of grid.items.values()) {
+          if (index === nextIndex) {
+            nextIndex += 1;
+            continue;
+          }
+          break;
+        }
+        grid.items.set(finalPath, nextIndex);
+      });
+    },
+    removeItem: (finalPath) => {
+      validateGridChild(finalPath);
+      const parentPath = parseParentPath(finalPath);
+      set((state) => {
+        const grid = state.gridMap.get(parentPath)!;
+        grid.items.delete(finalPath);
       });
     },
     setIndex: (path, index) => {

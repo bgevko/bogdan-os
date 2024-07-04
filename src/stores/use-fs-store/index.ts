@@ -9,6 +9,8 @@ import {
   addToParentGrid,
   newFileNode,
   InitHelper,
+  getNextGridIndex,
+  removeFromParentGrid,
 } from '@/stores/use-fs-store/fs-helpers';
 import useGridStore from '@/stores/use-grid-store';
 import { type Paths, FileNode, FileSystem, FileRemoveOptions } from '@/types';
@@ -119,7 +121,8 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
       const parentPath = parseParentPath(path);
       get().mkdir(parentPath);
       set((state) => {
-        const gridIndex = state.dir.get(parentPath)!.children.size;
+        // const gridIndex = state.dir.get(parentPath)!.children.size;
+        const gridIndex = getNextGridIndex(parentPath);
         const newFile = newFileNode({ path, isDir: false, gridIndex });
         state.dir.get(parentPath)!.children.set(path, newFile);
         state.dir.set(path, newFile);
@@ -139,7 +142,8 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
 
           const parent = dir.get(parentPath);
           if (parent?.isDir) {
-            const gridIndex = parent.children.size;
+            // const gridIndex = parent.children.size;
+            const gridIndex = getNextGridIndex(parentPath);
             const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
             parent.children.set(filePath, newDir);
             dir.set(filePath, newDir);
@@ -168,6 +172,7 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
         if (parentPath) {
           const parent = state.dir.get(parentPath)!;
           parent.children.delete(path);
+          removeFromParentGrid(path);
         }
         for (const dirPath of state.dir.keys()) {
           if (dirPath.startsWith(path)) {

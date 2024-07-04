@@ -29,8 +29,31 @@ export function newGrid(filePath: string, dir: FileNode): void {
 }
 
 export function addToParentGrid(finalPath: string): void {
-  const { appendParent } = useGridStore.getState();
-  appendParent(finalPath);
+  const { addItem } = useGridStore.getState();
+  addItem(finalPath);
+}
+
+export function removeFromParentGrid(path: string): void {
+  const { removeItem } = useGridStore.getState();
+  removeItem(path);
+}
+
+export function deleteGrid(path: string): void {
+  const { removeGrid } = useGridStore.getState();
+  removeGrid(path);
+}
+
+export function getNextGridIndex(parentPath: string): number {
+  const items = useGridStore.getState().getItems(parentPath).values();
+  let nextIndex = 0;
+  for (const index of items) {
+    if (index === nextIndex) {
+      nextIndex += 1;
+    } else {
+      break;
+    }
+  }
+  return nextIndex;
 }
 
 export class InitHelper {

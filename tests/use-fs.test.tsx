@@ -3,6 +3,8 @@ import { it, expect, describe, beforeEach } from 'vitest';
 
 import { iconsPath } from '@/constants';
 import useFsStore from '@/stores/use-fs-store';
+import useGridStore from '@/stores/use-grid-store';
+// import useProcessesStore from '@/stores/use-processes-store';
 
 beforeEach(() => {
   const { result } = renderHook(() => useFsStore());
@@ -446,6 +448,66 @@ describe('useFsStore - mv function', () => {
       expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/2/3', '/2/3/4', '/2/3/4/5']);
       fs.mv('/2', '/1/2');
       expect([...fs.getPaths()]).toEqual(['/', '/1', '/1/2', '/1/2/3', '/1/2/3/4', '/1/2/3/4/5']);
+    });
+  });
+});
+
+describe('useFsStore - move and delete side effects', () => {
+  const { result } = renderHook(() => useFsStore());
+  const fs = result.current;
+  // const { result: resultProcesses } = renderHook(() => useProcessesStore());
+  // const pr = resultProcesses.current;
+  const { result: resultGrid } = renderHook(() => useGridStore());
+  const grid = resultGrid.current;
+
+  it('should update the grid store when adding / deleting a file', () => {
+    act(() => {
+      fs.initDir();
+      fs.touch('/file.txt');
+      fs.touch('/file2.txt');
+      let rootChildren = [...fs.getChildPaths('/')];
+      let gridItems = [...grid.getItems('/').keys()];
+      expect(rootChildren).toEqual(gridItems);
+      fs.rm('/file.txt');
+      rootChildren = [...fs.getChildPaths('/')];
+      gridItems = [...grid.getItems('/').keys()];
+      expect(rootChildren).toEqual(gridItems);
+      fs.rm('/file2.txt');
+      rootChildren = [...fs.getChildPaths('/')];
+      gridItems = [...grid.getItems('/').keys()];
+      expect(rootChildren).toEqual(gridItems);
+
+      fs.mkdir('/test');
+      fs.touch('/test/file.txt');
+      fs.touch('/test/file2.txt');
+      rootChildren = [...fs.getChildPaths('/')];
+      gridItems = [...grid.getItems('/').keys()];
+      expect(rootChildren).toEqual(gridItems);
+
+      fs.rm('/test/file.txt');
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+
+      fs.rm('/test');
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+
+      fs.initDir();
+      fs.mkdir('/test/1/2/3');
+      fs.touch('/test/1/2/3/file.txt');
+      fs.touch('/test/1/2/3/file2.txt');
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+      fs.rm('/test/1/2/3/file.txt');
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+      fs.rm('/test/1/2/3');
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+      fs.rm('/test');
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+    });
+  });
+
+  it.only('initDir should also initiate the grid correctly.', () => {
+    act(() => {
+      fs.initDir(['/Desktop/myFile.txt', '/Desktop/MyFolder/1', '/Desktop/MyFolder/2']);
+      expect([...fs.getPaths()]).toEqual([...grid.getItems('/').keys()]);
     });
   });
 });

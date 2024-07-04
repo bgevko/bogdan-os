@@ -3,6 +3,7 @@ import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import DropGuide from '@/components/system/fs/drop-guide';
 import UseEvents from '@/hooks/use-events';
 import useSelect from '@/hooks/use-fs/use-select';
+import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
@@ -10,12 +11,12 @@ import useSelectStore from '@/stores/use-select-store';
 import { ICON_SIZE } from '@/themes';
 import { type TransferData } from '@/types';
 import cn from '@/utils/format';
-import { parseFileName } from '@/utils/fs';
+import { parseFileName, parseFullFileName, parseParentPath } from '@/utils/fs';
 import { indexToPosition, positionToIndex } from '@/utils/grid';
 
 const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string }): ReactElement => {
+  const parentPath = parseParentPath(path);
   const open = useProcessesStore((state) => state.open);
-  const parentPath = path.split('/').slice(0, -1).join('/');
   const gridIndex = useGridStore((state) => state.getIndex(path));
   const getGridIndex = useGridStore((state) => state.getIndex);
   const gridItemsPerLine = useGridStore((state) => state.getGrid(parentPath).lineSize);
@@ -24,8 +25,10 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
   const setDragContext = useMouseStore((state) => state.setDragContext);
+  const isDir = useFsStore((state) => state.isDir);
+  const mv = useFsStore((state) => state.mv);
 
-  const context = parentPath === '/Desktop' ? 'desktop' : 'folder';
+  const myContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
   const dropContext = useSelectStore((state) => state.dropContext);
   const { registerEvents } = UseEvents();
 
@@ -76,7 +79,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   );
 
   const getFolderPosition = useCallback(() => {
-    if (context === 'desktop' || dropContext === 'desktop') {
+    if (myContext === 'desktop' || dropContext === 'desktop') {
       return {
         folderX: 0,
         folderY: 0,
@@ -87,7 +90,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
       folderX: folder.position.x,
       folderY: folder.position.y,
     };
-  }, [context, dropContext, parentPath, getWindow]);
+  }, [myContext, dropContext, parentPath, getWindow]);
 
   const handleDrag = useCallback(
     (event: React.DragEvent) => {
@@ -103,6 +106,22 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
       setGuideIndex(mouseGridIndex);
     },
     [gridItemsPerLine, getFolderPosition],
+  );
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      const transferData: TransferData[] = JSON.parse(
+        event.dataTransfer.getData('text/plain'),
+      ) as TransferData[];
+      for (const element of transferData) {
+        const draggedPath = element.path;
+        // eslint-disable-next-line no-continue
+        if (draggedPath === path || !isDir(path)) continue;
+        mv(draggedPath, `${path}/${parseFullFileName(draggedPath)}`);
+      }
+    },
+    [mv, path, isDir],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -132,11 +151,11 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
           draggable
           className={cn(
             'background-transparent cursor-default flex flex-col items-center focus:outline-none',
-            isSelected && (context === 'desktop' ? 'bg-accent-50/20' : 'bg-primary-300/80'),
+            isSelected && (myContext === 'desktop' ? 'bg-accent-50/20' : 'bg-primary-300/80'),
             // !isSelected && !isUsingSelectRect && 'hover:bg-accent-50/10',
             !isSelected &&
               !isUsingSelectRect &&
-              (context === 'desktop' ? 'hover:bg-accent-50/10' : 'hover:bg-primary-300/40'),
+              (myContext === 'desktop' ? 'hover:bg-accent-50/10' : 'hover:bg-primary-300/40'),
           )}
           style={{
             width: `${ICON_SIZE.toString()}px`,
@@ -148,6 +167,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
             setDragContext('file-icon');
           }}
           onDrag={handleDrag}
+          onDrop={handleDrop}
           onDragEnd={handleDragEnd}
           onMouseDown={(e: React.MouseEvent) => {
             e.stopPropagation();
@@ -180,7 +200,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
       </li>
       <DropGuide
         path={parentPath}
-        context={context}
+        context={myContext}
         isVisible={dropGuideVisible}
         mouseIndex={guideIndex}
         offsets={indexOffsets}
