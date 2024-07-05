@@ -96,8 +96,8 @@ const useGridStore = create<GridSystem & GridActions>()(
       });
     },
     setIndex: (path, index) => {
-      validateGridChild(path);
       const parentPath = parseParentPath(path);
+      validateParentPath(parentPath);
       set((state) => {
         const grid = state.gridMap.get(parentPath)!;
         const existing = new Set(grid.items.values());
@@ -106,6 +106,7 @@ const useGridStore = create<GridSystem & GridActions>()(
       });
     },
     getIndex: (path) => {
+      console.log('path called', path);
       validateGridChild(path);
       const parentPath = parseParentPath(path);
       return get().gridMap.get(parentPath)!.items.get(path)!;

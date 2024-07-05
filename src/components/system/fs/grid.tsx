@@ -77,13 +77,14 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
           // eslint-disable-next-line no-continue
           continue;
         }
-        const elementIndex = element.startingGridIndex + indexDifference;
+        const finalIndex = element.startingGridIndex + indexDifference;
         const destinationPath = `${path}/${parseFullFileName(sourcePath)}`;
         if (sourcePath !== destinationPath) {
-          mv(sourcePath, destinationPath);
+          mv(sourcePath, destinationPath, { gridIndex: finalIndex });
+          return;
         }
 
-        setGridIndex(element.path, elementIndex);
+        setGridIndex(element.path, finalIndex);
       }
     },
     [grid.lineSize, setGridIndex, path, getWindow, mv],

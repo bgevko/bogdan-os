@@ -1,3 +1,4 @@
+/* eslint-disable no-continue */
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 
 import DropGuide from '@/components/system/fs/drop-guide';
@@ -31,7 +32,6 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const myContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
   const dropContext = useSelectStore((state) => state.dropContext);
   const { registerEvents } = UseEvents();
-
   const {
     handleFocusSelect,
     handleMouseDownSelect,
@@ -111,14 +111,18 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
+      event.stopPropagation();
       const transferData: TransferData[] = JSON.parse(
         event.dataTransfer.getData('text/plain'),
       ) as TransferData[];
       for (const element of transferData) {
         const draggedPath = element.path;
-        // eslint-disable-next-line no-continue
         if (draggedPath === path || !isDir(path)) continue;
-        mv(draggedPath, `${path}/${parseFullFileName(draggedPath)}`);
+        try {
+          mv(draggedPath, `${path}/${parseFullFileName(draggedPath)}`);
+        } catch {
+          // Pass
+        }
       }
     },
     [mv, path, isDir],
