@@ -3,6 +3,7 @@ import { it, expect, describe, beforeEach } from 'vitest';
 
 import { iconsPath } from '@/constants';
 import useFsStore from '@/stores/use-fs-store';
+import { getChildPathsDeep } from '@/stores/use-fs-store/fs-helpers';
 import useGridStore from '@/stores/use-grid-store';
 // import useProcessesStore from '@/stores/use-processes-store';
 
@@ -13,6 +14,7 @@ beforeEach(() => {
     expect(fs).toBeDefined();
     fs.initDir();
     const paths = [...fs.getPaths()];
+    expect([...fs.getDir().keys()]).toEqual(['/']);
     expect(paths).toEqual(['/']);
   });
 });
@@ -20,6 +22,22 @@ beforeEach(() => {
 describe('useFsStore', () => {
   const { result } = renderHook(() => useFsStore());
   const fs = result.current;
+  it('should init correctly', () => {
+    act(() => {
+      fs.initDir();
+      fs.initDir(['/Desktop/myFile.txt', '/Desktop/MyFolder/1', '/Desktop/MyFolder/2']);
+      expect([...fs.getPaths()]).toEqual([
+        '/',
+        '/Desktop',
+        '/Desktop/myFile.txt',
+        '/Desktop/MyFolder',
+        '/Desktop/MyFolder/1',
+        '/Desktop/MyFolder/2',
+      ]);
+      fs.initDir(['1', '2', '3', '4', '5']);
+      expect([...fs.getPaths()]).toEqual(['/', '/1', '/2', '/3', '/4', '/5']);
+    });
+  });
   it('should be able to create a directory with mkdir', () => {
     act(() => {
       fs.mkdir('/test');
@@ -269,18 +287,22 @@ describe('useFsStore', () => {
   it('should get deep child paths correctly', () => {
     act(() => {
       fs.initDir();
+      expect([...fs.getPaths()]).toEqual(['/']);
       fs.mkdir('/test/1/2/3');
-      expect(fs.getChildPathsDeep('/')).toEqual(['/test', '/test/1', '/test/1/2', '/test/1/2/3']);
-      expect(fs.getChildPathsDeep('/test')).toEqual(['/test/1', '/test/1/2', '/test/1/2/3']);
-      expect(fs.getChildPathsDeep('/test/1')).toEqual(['/test/1/2', '/test/1/2/3']);
-      expect(fs.getChildPathsDeep('/test/1/2')).toEqual(['/test/1/2/3']);
-      expect(fs.getChildPathsDeep('/test/1/2/3')).toEqual([]);
+      let dir = fs.getDir();
+      expect([...fs.getPaths()]).toEqual(['/', '/test', '/test/1', '/test/1/2', '/test/1/2/3']);
+      expect(getChildPathsDeep(dir, '/')).toEqual(['/test', '/test/1', '/test/1/2', '/test/1/2/3']);
+      expect(getChildPathsDeep(dir, '/test')).toEqual(['/test/1', '/test/1/2', '/test/1/2/3']);
+      expect(getChildPathsDeep(dir, '/test/1')).toEqual(['/test/1/2', '/test/1/2/3']);
+      expect(getChildPathsDeep(dir, '/test/1/2')).toEqual(['/test/1/2/3']);
+      expect(getChildPathsDeep(dir, '/test/1/2/3')).toEqual([]);
 
       fs.initDir();
       fs.mkdir('/test/1/2/3');
       fs.mkdir('/test2/1/2/3');
       fs.mkdir('/test3/1/2/3');
-      expect(fs.getChildPathsDeep('/')).toEqual([
+      dir = fs.getDir();
+      expect(getChildPathsDeep(dir, '/')).toEqual([
         '/test',
         '/test/1',
         '/test/1/2',
@@ -298,7 +320,8 @@ describe('useFsStore', () => {
       fs.initDir();
       fs.mkdir('/test/1/2/3');
       fs.mkdir('/test/1/4/5');
-      expect(fs.getChildPathsDeep('/')).toEqual([
+      dir = fs.getDir();
+      expect(getChildPathsDeep(dir, '/')).toEqual([
         '/test',
         '/test/1',
         '/test/1/2',
@@ -306,7 +329,7 @@ describe('useFsStore', () => {
         '/test/1/4',
         '/test/1/4/5',
       ]);
-      expect(fs.getChildPathsDeep('/test')).toEqual([
+      expect(getChildPathsDeep(dir, '/test')).toEqual([
         '/test/1',
         '/test/1/2',
         '/test/1/2/3',
@@ -504,10 +527,33 @@ describe('useFsStore - move and delete side effects', () => {
     });
   });
 
-  it.only('initDir should also initiate the grid correctly.', () => {
+  it('should also initiate the grid correctly when initDir is called', () => {
     act(() => {
       fs.initDir(['/Desktop/myFile.txt', '/Desktop/MyFolder/1', '/Desktop/MyFolder/2']);
-      expect([...fs.getPaths()]).toEqual([...grid.getItems('/').keys()]);
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+      fs.initDir(['/1', '/2', '/3', '/4', '/5/6/7/8/9']);
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+      expect([...fs.getChildPaths('/5')]).toEqual([...grid.getItems('/5').keys()]);
+    });
+  });
+
+  it('should also move / rename the grid items when mv is called', () => {
+    act(() => {
+      fs.initDir(['/Desktop/myFile.txt', '/Desktop/MyFolder/1', '/Desktop/MyFolder/2']);
+      expect([...fs.getChildPaths('/Desktop')]).toEqual([...grid.getItems('/Desktop').keys()]);
+      fs.mv('/Desktop/myFile.txt', '/Desktop/MyFolder/myFile.txt');
+      expect([...fs.getChildPaths('/Desktop')]).toEqual([...grid.getItems('/Desktop').keys()]);
+      expect([...fs.getChildPaths('/Desktop/MyFolder')]).toEqual([
+        ...grid.getItems('/Desktop/MyFolder').keys(),
+      ]);
+      fs.mv('/Desktop/MyFolder', '/Desktop/MyFolder2');
+      expect([...fs.getChildPaths('/Desktop')]).toEqual([...grid.getItems('/Desktop').keys()]);
+      fs.mv('/Desktop/MyFolder2/1', '/Desktop/1');
+      fs.mv('/Desktop/MyFolder2/2', '/Desktop/2');
+      fs.mv('/Desktop/MyFolder2/myFile.txt', '/Desktop/myFile.txt');
+      fs.rm('/Desktop/MyFolder2');
+      expect([...fs.getChildPaths('/Desktop')]).toEqual([...grid.getItems('/Desktop').keys()]);
+      expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
     });
   });
 });

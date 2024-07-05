@@ -1,9 +1,10 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-param-reassign */
 import { iconsPath, startingDir } from '@/constants';
 import useGridStore from '@/stores/use-grid-store';
 import { GRID_CELL_SIZE } from '@/themes';
-import { type Paths, FileNode, FileNodeOptions, DirectoryMap } from '@/types';
+import { Paths, FileNode, FileNodeOptions, DirectoryMap, FileRemoveOptions } from '@/types';
 import { parseParentPath, normalizePath, parseFileIcon } from '@/utils/fs';
 
 export function newFileNode(options: FileNodeOptions = {}): FileNode {
@@ -56,72 +57,159 @@ export function getNextGridIndex(parentPath: string): number {
   return nextIndex;
 }
 
-export class InitHelper {
-  private dir: DirectoryMap = new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]);
-  constructor() {
-    this.initDir(startingDir);
-  }
-
-  initDir(source?: Paths): void {
-    if (!source) {
-      this.dir = new Map<string, FileNode>([['/', newFileNode({ path: '/' })]]);
+export function mkdirHelper(dir: DirectoryMap, path: string): DirectoryMap {
+  path = normalizePath(path);
+  const mkdir = (filePath: string): void => {
+    if (filePath === '' || dir.has(filePath)) {
       return;
     }
-    for (const path of source) {
-      const isDir = path.endsWith('/');
-      if (isDir) {
-        this.mkdir(path);
-      } else {
-        try {
-          this.touch(path);
-        } catch {
-          // skip
-        }
+    const parentPath = parseParentPath(filePath);
+    mkdir(parentPath);
+
+    const parent = dir.get(parentPath);
+    if (parent?.isDir) {
+      const gridIndex = parent.children.size;
+      const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
+      parent.children.set(filePath, newDir);
+      dir.set(filePath, newDir);
+      newGrid(filePath, newDir);
+      addToParentGrid(filePath);
+    }
+  };
+  mkdir(path);
+  return dir;
+}
+
+export function touchHelper(dir: DirectoryMap, path: string): DirectoryMap {
+  if (path.endsWith('/')) {
+    throw new Error(`Invalid path: ${path}. Use mkdir instead`);
+  }
+  path = normalizePath(path);
+  if (dir.has(path)) {
+    throw new Error(`File already exists: ${path}`);
+  }
+  const parentPath = parseParentPath(path);
+  mkdirHelper(dir, parentPath);
+  const gridIndex = dir.get(parentPath)!.children.size;
+  const newFile = newFileNode({ path, isDir: false, gridIndex });
+  dir.get(parentPath)!.children.set(path, newFile);
+  dir.set(path, newFile);
+  addToParentGrid(path);
+  return dir;
+}
+
+export function initDirHelper(
+  source: Paths = startingDir,
+  initialDir: DirectoryMap = new Map([['/', newFileNode({ path: '/' })]]),
+): DirectoryMap {
+  // Reset all grids
+  useGridStore.getState().reset();
+
+  // Initialize the directory
+  let dir = new Map(initialDir);
+
+  for (const path of source) {
+    const isDir = path.endsWith('/');
+    if (isDir) {
+      dir = mkdirHelper(dir, path);
+    } else {
+      try {
+        dir = touchHelper(dir, path);
+      } catch {
+        // skip
       }
     }
   }
+  return dir;
+}
 
-  getDir(): DirectoryMap {
-    return this.dir;
+export function rmHelper(
+  dir: DirectoryMap,
+  path: string,
+  options: FileRemoveOptions = {},
+): DirectoryMap {
+  path = normalizePath(path);
+  if (path === '/') return dir;
+
+  const opts: FileRemoveOptions = { filesOnly: false, emptyDirsOnly: false, ...options };
+  if (opts.filesOnly && dir.get(path)?.isDir) {
+    throw new Error(`${path} is a directory`);
+  }
+  if (opts.emptyDirsOnly && (dir.get(path)?.children.size ?? 0) > 0) {
+    throw new Error(`${path} is not empty`);
   }
 
-  private mkdir(path: string): void {
-    path = normalizePath(path);
-    const { dir } = this;
-    const mkdirHelper = (filePath: string): void => {
-      if (filePath === '' || dir.has(filePath)) {
-        return;
-      }
-      const parentPath = parseParentPath(filePath);
-      mkdirHelper(parentPath);
-
-      const parent = dir.get(parentPath);
-      if (parent?.isDir) {
-        const gridIndex = parent.children.size;
-        const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
-        parent.children.set(filePath, newDir);
-        dir.set(filePath, newDir);
-        newGrid(filePath, newDir);
-        addToParentGrid(filePath);
-      }
-    };
-    mkdirHelper(path);
+  const parentPath = parseParentPath(path);
+  if (parentPath) {
+    const parent = dir.get(parentPath)!;
+    parent.children.delete(path);
+    removeFromParentGrid(path);
   }
 
-  private touch(path: string): void {
-    if (path.endsWith('/')) {
-      throw new Error(`Invalid path: ${path}. Use mkdir instead`);
+  for (const dirPath of dir.keys()) {
+    if (dirPath.startsWith(path)) {
+      dir.delete(dirPath);
     }
-    path = normalizePath(path);
-    if (this.dir.has(path)) {
-      throw new Error(`File already exists: ${path}`);
-    }
-    const parentPath = parseParentPath(path);
-    this.mkdir(parentPath);
-    const gridIndex = this.dir.get(parentPath)!.children.size;
-    const newFile = newFileNode({ path, isDir: false, gridIndex });
-    this.dir.get(parentPath)!.children.set(path, newFile);
-    this.dir.set(path, newFile);
-    addToParentGrid(path);
   }
+
+  return dir;
+}
+
+export function mvHelper(dir: DirectoryMap, sourcePath: string, targetPath: string): DirectoryMap {
+  sourcePath = normalizePath(sourcePath);
+  targetPath = normalizePath(targetPath);
+
+  validatePath(dir, sourcePath);
+
+  if (sourcePath === targetPath) {
+    throw new Error('Source and target paths are the same');
+  }
+  if (dir.has(targetPath)) {
+    throw new Error(`Target path already exists: ${targetPath}`);
+  }
+
+  // Replace the source path with the target path in all children
+  const sourceDeepPaths = getChildPathsDeep(dir, sourcePath);
+  const newPaths = [...sourceDeepPaths].map((path) => path.replace(sourcePath, targetPath));
+
+  // Remove the source path
+  const sourceNode = dir.get(sourcePath)!;
+  dir = rmHelper(dir, sourcePath);
+
+  // Add the new paths
+  if (sourceNode.isDir) {
+    dir = mkdirHelper(dir, targetPath);
+    for (const path of newPaths) {
+      dir = mkdirHelper(dir, path);
+    }
+  } else {
+    dir = touchHelper(dir, targetPath);
+  }
+
+  return dir;
+}
+
+function validatePath(dir: DirectoryMap, path: string): void {
+  if (!dir.has(path)) {
+    throw new Error(`Path does not exist: ${path}`);
+  }
+}
+
+function getNode(dir: DirectoryMap, path: string): FileNode {
+  validatePath(dir, path);
+  return dir.get(path)!;
+}
+
+export function getChildPathsDeep(dir: DirectoryMap, path: string): string[] {
+  path = normalizePath(path);
+  const paths = new Set<string>();
+  const helper = (filePath: string): void => {
+    const node = getNode(dir, filePath);
+    if (filePath !== path) paths.add(filePath);
+    for (const child of node.children.values()) {
+      helper(child.path);
+    }
+  };
+  helper(path);
+  return [...paths];
 }
