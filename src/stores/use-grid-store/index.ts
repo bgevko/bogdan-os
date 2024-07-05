@@ -29,14 +29,16 @@ interface GridActions {
   getItems: (path: string) => Map<string, number>;
   createGrid: (path: string, options: GridOptions) => void;
   removeGrid: (path: string) => void;
-  addItem: (finalPath: string) => void;
+  addItem: (finalPath: string, index?: number) => void;
   removeItem: (path: string) => void;
-  setIndex: (path: string, index: number) => void;
-  getIndex: (path: string) => number;
   getLineSize: (path: string) => number;
   getNumColumns: (path: string) => number;
-  sort: (gridPath: string, order: 'asc' | 'desc') => void;
+  sort: (gridPath: string, order?: 'asc' | 'desc') => void;
   updateSize: (path: string, width: number, height: number) => void;
+  setIndex: (path: string, index: number) => void;
+  getIndex: (path: string) => number;
+  getNextIndex: (parentPath: string) => number;
+  gridIndexExists: (path: string, index?: number) => boolean;
   reset: () => void;
 }
 
@@ -76,19 +78,12 @@ const useGridStore = create<GridSystem & GridActions>()(
       validateParentPath(path);
       return get().gridMap.get(path)!.items;
     },
-    addItem: (finalPath) => {
+    addItem: (finalPath, index) => {
       if (finalPath === '/') return;
       const parentPath = parseParentPath(finalPath);
+      const nextIndex = index ?? get().getNextIndex(parentPath);
       set((state) => {
         const grid = state.gridMap.get(parentPath)!;
-        let nextIndex = 0;
-        for (const index of grid.items.values()) {
-          if (index === nextIndex) {
-            nextIndex += 1;
-            continue;
-          }
-          break;
-        }
         grid.items.set(finalPath, nextIndex);
       });
     },
@@ -105,6 +100,8 @@ const useGridStore = create<GridSystem & GridActions>()(
       const parentPath = parseParentPath(path);
       set((state) => {
         const grid = state.gridMap.get(parentPath)!;
+        const existing = new Set(grid.items.values());
+        if (existing.has(index)) return;
         grid.items.set(path, index);
       });
     },
@@ -121,7 +118,7 @@ const useGridStore = create<GridSystem & GridActions>()(
       validateParentPath(path);
       return get().gridMap.get(path)!.columns;
     },
-    sort: (gridPath, order) => {
+    sort: (gridPath, order = 'asc') => {
       validateParentPath(gridPath);
       set((state) => {
         const grid = state.gridMap.get(gridPath)!;
@@ -144,6 +141,25 @@ const useGridStore = create<GridSystem & GridActions>()(
         grid.rows = Math.floor(height / GRID_CELL_SIZE);
         grid.lineSize = grid.flow === 'row' ? grid.rows : grid.columns;
       });
+    },
+    getNextIndex: (parentPath) => {
+      validateParentPath(parentPath);
+      const items = new Set(get().gridMap.get(parentPath)!.items.values());
+      let nextIndex = 0;
+      while (items.has(nextIndex)) {
+        nextIndex += 1;
+      }
+      return nextIndex;
+    },
+    gridIndexExists: (path, index) => {
+      if (!index) return false;
+      try {
+        validateParentPath(path);
+        const existing = new Set(get().gridMap.get(path)!.items.values());
+        return existing.has(index);
+      } catch {
+        return false;
+      }
     },
     reset: () => {
       set(() => ({

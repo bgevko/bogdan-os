@@ -154,3 +154,68 @@ describe('useGridStore', () => {
     expect(desktopGrid.rows).toBeLessThan(20);
   });
 });
+
+describe('useGridStore - moving items around', () => {
+  const { result: fsResult } = renderHook(() => useFsStore());
+  const { result } = renderHook(() => useGridStore());
+  const fs = fsResult.current;
+  const grid = result.current;
+  it('Should fill an empty grid index when item is dropped onto a folder icon', () => {
+    act(() => {
+      fs.initDir(['/0', '/1', '/2', '/3', '/folder/']);
+      expect([...fs.getPaths()]).toEqual(['/', '/0', '/1', '/2', '/3', '/folder']);
+      expect([...grid.getGrid('/').items.values()]).toEqual([0, 1, 2, 3, 4]);
+
+      fs.mv('/0', '/folder/0');
+      expect([...grid.getGrid('/').items.values()]).toEqual([1, 2, 3, 4]);
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([0]);
+
+      fs.mv('/1', '/folder/1');
+      expect([...grid.getGrid('/').items.values()]).toEqual([2, 3, 4]);
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([0, 1]);
+
+      fs.mv('folder/0', '/0');
+      expect([...grid.getGrid('/').items.values()]).toEqual([2, 3, 4, 0]);
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([1]);
+
+      fs.mv('folder/1', '/1');
+      expect([...grid.getGrid('/').items.values()]).toEqual([2, 3, 4, 0, 1]);
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([]);
+
+      fs.mv('/0', '/folder/0');
+      fs.mv('/1', '/folder/1');
+      fs.mv('/2', '/folder/2');
+      fs.mv('/3', '/folder/3');
+      expect([...grid.getGrid('/').items.values()]).toEqual([4]);
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([0, 1, 2, 3]);
+
+      fs.mv('/folder/0', '/0');
+      fs.mv('/folder/2', '/1');
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([1, 3]);
+      expect([...grid.getGrid('/').items.values()]).toEqual([4, 0, 1]);
+    });
+  });
+  it('Should drop on the correct index when index information is passed into the mv function', () => {
+    act(() => {
+      fs.initDir(['/0', '/1', '/2', '/3', '/folder/']);
+      fs.mv('/0', '/folder/3', { gridIndex: 3 });
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([3]);
+      expect([...grid.getGrid('/').items.values()]).toEqual([1, 2, 3, 4]);
+
+      fs.mv('/1', '/folder/2', { gridIndex: 2 });
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([3, 2]);
+      expect([...grid.getGrid('/').items.values()]).toEqual([2, 3, 4]);
+
+      fs.mv('/2', '/folder/10', { gridIndex: 10 });
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([3, 2, 10]);
+      expect([...grid.getGrid('/').items.values()]).toEqual([3, 4]);
+
+      // Throw error if moving onto an existing index
+      expect(() => {
+        fs.mv('/3', '/folder/10-dupe', { gridIndex: 10 });
+      }).toThrowError();
+      expect([...grid.getGrid('/folder').items.values()]).toEqual([3, 2, 10]);
+      expect([...grid.getGrid('/').items.values()]).toEqual([3, 4]);
+    });
+  });
+});

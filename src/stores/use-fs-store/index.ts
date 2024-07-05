@@ -11,7 +11,7 @@ import {
   rmHelper,
   mvHelper,
 } from '@/stores/use-fs-store/fs-helpers';
-import { type Paths, FileNode, FileSystem, FileRemoveOptions } from '@/types';
+import { type Paths, FileNode, FileSystem, FileRemoveOptions, FileNodeOptions } from '@/types';
 import { splitPath, normalizePath } from '@/utils/fs';
 
 enableMapSet();
@@ -30,7 +30,7 @@ interface FileSystemActions {
   mkdir: (path: string) => void;
   touch: (path: string) => void;
   rm: (path: string, options?: FileRemoveOptions) => void;
-  mv: (sourcePath: string, targetPath: string) => void;
+  mv: (sourcePath: string, targetPath: string, options?: FileNodeOptions) => void;
 
   // Validation helpers
   isDir: (path: string) => boolean;
@@ -102,9 +102,9 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
       });
     },
 
-    mv: (sourcePath: string, targetPath: string) => {
+    mv: (sourcePath: string, targetPath: string, options?: FileNodeOptions) => {
       set((state) => {
-        state.dir = mvHelper(state.dir, sourcePath, targetPath);
+        state.dir = mvHelper(state.dir, sourcePath, targetPath, options);
       });
     },
 

@@ -1,5 +1,9 @@
+import { renderHook, act } from '@testing-library/react';
 import { it, expect, describe } from 'vitest';
 
+import useFsStore from '@/stores/use-fs-store';
+import { getNextGridIndex } from '@/stores/use-fs-store/fs-helpers';
+import useGridStore from '@/stores/use-grid-store';
 import { indexToPosition, positionToIndex } from '@/utils/grid';
 
 describe('Index to Position', () => {
@@ -52,5 +56,75 @@ describe('Position to Index', () => {
 
   it('should correctly convert position [3, 7], 10 lines, to index 37', () => {
     expect(positionToIndex(3, 7, 10)).toBe(37);
+  });
+});
+
+describe('Grid Helpers', () => {
+  const { result: fsResult } = renderHook(() => useFsStore());
+  const { result } = renderHook(() => useGridStore());
+  const fs = fsResult.current;
+  const grid = result.current;
+
+  it('Should calculate the next grid index correctly', () => {
+    act(() => {
+      fs.initDir(['/0', '/1', '/2', '/3', '/folder/']);
+      const nextIndex = getNextGridIndex('/');
+      expect(nextIndex).toBe(5);
+
+      fs.rm('/0');
+      expect(getNextGridIndex('/')).toBe(0);
+
+      fs.touch('/0');
+      expect(getNextGridIndex('/')).toBe(5);
+      expect(getNextGridIndex('/folder')).toBe(0);
+
+      fs.mv('/2', '/folder/0');
+      expect(getNextGridIndex('/folder')).toBe(1);
+      expect(getNextGridIndex('/')).toBe(2);
+      fs.mv('/3', '/folder/1');
+      expect(getNextGridIndex('/folder')).toBe(2);
+      expect(getNextGridIndex('/')).toBe(2);
+      fs.mv('/0', '/folder/2');
+      expect(getNextGridIndex('/folder')).toBe(3);
+      expect(getNextGridIndex('/')).toBe(0);
+
+      grid.sort('/');
+      expect(getNextGridIndex('/')).toBe(2);
+
+      fs.mv('/folder/0', '/2');
+      expect(getNextGridIndex('/')).toBe(3);
+      expect(getNextGridIndex('/folder')).toBe(0);
+
+      fs.mv('/folder/1', '/3');
+      expect(getNextGridIndex('/')).toBe(4);
+      expect(getNextGridIndex('/folder')).toBe(0);
+
+      fs.mv('/folder/2', '/4');
+      expect(getNextGridIndex('/')).toBe(5);
+      expect(getNextGridIndex('/folder')).toBe(0);
+
+      fs.rm('/folder');
+      expect(getNextGridIndex('/')).toBe(1);
+
+      fs.rm('/4');
+      fs.rm('/3');
+      fs.rm('/2');
+      expect(getNextGridIndex('/')).toBe(1);
+      fs.rm('/1');
+      expect(getNextGridIndex('/')).toBe(0);
+    });
+  });
+  it('Should should handle setting duplicate indeces correctly', () => {
+    act(() => {
+      fs.initDir(['/0', '/1', '/2', '/folder/']);
+      grid.setIndex('/0', 1);
+      expect(grid.getIndex('/0')).toBe(0);
+      grid.setIndex('/0', 2);
+      expect(grid.getIndex('/0')).toBe(0);
+      grid.setIndex('/0', 3);
+      expect(grid.getIndex('/0')).toBe(0);
+      grid.setIndex('/0', 4);
+      expect(grid.getIndex('/0')).toBe(4);
+    });
   });
 });

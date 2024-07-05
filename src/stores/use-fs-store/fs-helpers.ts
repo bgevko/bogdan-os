@@ -29,9 +29,9 @@ export function newGrid(filePath: string, dir: FileNode): void {
   });
 }
 
-export function addToParentGrid(finalPath: string): void {
+export function addToParentGrid(finalPath: string, index?: number): void {
   const { addItem } = useGridStore.getState();
-  addItem(finalPath);
+  addItem(finalPath, index);
 }
 
 export function removeFromParentGrid(path: string): void {
@@ -45,19 +45,14 @@ export function deleteGrid(path: string): void {
 }
 
 export function getNextGridIndex(parentPath: string): number {
-  const items = useGridStore.getState().getItems(parentPath).values();
-  let nextIndex = 0;
-  for (const index of items) {
-    if (index === nextIndex) {
-      nextIndex += 1;
-    } else {
-      break;
-    }
-  }
-  return nextIndex;
+  return useGridStore.getState().getNextIndex(parentPath);
 }
 
-export function mkdirHelper(dir: DirectoryMap, path: string): DirectoryMap {
+export function mkdirHelper(
+  dir: DirectoryMap,
+  path: string,
+  options?: FileNodeOptions,
+): DirectoryMap {
   path = normalizePath(path);
   const mkdir = (filePath: string): void => {
     if (filePath === '' || dir.has(filePath)) {
@@ -68,19 +63,22 @@ export function mkdirHelper(dir: DirectoryMap, path: string): DirectoryMap {
 
     const parent = dir.get(parentPath);
     if (parent?.isDir) {
-      const gridIndex = parent.children.size;
-      const newDir = newFileNode({ path: filePath, isDir: true, gridIndex });
+      const newDir = newFileNode({ path: filePath, isDir: true });
       parent.children.set(filePath, newDir);
       dir.set(filePath, newDir);
       newGrid(filePath, newDir);
-      addToParentGrid(filePath);
+      addToParentGrid(filePath, options?.gridIndex);
     }
   };
   mkdir(path);
   return dir;
 }
 
-export function touchHelper(dir: DirectoryMap, path: string): DirectoryMap {
+export function touchHelper(
+  dir: DirectoryMap,
+  path: string,
+  options?: FileNodeOptions,
+): DirectoryMap {
   if (path.endsWith('/')) {
     throw new Error(`Invalid path: ${path}. Use mkdir instead`);
   }
@@ -89,12 +87,15 @@ export function touchHelper(dir: DirectoryMap, path: string): DirectoryMap {
     throw new Error(`File already exists: ${path}`);
   }
   const parentPath = parseParentPath(path);
-  mkdirHelper(dir, parentPath);
-  const gridIndex = dir.get(parentPath)!.children.size;
-  const newFile = newFileNode({ path, isDir: false, gridIndex });
+  if (!dir.has(parentPath)) {
+    mkdirHelper(dir, parentPath);
+  } else if (!dir.get(parentPath)!.isDir) {
+    throw new Error(`Parent path is a file: ${parentPath}`);
+  }
+  const newFile = newFileNode({ path, isDir: false });
   dir.get(parentPath)!.children.set(path, newFile);
   dir.set(path, newFile);
-  addToParentGrid(path);
+  addToParentGrid(path, options?.gridIndex);
   return dir;
 }
 
@@ -155,11 +156,21 @@ export function rmHelper(
   return dir;
 }
 
-export function mvHelper(dir: DirectoryMap, sourcePath: string, targetPath: string): DirectoryMap {
+export function mvHelper(
+  dir: DirectoryMap,
+  sourcePath: string,
+  targetPath: string,
+  options?: FileNodeOptions,
+): DirectoryMap {
   sourcePath = normalizePath(sourcePath);
   targetPath = normalizePath(targetPath);
 
   validatePath(dir, sourcePath);
+  const parentPath = parseParentPath(targetPath);
+
+  if (useGridStore.getState().gridIndexExists(parentPath, options?.gridIndex)) {
+    throw new Error(`Target index already exists: ${targetPath}`);
+  }
 
   if (sourcePath === targetPath) {
     throw new Error('Source and target paths are the same');
@@ -178,12 +189,12 @@ export function mvHelper(dir: DirectoryMap, sourcePath: string, targetPath: stri
 
   // Add the new paths
   if (sourceNode.isDir) {
-    dir = mkdirHelper(dir, targetPath);
+    dir = mkdirHelper(dir, targetPath, options);
     for (const path of newPaths) {
       dir = mkdirHelper(dir, path);
     }
   } else {
-    dir = touchHelper(dir, targetPath);
+    dir = touchHelper(dir, targetPath, options);
   }
 
   return dir;

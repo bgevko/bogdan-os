@@ -438,6 +438,9 @@ describe('useFsStore - mv function', () => {
       expect([...fs.getPaths()]).toEqual(['/', '/test', '/test/file.txt', '/test/test2']);
       expect(fs.getNode('/test/test2')).toBeDefined();
       expect(() => fs.getNode('/test2')).toThrowError();
+
+      fs.initDir(['/1', '/2', '/3', '/4', '/folder/']);
+      fs.mv('/1', '/folder/1');
     });
   });
 
