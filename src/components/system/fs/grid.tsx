@@ -7,7 +7,7 @@ import useGridStore from '@/stores/use-grid-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
-import { TASKBAR_HEIGHT } from '@/themes';
+import { TASKBAR_HEIGHT, WINDOW_HEADER_HEIGHT } from '@/themes';
 import { type TransferData } from '@/types';
 import cn from '@/utils/format';
 import { parseFullFileName } from '@/utils/fs';
@@ -45,6 +45,22 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  const myContext = path === '/Desktop' ? 'desktop' : 'folder';
+
+  const getFolderPosition = useCallback(() => {
+    if (myContext === 'desktop') {
+      return {
+        folderX: 0,
+        folderY: 0,
+      };
+    }
+    const folder = getWindow(path);
+    return {
+      folderX: folder.position.x,
+      folderY: folder.position.y + WINDOW_HEADER_HEIGHT + 8,
+    };
+  }, [path, myContext, getWindow]);
+
   const handleDragEnter = useCallback(() => {
     if (options?.isDesktop) {
       setDropContext('desktop');
@@ -58,7 +74,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const { x: folderX, y: folderY } = getWindow(path).position;
+      const { folderX, folderY } = getFolderPosition();
       const dropX = event.clientX - folderX;
       const dropY = event.clientY - folderY;
       const dropIndex = positionToIndex(dropX, dropY, grid.lineSize, {
@@ -87,7 +103,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         setGridIndex(element.path, finalIndex);
       }
     },
-    [grid.lineSize, setGridIndex, path, getWindow, mv],
+    [grid.lineSize, setGridIndex, path, mv, getFolderPosition],
   );
 
   const handleUpdateGridSize = useCallback(() => {

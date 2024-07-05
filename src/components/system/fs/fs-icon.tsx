@@ -9,7 +9,7 @@ import useGridStore from '@/stores/use-grid-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
-import { ICON_SIZE } from '@/themes';
+import { ICON_SIZE, WINDOW_HEADER_HEIGHT } from '@/themes';
 import { type TransferData } from '@/types';
 import cn from '@/utils/format';
 import { parseFileName, parseFullFileName, parseParentPath } from '@/utils/fs';
@@ -25,12 +25,11 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const selectRectContext = useSelectStore((state) => state.selectRectContext);
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
-  const setDragContext = useMouseStore((state) => state.setDragContext);
   const isDir = useFsStore((state) => state.isDir);
   const mv = useFsStore((state) => state.mv);
 
   const myContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
-  const dropContext = useSelectStore((state) => state.dropContext);
+  const dragContext = useMouseStore((state) => state.dragContext);
   const { registerEvents } = UseEvents();
   const {
     handleFocusSelect,
@@ -58,8 +57,8 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
         // Create transfer object
         const transferObj: Partial<TransferData> = {};
         transferObj.path = selectedPath;
-        transferObj.startingGridIndex = pathGridIndex;
         transferObj.isHead = selectedPath === path;
+        transferObj.startingGridIndex = pathGridIndex;
         transferData.push(transferObj as TransferData);
 
         // Calculate index offsets
@@ -78,7 +77,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   );
 
   const getFolderPosition = useCallback(() => {
-    if (myContext === 'desktop' || dropContext === 'desktop') {
+    if (myContext === 'desktop' || dragContext === 'desktop') {
       return {
         folderX: 0,
         folderY: 0,
@@ -87,9 +86,9 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
     const folder = getWindow(parentPath);
     return {
       folderX: folder.position.x,
-      folderY: folder.position.y,
+      folderY: folder.position.y + WINDOW_HEADER_HEIGHT + 8,
     };
-  }, [myContext, dropContext, parentPath, getWindow]);
+  }, [myContext, dragContext, parentPath, getWindow]);
 
   const handleDrag = useCallback(
     (event: React.DragEvent) => {
@@ -110,10 +109,12 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      event.stopPropagation();
       const transferData: TransferData[] = JSON.parse(
         event.dataTransfer.getData('text/plain'),
       ) as TransferData[];
+      const headElement = transferData.find((element) => element.isHead) ?? transferData[0];
+      if (headElement.path === path) return;
+      event.stopPropagation();
       for (const element of transferData) {
         const draggedPath = element.path;
         if (draggedPath === path || !isDir(path)) continue;
@@ -165,10 +166,6 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
             height: `${ICON_SIZE.toString()}px`,
           }}
           onDragStart={handleDragStart}
-          onDragEnter={(event: React.DragEvent) => {
-            event.stopPropagation();
-            setDragContext('file-icon');
-          }}
           onDrag={handleDrag}
           onDrop={handleDrop}
           onDragEnd={handleDragEnd}

@@ -33,8 +33,8 @@ export interface SizePos {
 // File System
 export interface TransferData {
   path: string;
-  startingGridIndex: number;
   isHead: boolean;
+  startingGridIndex: number;
 }
 
 export interface FileNode {
