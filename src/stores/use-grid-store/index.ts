@@ -1,4 +1,3 @@
-/* eslint-disable no-continue */
 /* eslint-disable no-use-before-define */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { enableMapSet } from 'immer';
@@ -106,7 +105,6 @@ const useGridStore = create<GridSystem & GridActions>()(
       });
     },
     getIndex: (path) => {
-      console.log('path called', path);
       validateGridChild(path);
       const parentPath = parseParentPath(path);
       return get().gridMap.get(parentPath)!.items.get(path)!;

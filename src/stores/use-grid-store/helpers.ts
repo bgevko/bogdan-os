@@ -7,7 +7,6 @@ function newGridState(options: GridOptions): GridState {
   const columns = Math.floor(window.innerWidth / cellSize);
   const items = new Map<string, number>();
 
-  // Any sort logic can be applied to items here
   for (const [i, childPath] of childPaths.entries()) {
     items.set(childPath, i);
   }

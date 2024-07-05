@@ -8,7 +8,7 @@ import { indexToPosition } from '@/utils/grid';
 
 interface UseSelectReturn {
   handleFocusSelect: () => void;
-  handleMouseDownSelect: (e: React.MouseEvent) => void;
+  handleMouseDownSelect: (event: React.MouseEvent) => void;
   handleMouseUpSelect: () => void;
   handleToggleSelect: () => void;
   isSelected: boolean;
@@ -59,7 +59,7 @@ const UseSelect = (path: string): UseSelectReturn => {
   }, [setSelected, shiftIsPressed, isMultipleSelected, path]);
 
   const handleMouseDownSelect = useCallback(
-    (event: MouseEvent) => {
+    (event: React.MouseEvent) => {
       if (event.button !== 0) return;
       if (shiftIsPressed || !isMultipleSelected) return;
       addSelected(path);
