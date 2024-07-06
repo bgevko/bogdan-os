@@ -71,14 +71,26 @@ const UseSelect = (path: string): UseSelectReturn => {
     setSelected([path]);
   }, [shiftIsPressed, setSelected, path, isMultipleSelected, isUsingSelectRect]);
 
+  const isSameParent = useCallback(
+    (target: string) => {
+      const parent = parseParentPath(target);
+      return allSelected.every((selectedPath) => parseParentPath(selectedPath) === parent);
+    },
+    [allSelected],
+  );
+
   const handleToggleSelect = useCallback(() => {
     if (!shiftIsPressed) return;
+    if (!isSameParent(path)) {
+      setSelected([path]);
+      return;
+    }
     if (isSelected) {
       removeSelected(path);
     } else {
       addSelected(path);
     }
-  }, [shiftIsPressed, isSelected, addSelected, removeSelected, path]);
+  }, [shiftIsPressed, isSelected, setSelected, addSelected, removeSelected, path, isSameParent]);
 
   const handleDragSelect = useCallback(() => {
     if (!isUsingSelectRect || !isCorrectContext) return;

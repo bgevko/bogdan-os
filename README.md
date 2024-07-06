@@ -37,10 +37,10 @@
 
 ### Issues
 
-- HMR crashes the app when a folder is opened.
-- Shift selecting an item from different context should only select the last item clicked.
-- Dragging an item across a non-drop target makes the drop guide fly off screen.
-- Dragging an item after it's been opened causes the app to crash.
 - Multi-drag items from folder to desktop only drags out the last item.
+- Dragging an item after it's been opened causes the app to crash.
 - Multi-drag items on top of a folder should consolidate the drag guide to the folder's grid.
 - Dragging a folder into itself should give some sort of incorrect feedback.
+- Drag guide shows up in all opened folders, not the focused one.
+- Dragging an item across a non-drop target makes the drop guide fly off screen.
+- HMR crashes the app when a folder is opened.
