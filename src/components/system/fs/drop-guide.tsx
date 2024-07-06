@@ -22,8 +22,7 @@ const DropGuide = ({ path }: DropGuideProps): ReactElement => {
   const getLineSize = useGridStore((state) => state.getLineSize);
   const componentContext = path === '/Desktop' ? 'desktop' : 'folder';
   const padding = componentContext === 'desktop' ? 32 : 16;
-
-  const shouldRender = dragStartContext === componentContext;
+  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
 
   const calcPos = useCallback(
     (offsetIndex: number) => {
@@ -79,10 +78,18 @@ const DropGuide = ({ path }: DropGuideProps): ReactElement => {
     if (componentContext === 'folder' && dragContext === 'desktop') {
       return -1;
     }
-    return 1;
+    return 100;
   }, [isDragging, componentContext, dragContext]);
 
-  if (!shouldRender || !isDragging) return <></>;
+  const shouldRender = useMemo(() => {
+    if (!isDragging) return false;
+    if (dragStartContext !== componentContext) return false;
+    if (!isFocused && componentContext === 'folder' && dragContext === 'window') return false;
+    return true;
+  }, [isDragging, dragStartContext, componentContext, isFocused, dragContext]);
+
+  if (!shouldRender) return <></>;
+
   return (
     <>
       {offsets.map((offset) => (
