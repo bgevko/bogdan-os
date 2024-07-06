@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import useProcessesStore from '@/stores/use-processes-store';
 import { FileSystemContext } from '@/types';
 
 interface DragState {
@@ -46,6 +47,13 @@ const useDragStore = create<DragState & DragActions>((set, get) => ({
     set({ guideIndex: index });
   },
   setDragoverPath: (path) => {
+    const { setFocused } = useProcessesStore.getState();
+    const { setBlurFocus } = useProcessesStore.getState();
+    if (path === '/Desktop') {
+      setBlurFocus(true);
+    } else {
+      setFocused(path);
+    }
     set({ dragoverPath: path });
   },
   setIsDragging: (isDragging) => {

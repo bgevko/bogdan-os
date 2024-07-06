@@ -8,6 +8,8 @@ export const startingDir: Paths = [
   '/Desktop/HelloWorld',
   '/Desktop/Terminal.app',
   '/Desktop/MyFolder/MyFile',
+  '/Desktop/MyFolder2/MyFile2',
+  '/Desktop/MyFolder3/MyFile3',
 ];
 
 // Processes

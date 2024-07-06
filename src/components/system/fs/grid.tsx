@@ -38,7 +38,6 @@ const GridComponent = ({ children, path, options }: GridProps): ReactElement => 
   const setDragContext = useMouseStore((state) => state.setDragContext);
   const setDragoverPath = useDragStore((state) => state.setDragoverPath);
   const setIsDragging = useDragStore((state) => state.setIsDragging);
-
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
@@ -106,7 +105,7 @@ const GridComponent = ({ children, path, options }: GridProps): ReactElement => 
         setGridIndex(element.path, finalIndex);
       }
     },
-    [grid.lineSize, setGridIndex, path, mv, getFolderPosition],
+    [grid.lineSize, setGridIndex, path, mv, getFolderPosition, setIsDragging],
   );
 
   const handleUpdateGridSize = useCallback(() => {
