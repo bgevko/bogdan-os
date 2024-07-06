@@ -102,7 +102,7 @@ const UseDrag = (path: string): ReturnTypes => {
 
     // Folder to folder case
     if (componentContext === 'folder' && dragContext === 'window') {
-      const folder = getWindow(parentPath);
+      const folder = getWindow(dragoverPath);
       return {
         folderX: folder.position.x,
         folderY: folder.position.y + WINDOW_HEADER_HEIGHT + 8,
@@ -114,7 +114,7 @@ const UseDrag = (path: string): ReturnTypes => {
       folderX: 0,
       folderY: 0,
     };
-  }, [componentContext, dragoverPath, dragContext, parentPath, getWindow]);
+  }, [componentContext, dragoverPath, dragContext, getWindow]);
 
   const handleDrag = useCallback(
     (event: React.DragEvent) => {
