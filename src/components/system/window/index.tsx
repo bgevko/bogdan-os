@@ -29,7 +29,7 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
 
   const calcZIndex = useCallback(() => {
     if (isMinimized) return -1;
-    const myZIndex = allFocused.indexOf(path);
+    const myZIndex = allFocused.indexOf(path) * 10;
     return myZIndex + 1;
   }, [isMinimized, allFocused, path]);
 

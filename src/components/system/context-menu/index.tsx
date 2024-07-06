@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 import useEvents from '@/hooks/use-events';
 import useMouseStore from '@/stores/use-mouse-store';
 import { TASKBAR_HEIGHT } from '@/themes';
 import cn from '@/utils/format';
 
-const ContextMenu = (): React.ReactElement => {
+const ContextMenuComponent = (): React.ReactElement => {
   const [menuPos, setMenuPos] = useState({ x: -500, y: 0 });
   const { registerEvents } = useEvents();
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
@@ -73,4 +73,5 @@ const ContextMenu = (): React.ReactElement => {
   );
 };
 
+const ContextMenu = React.memo(ContextMenuComponent);
 export default ContextMenu;

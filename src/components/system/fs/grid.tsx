@@ -1,7 +1,8 @@
-import { type ReactElement, ReactNode } from 'react';
+import React, { type ReactElement, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
 
 import useEvents from '@/hooks/use-events';
+import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
 import useMouseStore from '@/stores/use-mouse-store';
@@ -24,18 +25,19 @@ interface GridProps {
   children: ReactNode;
 }
 
-const Grid = ({ children, path, options }: GridProps): ReactElement => {
+const GridComponent = ({ children, path, options }: GridProps): ReactElement => {
   const { registerEvents } = useEvents();
   const setGridIndex = useGridStore((state) => state.setIndex);
   const grid = useGridStore((state) => state.getGrid(path));
   const updateGridSize = useGridStore((state) => state.updateSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
   const setSelectContext = useSelectStore((state) => state.setSelectContext);
-  const setDropContext = useSelectStore((state) => state.setDropContext);
   const setSelected = useSelectStore((state) => state.setSelected);
   const mv = useFsStore((state) => state.mv);
   const resetMouseContext = useMouseStore((state) => state.reset);
   const setDragContext = useMouseStore((state) => state.setDragContext);
+  const setDragoverPath = useDragStore((state) => state.setDragoverPath);
+  const setIsDragging = useDragStore((state) => state.setIsDragging);
 
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
 
@@ -63,17 +65,18 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
 
   const handleDragEnter = useCallback(() => {
     if (options?.isDesktop) {
-      setDropContext('desktop');
       setDragContext('desktop');
+      setDragoverPath(path);
     } else {
-      setDropContext('folder');
       setDragContext('window');
+      setDragoverPath(path);
     }
-  }, [options?.isDesktop, setDropContext, setDragContext]);
+  }, [options?.isDesktop, setDragContext, setDragoverPath, path]);
 
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
+      setIsDragging(false);
       const { folderX, folderY } = getFolderPosition();
       const dropX = event.clientX - folderX;
       const dropY = event.clientY - folderY;
@@ -155,4 +158,5 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   );
 };
 
+const Grid = React.memo(GridComponent);
 export default Grid;

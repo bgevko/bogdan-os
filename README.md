@@ -40,8 +40,10 @@
 
 ### Issues
 
-- Dragging items across different contexts doesn't set the correct grid index and position of the dropped item.
-- Drop guide shouldn't clip its parent boundary
 - Dragging an item over an unfocused folder doesn't focus the folder.
-- Dropguide doesn't align to the folder's grid when dragging from desktop to folder.
 - HMR crashes the app when a folder is opened.
+- Shift selecting an item from different context should only select the last item clicked.
+- Dragging an item across a non-drop target makes the drop guide fly off screen.
+- Dragging an item after it's been opened causes the app to crash.
+- Multi-drag items from folder to desktop only drags out the last item.
+- Multi-drag items on top of a folder should consolidate the drag guide to the folder's grid.

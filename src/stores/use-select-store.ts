@@ -5,12 +5,11 @@ import { type SizePos, Position } from '@/types';
 type Context = 'desktop' | 'folder';
 
 interface SelectState {
-  selected: Set<string>;
+  allSelected: Set<string>;
   clickStart: Position;
-  selecting: boolean;
+  isSelecting: boolean;
   selectingRect: SizePos;
   selectRectContext: Context;
-  dropContext: Context;
 }
 
 interface SelectActions {
@@ -22,18 +21,16 @@ interface SelectActions {
   setSelecting: (selecting: boolean) => void;
   setSelectingRect: (selectingRect: SizePos) => void;
   setSelectContext: (selectContext: 'desktop' | 'folder') => void;
-  setDropContext: (dropContext: 'desktop' | 'folder') => void;
 }
 
 const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
-  selected: new Set(),
+  allSelected: new Set(),
   selectRectContext: 'desktop',
-  dropContext: 'desktop',
   clickStart: {
     x: 0,
     y: 0,
   },
-  selecting: false,
+  isSelecting: false,
   selectingRect: {
     size: {
       width: 0,
@@ -45,26 +42,26 @@ const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
     },
   },
   getSelected: () => {
-    return [...get().selected];
+    return [...get().allSelected];
   },
   setSelected: (selected) => {
-    set({ selected: new Set(selected) });
+    set({ allSelected: new Set(selected) });
   },
   addSelected: (path) => {
     set((state) => {
-      const newSelected = new Set(state.selected);
+      const newSelected = new Set(state.allSelected);
       newSelected.add(path);
       return {
-        selected: newSelected,
+        allSelected: newSelected,
       };
     });
   },
   removeSelected: (path) => {
     set((state) => {
-      const newSelected = new Set(state.selected);
+      const newSelected = new Set(state.allSelected);
       newSelected.delete(path);
       return {
-        selected: newSelected,
+        allSelected: newSelected,
       };
     });
   },
@@ -72,16 +69,13 @@ const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
     set({ clickStart });
   },
   setSelecting: (selecting: boolean) => {
-    set({ selecting });
+    set({ isSelecting: selecting });
   },
   setSelectingRect: (selectingRect: SizePos) => {
     set({ selectingRect });
   },
   setSelectContext: (selectContext: 'desktop' | 'folder') => {
     set({ selectRectContext: selectContext });
-  },
-  setDropContext: (dropContext: 'desktop' | 'folder') => {
-    set({ dropContext });
   },
 }));
 

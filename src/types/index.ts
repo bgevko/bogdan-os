@@ -37,6 +37,8 @@ export interface TransferData {
   startingGridIndex: number;
 }
 
+export type FileSystemContext = 'desktop' | 'folder';
+
 export interface FileNode {
   path: string;
   icon: string;

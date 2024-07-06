@@ -4,8 +4,8 @@ import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 
-const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
-  const selecting = useSelectStore((state) => state.selecting);
+const SelectRectComponent = ({ rootPath }: { rootPath: string }): React.ReactElement => {
+  const selecting = useSelectStore((state) => state.isSelecting);
   const setSelecting = useSelectStore((state) => state.setSelecting);
   const selectRect = useSelectStore((state) => state.selectingRect);
   const setSelectRect = useSelectStore((state) => state.setSelectingRect);
@@ -108,4 +108,5 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   );
 };
 
+const SelectRect = React.memo(SelectRectComponent);
 export default SelectRect;

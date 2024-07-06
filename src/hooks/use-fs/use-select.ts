@@ -13,20 +13,19 @@ interface UseSelectReturn {
   handleToggleSelect: () => void;
   isSelected: boolean;
   isUsingSelectRect: boolean;
-  allSelected: string[];
 }
 
 const UseSelect = (path: string): UseSelectReturn => {
   const gridIndex = useGridStore((state) => state.getIndex(path));
   const parentPath = parseParentPath(path);
-  const lineSize = useGridStore((state) => state.getGrid(parentPath).lineSize);
+  const lineSize = useGridStore((state) => state.getLineSize(parentPath));
 
   const allSelected = useSelectStore((state) => state.getSelected());
   const addSelected = useSelectStore((state) => state.addSelected);
   const removeSelected = useSelectStore((state) => state.removeSelected);
   const setSelected = useSelectStore((state) => state.setSelected);
 
-  const isUsingSelectRect = useSelectStore((state) => state.selecting);
+  const isUsingSelectRect = useSelectStore((state) => state.isSelecting);
   const selectingRect = useSelectStore((state) => state.selectingRect);
 
   const isSelected = allSelected.includes(path);
@@ -114,7 +113,6 @@ const UseSelect = (path: string): UseSelectReturn => {
     handleToggleSelect,
     isSelected,
     isUsingSelectRect,
-    allSelected,
   };
 };
 
