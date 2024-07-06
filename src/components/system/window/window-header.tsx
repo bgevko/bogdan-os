@@ -20,12 +20,16 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
   const close = useProcessesStore((state) => state.close);
   const title = parseFileName(path);
   const isMaximized = useProcessesStore((state) => state.getIsMaximized(path));
+  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
   return (
     <>
       <header
         className="relative flex items-center justify-center bg-surface text-[14px]"
         data-testid="window-header"
-        style={{ height: `${WINDOW_HEADER_HEIGHT.toString()}px` }}
+        style={{
+          height: `${WINDOW_HEADER_HEIGHT.toString()}px`,
+          filter: isFocused ? 'none' : 'saturate(0.0)',
+        }}
         role="toolbar"
         aria-label="Window header"
         onMouseDown={(event: React.MouseEvent) => {

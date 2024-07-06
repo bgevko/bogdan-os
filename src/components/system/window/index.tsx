@@ -19,7 +19,6 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const isMinimized = useProcessesStore((state) => state.getIsMinimized(path));
   const setFocused = useProcessesStore((state) => state.setFocused);
   const allFocused = useProcessesStore((state) => state.getFocused());
-  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
 
@@ -47,7 +46,6 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
         height: size.height,
         opacity,
         zIndex: calcZIndex(),
-        filter: isFocused ? 'none' : 'saturate(0.0)',
       }}
       onMouseDownCapture={handleWindowFocus}
       onMouseEnter={(event: React.MouseEvent) => {

@@ -37,10 +37,13 @@
 
 ### Issues
 
-- Multi-drag items from folder to desktop only drags out the last item.
 - Dragging an item after it's been opened causes the app to crash.
-- Multi-drag items on top of a folder should consolidate the drag guide to the folder's grid.
+  - Write more FS tests to ensure mv / delete are also properly affecting the processes state
+- Multi-drag items from folder to desktop only drags out the last item.
+  - Implement a bulk move instead of trying to process each item individually.
+- Dragging an item from an open folder to another open folder doesn't calculate the drop guide correctly.
+  - Consider focused window when determining which folder instance to use for offset calculations.
+- Multi-drag items on top of a folder should consolidate the drag guide to the folder icon's location.
 - Dragging a folder into itself should give some sort of incorrect feedback.
-- Drag guide shows up in all opened folders, not the focused one.
 - Dragging an item across a non-drop target makes the drop guide fly off screen.
 - HMR crashes the app when a folder is opened.
