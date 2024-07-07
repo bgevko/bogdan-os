@@ -70,11 +70,17 @@ function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode
 }
 
 function dumpOptions(node: ProcessNode): ProcessOptions {
+  function calcSizePos(): SizePos {
+    if (node.window.isMinimized) {
+      return node.window.unMinimizedSizePos;
+    }
+    return { size: node.window.size, position: node.window.position };
+  }
   return {
     hasWindow: node.hasWindow,
-    position: node.window.position,
+    position: calcSizePos().position,
+    size: calcSizePos().size,
     minSize: node.window.minSize,
-    size: node.window.size,
     defaultSizePos: node.window.defaultSizePos,
   };
 }
