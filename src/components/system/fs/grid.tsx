@@ -135,6 +135,7 @@ const GridComponent = ({ children, path, options }: GridProps): ReactElement => 
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ol
       className={cn('grid grid-flow-col', options?.isDesktop ? 'p-4' : 'p-0')}
+      data-testid={options?.isDesktop ? 'desktop' : 'folder'}
       data-id={options?.isDesktop ? 'desktop' : 'folder'}
       style={{
         height: options?.isDesktop ? `calc(100vh - ${TASKBAR_HEIGHT.toString()}px)` : '100%',

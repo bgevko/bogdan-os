@@ -14,8 +14,10 @@ interface MenuEntryProps {
 
 const MenuEntry = ({ label, callback }: MenuEntryProps): React.ReactElement => {
   const resetMenuContext = useMenuStore((state) => state.reset);
+  const testId = label.toLowerCase().replace(' ', '-');
   return (
     <button
+      data-testid={testId}
       className="w-full p-2 text-left hover:bg-secondary hover:text-surface"
       type="button"
       onClick={() => {

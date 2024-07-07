@@ -15,8 +15,9 @@ describe(
   () => {
     beforeEach(() => {
       cy.visit('/');
-      cy.get('[data-testid="start-button"]').click();
-      cy.get('[data-testid="start-button"]').as('startButton');
+      cy.get('[data-testid="desktop"]').rightclick();
+      cy.get('[data-testid="new-file"]').click();
+      cy.get('[data-testid="NewFile"]').dblclick();
       cy.get('[data-testid="window-header"]').as('windowHeader');
       cy.get('[data-testid="window"]').as('myWindow');
       cy.get('[data-testid="taskbar-entry"]').as('taskbarEntry');
@@ -495,13 +496,24 @@ describe(
     });
 
     it('should open in opened state even if closed in a minimized state', () => {
-      cy.get('@minimizeButton').click();
-      cy.wait(200);
-      // For now, right clicking the taskbar entry will close the window
-      // TODO: change this behavior later
-      cy.get('@taskbarEntry').rightclick();
-      cy.get('@startButton').click();
-      cy.get('@myWindow').should('be.visible');
+      cy.get('@myWindow')
+        .getDimensions()
+        .then(({ x: initialX, y: initialY, width: initialWidth, height: initialHeight }) => {
+          cy.get('@minimizeButton').click();
+          cy.wait(200);
+          cy.get('@taskbarEntry').rightclick();
+          cy.get('[data-testid="close"]').click();
+          cy.get('[data-testid="NewFile"]').dblclick();
+          cy.get('@myWindow').should('be.visible');
+          cy.get('@myWindow')
+            .getDimensions()
+            .then(({ x: newX, y: newY, width: newWidth, height: newHeight }) => {
+              expect(newX).equal(initialX);
+              expect(newY).equal(initialY);
+              expect(newWidth).equal(initialWidth);
+              expect(newHeight).equal(initialHeight);
+            });
+        });
     });
   },
 );
