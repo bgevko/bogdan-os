@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
 import { folderIconPath } from '@/constants';
-import UseWindowState from '@/hooks/use-window';
+import UseWindowState from '@/hooks/system/use-window';
 import useFsStore from '@/stores/use-fs-store';
+import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
@@ -24,6 +25,8 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
   const isDir = useFsStore((state) => state.isDir(path));
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
+  const setMenuContext = useMenuStore((state) => state.setMenuContext);
+  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
 
   const title = parseFileName(path);
   const icon = isDir ? folderIconPath : parseFileIcon(path);
@@ -72,6 +75,7 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
       type="button"
       ref={tabReference}
       data-testid="taskbar-entry"
+      data-id="taskbar-entry"
       className={cn(
         'flex h-full items-center justify-center gap-1 text-onSurface cursor-pointer select-none',
         isMinimized && 'embossed-border',
@@ -103,6 +107,11 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
       }}
       onDoubleClick={(event) => {
         event.stopPropagation();
+      }}
+      onContextMenu={(event: React.MouseEvent) => {
+        event.preventDefault();
+        setMenuContext('taskbar-entry');
+        setMenuTargetPath(path);
       }}
     >
       {!imgError && (

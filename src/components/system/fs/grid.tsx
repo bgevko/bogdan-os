@@ -5,6 +5,7 @@ import useEvents from '@/hooks/use-events';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
+import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
@@ -39,6 +40,8 @@ const GridComponent = ({ children, path, options }: GridProps): ReactElement => 
   const setDragoverPath = useDragStore((state) => state.setDragoverPath);
   const setIsDragging = useDragStore((state) => state.setIsDragging);
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
+  const setMenuContext = useMenuStore((state) => state.setMenuContext);
+  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -132,6 +135,7 @@ const GridComponent = ({ children, path, options }: GridProps): ReactElement => 
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ol
       className={cn('grid grid-flow-col', options?.isDesktop ? 'p-4' : 'p-0')}
+      data-id={options?.isDesktop ? 'desktop' : 'folder'}
       style={{
         height: options?.isDesktop ? `calc(100vh - ${TASKBAR_HEIGHT.toString()}px)` : '100%',
         gridTemplateColumns: `repeat(${grid.columns.toString()}, ${GRID_SIZE.toString()}px)`,
@@ -144,6 +148,16 @@ const GridComponent = ({ children, path, options }: GridProps): ReactElement => 
         setSelected([]);
         handleSelectRectContext();
         handleBlurWindowFocus();
+      }}
+      onContextMenu={(event: React.MouseEvent) => {
+        event.preventDefault();
+        const target = event.target as HTMLElement;
+        const dataId = target.dataset.id;
+        if (dataId === 'file-icon') {
+          return;
+        }
+        setMenuContext(options?.isDesktop ? 'desktop' : 'folder');
+        setMenuTargetPath(path);
       }}
       onMouseEnter={(event: React.MouseEvent) => {
         event.stopPropagation();

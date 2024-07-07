@@ -1,24 +1,60 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 
+import UseMenuContext from '@/hooks/system/use-menu-context';
 import useEvents from '@/hooks/use-events';
-import useMouseStore from '@/stores/use-mouse-store';
+import useMenuStore from '@/stores/use-menu-store';
 import { TASKBAR_HEIGHT } from '@/themes';
+import { ContextMenuItems } from '@/types';
 import cn from '@/utils/format';
+
+interface MenuEntryProps {
+  label: string;
+  callback: () => void;
+}
+
+const MenuEntry = ({ label, callback }: MenuEntryProps): React.ReactElement => {
+  const resetMenuContext = useMenuStore((state) => state.reset);
+  return (
+    <button
+      className="w-full p-2 text-left hover:bg-secondary hover:text-surface"
+      type="button"
+      onClick={() => {
+        callback();
+        resetMenuContext();
+      }}
+    >
+      {label}
+    </button>
+  );
+};
 
 const ContextMenuComponent = (): React.ReactElement => {
   const [menuPos, setMenuPos] = useState({ x: -500, y: 0 });
   const { registerEvents } = useEvents();
-  const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
-  const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
-  const mouseoverContext = useMouseStore((state) => state.getMouseoverContext());
-  const [visible, setVisible] = useState(false);
+  const menuContext = useMenuStore((state) => state.menuContext);
+  const setIsVisible = useMenuStore((state) => state.setIsVisible);
+  const isVisible = useMenuStore((state) => state.isVisible);
+  const isMouseOver = useMenuStore((state) => state.isMouseOver);
+  const setIsMouseOver = useMenuStore((state) => state.setIsMouseOver);
+
+  const { contextOptions } = UseMenuContext();
+
+  const menuItems: ContextMenuItems = useMemo(() => {
+    const getter = contextOptions.get(menuContext);
+    if (!getter) return new Map<string, () => void>();
+    return getter();
+  }, [contextOptions, menuContext]);
+
+  const calculatedHeight = useMemo(() => {
+    return menuItems.size * 40;
+  }, [menuItems]);
 
   const handleShowMenu = useCallback(
     (event: MouseEvent) => {
-      if (mouseoverContext === 'context-menu') return;
-      setVisible(true);
+      if (isMouseOver) return;
+      setIsVisible(true);
       const width = 200;
-      const height = 300;
+      const height = calculatedHeight;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight - TASKBAR_HEIGHT;
 
@@ -26,16 +62,16 @@ const ContextMenuComponent = (): React.ReactElement => {
       const y = event.clientY + height > viewportHeight ? event.clientY - height : event.clientY;
       setMenuPos({ x, y });
     },
-    [setVisible, mouseoverContext],
+    [setIsVisible, calculatedHeight, isMouseOver],
   );
 
   const handleHideMenu = useCallback(
     (event: MouseEvent) => {
       if (event.button !== 0) return;
-      if (mouseoverContext === 'context-menu') return;
-      setVisible(false);
+      if (isMouseOver) return;
+      setIsVisible(false);
     },
-    [setVisible, mouseoverContext],
+    [setIsVisible, isMouseOver],
   );
 
   const preventDefault = useCallback((event: MouseEvent) => {
@@ -49,24 +85,32 @@ const ContextMenuComponent = (): React.ReactElement => {
   }, [handleShowMenu, preventDefault, registerEvents, handleHideMenu]);
   return (
     <>
-      {visible && (
+      {isVisible && menuItems.size > 0 && (
+        // eslint-disable-next-line jsx-a11y/interactive-supports-focus
         <span
+          role="menu"
           className={cn(
-            'embossed-border fixed z-20 flex h-[300px] w-[200px] items-center justify-center bg-surface text-onSurface',
+            `h-[${calculatedHeight.toString()}px] w-[200px]`,
+            'embossed-border flex-col fixed z-20 select-none flex bg-surface text-onSurface',
           )}
           style={{
             transform: `translate(${menuPos.x.toString()}px, ${menuPos.y.toString()}px)`,
           }}
+          onMouseDown={(event: React.MouseEvent) => {
+            event.stopPropagation();
+          }}
           onMouseLeave={(event: React.MouseEvent) => {
             event.stopPropagation();
-            popMouseContext();
+            setIsMouseOver(false);
           }}
           onMouseEnter={(event: React.MouseEvent) => {
             event.stopPropagation();
-            appendMouseContext('context-menu');
+            setIsMouseOver(true);
           }}
         >
-          I am the context menu
+          {[...menuItems.entries()].map(([key, value]) => {
+            return <MenuEntry key={key} label={key} callback={value} />;
+          })}
         </span>
       )}
     </>

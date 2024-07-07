@@ -8,16 +8,19 @@
 ### File Explorer
 
 - Right clicking on a file or folder should open a context menu with options:
-  - Open
   - Rename
-  - Delete
   - Copy
 - Right clicking on the desktop / folder should open a context menu with options:
-  - Sort icons
-  - Create a new folder
-  - Create a new file
   - Paste
 - Implement sound for file drop
+
+### File System Icon
+
+- Implement a new state for renaming / new folder / new file, where the user should type a name and press enter
+
+### System dialog
+
+- Implement system dialog for various operations.
 
 ### Theme
 
@@ -37,6 +40,7 @@
 
 ### Issues
 
+- Context menu doesn't go away unless specifically clicked on desktop or folder background.
 - Dragging an item after it's been opened to a different parent causes the app to crash.
   - Write more FS tests to ensure mv / delete are also properly affecting the processes state
 - Multi-drag items from folder to desktop only drags out the last item.

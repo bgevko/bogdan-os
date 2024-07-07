@@ -5,11 +5,10 @@ import { AppDirectory, Paths } from '@/types';
 // File System
 export const startingDir: Paths = [
   '/',
-  '/Desktop/HelloWorld',
+  '/Desktop/file1',
+  '/Desktop/file2',
   '/Desktop/Terminal.app',
   '/Desktop/MyFolder/MyFile',
-  '/Desktop/MyFolder2/MyFile2',
-  '/Desktop/MyFolder3/MyFile3',
 ];
 
 // Processes

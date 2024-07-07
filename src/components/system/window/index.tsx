@@ -2,6 +2,7 @@ import { type ReactElement, ReactNode, useCallback } from 'react';
 
 import WindowResizeHandles from '@/components/system/window/resize-handles';
 import WindowHeader from '@/components/system/window/window-header';
+import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
@@ -21,6 +22,8 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const allFocused = useProcessesStore((state) => state.getFocused());
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
+  const setMenuContext = useMenuStore((state) => state.setMenuContext);
+  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
 
   const handleWindowFocus = useCallback(() => {
     setFocused(path);
@@ -54,6 +57,16 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
       }}
       onMouseLeave={() => {
         popMouseContext();
+      }}
+      onContextMenu={(event: React.MouseEvent) => {
+        event.preventDefault();
+        const target = event.target as HTMLElement;
+        const dataId = target.dataset.id;
+        if (dataId === 'window-header' || dataId === 'folder' || dataId === 'file-icon') {
+          return;
+        }
+        setMenuContext('window');
+        setMenuTargetPath(path);
       }}
     >
       {!isMinimized && (

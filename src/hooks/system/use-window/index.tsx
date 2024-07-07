@@ -1,6 +1,6 @@
-import UseMaxMin from '@/hooks/use-window/use-max-min';
-import UseWindowMove from '@/hooks/use-window/use-move';
-import UseWindowResize from '@/hooks/use-window/use-resize';
+import UseMaxMin from '@/hooks/system/use-window/use-max-min';
+import UseWindowMove from '@/hooks/system/use-window/use-move';
+import UseWindowResize from '@/hooks/system/use-window/use-resize';
 import { ResizeDirection } from '@/types';
 
 // window state hook return types

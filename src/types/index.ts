@@ -112,14 +112,23 @@ export type ResizeDirection =
   | 'BOTTOM_LEFT'
   | 'BOTTOM_RIGHT';
 
-// Mouse Global Context
-export type MouseContext =
+// Menu Context
+export type MouseContext = 'desktop' | 'file-icon' | 'taskbar' | 'window' | 'taskbar-entry';
+export type MenuContext =
   | 'desktop'
   | 'file-icon'
+  | 'folder'
   | 'taskbar'
-  | 'window'
   | 'taskbar-entry'
-  | 'context-menu';
+  | 'window'
+  | 'window-header';
+export interface MenuCallbackArgs {
+  path?: string;
+}
+export type ContextMenuItem = () => void;
+export type ContextMenuItems = Map<string, ContextMenuItem>;
+export type ContextCallback = () => ContextMenuItems;
+export type ContextCallbacks = Map<MenuContext, ContextCallback>;
 
 // Other statics
 export type Paths = string[];

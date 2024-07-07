@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 
-import UseWindowState from '@/hooks/use-window';
+import UseWindowState from '@/hooks/system/use-window';
 
 interface WindowHandlesProperties {
   path: string;
@@ -19,6 +19,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
           event.stopPropagation();
           handleSetResizeDirection('LEFT');
         }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
       />
       <span
         data-testid="resize-right"
@@ -28,6 +32,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
           handleSetResizeDirection('RIGHT');
+        }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
         }}
       />
       <span
@@ -39,6 +47,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
           event.stopPropagation();
           handleSetResizeDirection('TOP');
         }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
       />
       <span
         data-testid="resize-bottom"
@@ -48,6 +60,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
           handleSetResizeDirection('BOTTOM');
+        }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
         }}
       />
       <span
@@ -59,6 +75,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
           event.stopPropagation();
           handleSetResizeDirection('TOP_LEFT');
         }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
       />
       <span
         data-testid="resize-top-right"
@@ -68,6 +88,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
           handleSetResizeDirection('TOP_RIGHT');
+        }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
         }}
       />
       <span
@@ -79,6 +103,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
           event.stopPropagation();
           handleSetResizeDirection('BOTTOM_LEFT');
         }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
       />
       <span
         data-testid="resize-bottom-right"
@@ -88,6 +116,10 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
           handleSetResizeDirection('BOTTOM_RIGHT');
+        }}
+        onContextMenu={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
         }}
       />
     </>

@@ -1,8 +1,9 @@
 import React, { ReactElement, useMemo } from 'react';
 
-import useDrag from '@/hooks/use-fs/use-drag';
-import useSelect from '@/hooks/use-fs/use-select';
+import useDrag from '@/hooks/system/use-fs/use-drag';
+import useSelect from '@/hooks/system/use-fs/use-select';
 import useGridStore from '@/stores/use-grid-store';
+import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { ICON_SIZE } from '@/themes';
@@ -17,6 +18,8 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   const lineSize = useGridStore((state) => state.getGrid(parentPath).lineSize);
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
+  const setMenuContext = useMenuStore((state) => state.setMenuContext);
+  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
 
   const myContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
 
@@ -41,6 +44,7 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   return (
     <>
       <li
+        data-id="file-icon"
         className="flex items-center justify-center"
         style={{
           gridColumnStart: gridPos.x.toString(),
@@ -49,6 +53,8 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
       >
         <button
           type="button"
+          data-testid={parseFileName(path)}
+          data-id="file-icon"
           draggable
           className={cn(
             'background-transparent cursor-default flex flex-col items-center focus:outline-none',
@@ -87,8 +93,20 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
           onDoubleClickCapture={() => {
             open(path);
           }}
+          onContextMenu={(event: React.MouseEvent) => {
+            event.preventDefault();
+            setMenuContext('file-icon');
+            setMenuTargetPath(path);
+          }}
         >
-          <img draggable="false" src={icon} alt={fileName} width="48px" height="48px" />
+          <img
+            draggable="false"
+            src={icon}
+            alt={fileName}
+            width="48px"
+            height="48px"
+            data-id="file-icon"
+          />
           <span className="text-sm">{fileName}</span>
         </button>
       </li>
