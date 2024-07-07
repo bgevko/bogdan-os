@@ -1,5 +1,14 @@
 ### Tasks
 
+- Tests for single item drag and drop
+  - Within bounds on the desktop
+  - Out of bounds on the desktop
+  - Onto another folder icon on the desktop
+  - Onto another file icon on the desktop (invalid)
+  - from the desktop to a folder
+  - from desktop to a deeply nested folder
+  - from desktop to invalid drop targets: file, window, window title bar, resize handles, taskbar
+
 ### Window
 
 - If the viewport is smaller than the Window's minimum size, a different window should render to tell the user that the given program does not support the current viewport size.
@@ -40,6 +49,7 @@
 
 ### Issues
 
+- Some mouse events aren't working in the production build of the app.
 - Context menu doesn't go away unless specifically clicked on desktop or folder background.
 - Dragging an item after it's been opened to a different parent causes the app to crash.
   - Write more FS tests to ensure mv / delete are also properly affecting the processes state
@@ -49,3 +59,4 @@
 - Dragging a folder into itself should give some sort of incorrect feedback.
 - Dragging an item across a non-drop target makes the drop guide fly off screen.
 - HMR crashes the app when a folder is opened.
+- Should set a limit to how many files can be created
