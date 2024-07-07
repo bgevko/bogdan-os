@@ -93,6 +93,7 @@ interface ProcessesActions {
   getCachedProcess(path: string): ProcessOptions;
   getCachedPaths: () => string[];
   isCached(path: string): boolean;
+  mvProcessPath: (oldPath: string, newPath: string) => void;
 
   // focus context
   getFocused: () => string[];
@@ -194,6 +195,25 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     },
 
     isOpen: (path) => get().openedProcesses.has(path),
+    mvProcessPath: (oldPath, newPath) => {
+      if (!get().openedProcesses.has(oldPath)) {
+        if (!get().cachedOptions.has(oldPath)) {
+          return;
+        }
+        // Set cached options to new path
+        set((state) => {
+          state.cachedOptions.set(newPath, state.cachedOptions.get(oldPath)!);
+          state.cachedOptions.delete(oldPath);
+        });
+        return;
+      }
+
+      // Set opened process to new path
+      set((state) => {
+        state.openedProcesses.set(newPath, state.openedProcesses.get(oldPath)!);
+        state.openedProcesses.delete(oldPath);
+      });
+    },
 
     // focus context
     getFocused: () => get().focused,

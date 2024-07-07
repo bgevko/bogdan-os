@@ -3,6 +3,7 @@
 /* eslint-disable no-param-reassign */
 import { iconsPath, startingDir } from '@/constants';
 import useGridStore from '@/stores/use-grid-store';
+import useProcessesStore from '@/stores/use-processes-store';
 import { GRID_CELL_SIZE } from '@/themes';
 import { Paths, FileNode, FileNodeOptions, DirectoryMap, FileRemoveOptions } from '@/types';
 import { parseParentPath, normalizePath, parseFileIcon } from '@/utils/fs';
@@ -196,6 +197,9 @@ export function mvHelper(
   } else {
     dir = touchHelper(dir, targetPath, options);
   }
+
+  // Move processes using the old path to the new path
+  useProcessesStore.getState().mvProcessPath(sourcePath, targetPath);
 
   return dir;
 }

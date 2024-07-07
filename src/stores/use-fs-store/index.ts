@@ -110,7 +110,11 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
 
     // Validation helpers
     isDir: (path: string) => {
-      return get().getNode(path).isDir;
+      try {
+        return get().getNode(path).isDir;
+      } catch {
+        return false;
+      }
     },
     hasPath: (path: string) => {
       return get().dir.has(path);

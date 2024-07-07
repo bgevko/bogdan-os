@@ -5,6 +5,7 @@ import { iconsPath } from '@/constants';
 import useFsStore from '@/stores/use-fs-store';
 import { getChildPathsDeep } from '@/stores/use-fs-store/fs-helpers';
 import useGridStore from '@/stores/use-grid-store';
+import useProcessesStore from '@/stores/use-processes-store';
 // import useProcessesStore from '@/stores/use-processes-store';
 
 beforeEach(() => {
@@ -481,10 +482,39 @@ describe('useFsStore - mv function', () => {
 describe('useFsStore - move and delete side effects', () => {
   const { result } = renderHook(() => useFsStore());
   const fs = result.current;
-  // const { result: resultProcesses } = renderHook(() => useProcessesStore());
-  // const pr = resultProcesses.current;
+  const { result: resultProcesses } = renderHook(() => useProcessesStore());
+  const pr = resultProcesses.current;
   const { result: resultGrid } = renderHook(() => useGridStore());
   const grid = resultGrid.current;
+
+  it('should update an opened processs when moving(renaming) a file', () => {
+    act(() => {
+      fs.initDir(['myFile.txt']);
+      expect([...fs.getPaths()]).toEqual(['/', '/myFile.txt']);
+      pr.open('/myFile.txt');
+      expect(pr.getOpenedPaths()).toEqual(['/myFile.txt']);
+      expect([...grid.getItems('/').keys()]).toEqual(['/myFile.txt']);
+
+      fs.mv('/myFile.txt', '/myFile2.txt');
+      expect([...fs.getPaths()]).toEqual(['/', '/myFile2.txt']);
+      expect(pr.getOpenedPaths()).toEqual(['/myFile2.txt']);
+      expect([...grid.getItems('/').keys()]).toEqual(['/myFile2.txt']);
+      expect(() => fs.getNode('/myFile.txt')).toThrowError();
+      expect(pr.getCachedPaths()).toEqual([]);
+
+      pr.close('/myFile2.txt');
+      expect(pr.getOpenedPaths()).toEqual([]);
+      expect(pr.getCachedPaths()).toEqual(['/myFile2.txt']);
+
+      fs.mv('/myFile2.txt', '/myFile.txt');
+      expect([...fs.getPaths()]).toEqual(['/', '/myFile.txt']);
+      expect([...grid.getItems('/').keys()]).toEqual(['/myFile.txt']);
+      expect(() => fs.getNode('/myFile2.txt')).toThrowError();
+      expect(pr.getCachedPaths()).toEqual(['/myFile.txt']);
+      pr.open('/myFile.txt');
+      expect(pr.getOpenedPaths()).toEqual(['/myFile.txt']);
+    });
+  });
 
   it('should update the grid store when adding / deleting a file', () => {
     act(() => {
