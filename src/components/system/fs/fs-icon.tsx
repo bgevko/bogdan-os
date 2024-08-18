@@ -11,7 +11,7 @@ import cn from '@/utils/format';
 import { parseFileName, parseParentPath } from '@/utils/fs';
 import { indexToPosition } from '@/utils/grid';
 
-const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string }): ReactElement => {
+const FileSystemIcon = ({ path, icon }: { path: string; icon: string }): ReactElement => {
   const parentPath = parseParentPath(path);
   const open = useProcessesStore((state) => state.open);
   const gridIndex = useGridStore((state) => state.getIndex(path));
@@ -114,5 +114,4 @@ const FileSystemIconComponent = ({ path, icon }: { path: string; icon: string })
   );
 };
 
-const FileSystemIcon = React.memo(FileSystemIconComponent);
 export default FileSystemIcon;

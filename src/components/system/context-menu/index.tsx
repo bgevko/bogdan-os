@@ -30,7 +30,7 @@ const MenuEntry = ({ label, callback }: MenuEntryProps): React.ReactElement => {
   );
 };
 
-const ContextMenuComponent = (): React.ReactElement => {
+const ContextMenu = (): React.ReactElement => {
   const [menuPos, setMenuPos] = useState({ x: -500, y: 0 });
   const { registerEvents } = useEvents();
   const menuContext = useMenuStore((state) => state.menuContext);
@@ -119,5 +119,4 @@ const ContextMenuComponent = (): React.ReactElement => {
   );
 };
 
-const ContextMenu = React.memo(ContextMenuComponent);
 export default ContextMenu;

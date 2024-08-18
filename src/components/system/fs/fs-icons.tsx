@@ -1,11 +1,11 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 
 import DropGuide from '@/components/system/fs/drop-guide';
 import FileSystemIcon from '@/components/system/fs/fs-icon';
 import Grid from '@/components/system/fs/grid';
 import useFsStore from '@/stores/use-fs-store';
 
-const FileSystemIconComponents = ({ rootPath }: { rootPath: string }): ReactElement => {
+const FileSystemIcons = ({ rootPath }: { rootPath: string }): ReactElement => {
   const desktopItems = useFsStore((state) => state.getChildren(rootPath));
   const isDesktop = rootPath === '/Desktop';
   return (
@@ -20,5 +20,4 @@ const FileSystemIconComponents = ({ rootPath }: { rootPath: string }): ReactElem
   );
 };
 
-const FileSystemIcons = React.memo(FileSystemIconComponents);
 export default FileSystemIcons;

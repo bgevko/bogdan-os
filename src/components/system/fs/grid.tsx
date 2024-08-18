@@ -26,7 +26,7 @@ interface GridProps {
   children: ReactNode;
 }
 
-const GridComponent = ({ children, path, options }: GridProps): ReactElement => {
+const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const { registerEvents } = useEvents();
   const setGridIndex = useGridStore((state) => state.setIndex);
   const grid = useGridStore((state) => state.getGrid(path));
@@ -172,5 +172,4 @@ const GridComponent = ({ children, path, options }: GridProps): ReactElement => 
   );
 };
 
-const Grid = React.memo(GridComponent);
 export default Grid;
