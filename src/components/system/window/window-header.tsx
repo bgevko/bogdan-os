@@ -24,6 +24,7 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
   const setMenuContext = useMenuStore((state) => state.setMenuContext);
   const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
+  const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
   return (
     <>
       <header
@@ -39,6 +40,7 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
           handleMouseDownMove(event);
+          setContextMenuVisible(false);
         }}
         onDoubleClick={(event) => {
           event.stopPropagation();

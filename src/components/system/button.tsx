@@ -2,6 +2,7 @@
 import { type ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 
+import useMenuStore from '@/stores/use-menu-store';
 import cn from '@/utils/format';
 
 interface ButtonProperties extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -13,6 +14,7 @@ interface ButtonProperties extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 // eslint-disable-next-line react/prop-types
 const Button: React.FC<ButtonProperties> = ({ className, children, ...properties }) => {
+  const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
   const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
 
@@ -40,6 +42,7 @@ const Button: React.FC<ButtonProperties> = ({ className, children, ...properties
         event.stopPropagation();
         setButtonDown(true);
         setMouseDown(true);
+        setContextMenuVisible(false);
       }}
       onMouseUp={() => {
         setButtonDown(false);

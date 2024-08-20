@@ -1,7 +1,6 @@
-import React, { type ReactElement, ReactNode } from 'react';
+import React, { type ReactElement, useState, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
 
-import useEvents from '@/hooks/use-events';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
@@ -27,7 +26,6 @@ interface GridProps {
 }
 
 const Grid = ({ children, path, options }: GridProps): ReactElement => {
-  const { registerEvents } = useEvents();
   const setGridIndex = useGridStore((state) => state.setIndex);
   const grid = useGridStore((state) => state.getGrid(path));
   const updateGridSize = useGridStore((state) => state.updateSize);
@@ -49,7 +47,21 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  const [shiftIsPressed, setShiftIsPressed] = useState(false);
+
   const myContext = path === '/Desktop' ? 'desktop' : 'folder';
+
+  const handleShiftPress = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Shift') {
+      setShiftIsPressed(true);
+    }
+  }, []);
+
+  const handleShiftRelease = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Shift') {
+      setShiftIsPressed(false);
+    }
+  }, []);
 
   const getFolderPosition = useCallback(() => {
     if (myContext === 'desktop') {
@@ -121,8 +133,15 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   }, [setSelectContext, options?.isDesktop]);
 
   useEffect(() => {
-    registerEvents('resize', [handleUpdateGridSize]);
-  }, [registerEvents, handleUpdateGridSize]);
+    window.addEventListener('resize', handleUpdateGridSize);
+    window.addEventListener('keydown', handleShiftPress);
+    window.addEventListener('keyup', handleShiftRelease);
+    return () => {
+      window.removeEventListener('resize', handleUpdateGridSize);
+      window.removeEventListener('keydown', handleShiftPress);
+      window.removeEventListener('keyup', handleShiftRelease);
+    };
+  }, [handleUpdateGridSize, handleShiftPress, handleShiftRelease]);
 
   const handleBlurWindowFocus = useCallback(() => {
     const localContext = options?.isDesktop ? 'desktop' : 'folder';
@@ -146,7 +165,9 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       onDragEnter={handleDragEnter}
       onDrop={handleDrop}
       onMouseDown={() => {
-        setSelected([]);
+        if (!shiftIsPressed) {
+          setSelected([]);
+        }
         handleSelectRectContext();
         handleBlurWindowFocus();
       }}

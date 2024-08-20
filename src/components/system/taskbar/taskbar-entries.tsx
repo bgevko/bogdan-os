@@ -27,6 +27,7 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
   const setMenuContext = useMenuStore((state) => state.setMenuContext);
   const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
+  const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
 
   const title = parseFileName(path);
   const icon = isDir ? folderIconPath : parseFileIcon(path);
@@ -89,6 +90,11 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
         event.stopPropagation();
         setButtonDown(true);
         setMouseDown(true);
+
+        // if not right click, hide context menu
+        if (event.button !== 2) {
+          setContextMenuVisible(false);
+        }
       }}
       onMouseUp={() => {
         setButtonDown(false);
