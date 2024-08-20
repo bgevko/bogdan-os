@@ -1,7 +1,6 @@
 /* eslint-disable no-continue */
 import React, { useCallback, useEffect } from 'react';
 
-import UseEvents from '@/hooks/use-events';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
@@ -35,7 +34,6 @@ const UseDrag = (path: string): ReturnTypes => {
   const isDir = useFsStore((state) => state.isDir);
   const mv = useFsStore((state) => state.mv);
   const lineSize = useGridStore((state) => state.getGrid(parentPath).lineSize);
-  const { registerEvents } = UseEvents();
   const dragoverPath = useDragStore((state) => state.dragoverPath);
 
   const componentContext: FileSystemContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
@@ -160,8 +158,11 @@ const UseDrag = (path: string): ReturnTypes => {
   }, [setIsDragging]);
 
   useEffect(() => {
-    registerEvents('mouseup', [handleDragEnd]);
-  }, [registerEvents, handleDragEnd]);
+    document.addEventListener('mouseup', handleDragEnd);
+    return () => {
+      document.removeEventListener('mouseup', handleDragEnd);
+    };
+  }, [handleDragEnd]);
 
   return {
     handleDragStart,

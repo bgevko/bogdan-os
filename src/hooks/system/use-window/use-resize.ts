@@ -1,6 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
 
-import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
 import { Position, ResizeDirection } from '@/types';
 
@@ -23,7 +22,6 @@ const UseWindowResize = (path: string): usewindowReturnTypes => {
 
   const setIsUpdatingSize = useProcessesStore((state) => state.setIsUpdatingSize);
 
-  const { registerEvents } = useEvents();
   const [start, setStart] = useState<Position>({ x: 0, y: 0 });
 
   const getMouseClickStart = useCallback(
@@ -95,10 +93,15 @@ const UseWindowResize = (path: string): usewindowReturnTypes => {
   );
 
   useEffect(() => {
-    registerEvents('mousedown', [getMouseClickStart]);
-    registerEvents('mouseup', [handleStopResize]);
-    registerEvents('mousemove', [handleWindowResize]);
-  }, [getMouseClickStart, registerEvents, handleStopResize, handleWindowResize]);
+    document.addEventListener('mousedown', getMouseClickStart);
+    document.addEventListener('mouseup', handleStopResize);
+    document.addEventListener('mousemove', handleWindowResize);
+    return () => {
+      document.removeEventListener('mousedown', getMouseClickStart);
+      document.removeEventListener('mouseup', handleStopResize);
+      document.removeEventListener('mousemove', handleWindowResize);
+    };
+  }, [getMouseClickStart, handleStopResize, handleWindowResize]);
 
   return {
     handleWindowResize,

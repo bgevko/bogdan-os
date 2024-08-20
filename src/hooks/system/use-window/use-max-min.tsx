@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 
-import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
 import { SizePos } from '@/types';
@@ -38,8 +37,6 @@ const UseMaxMin = (path: string): ReturnTypes => {
   const setOpacity = useProcessesStore((state) => state.setOpacity);
 
   const setIsUpdatingSize = useProcessesStore((state) => state.setIsUpdatingSize);
-
-  const { registerEvents } = useEvents();
 
   const [myViewport, setMyViewport] = useState<SizePos>({
     size: {
@@ -153,8 +150,11 @@ const UseMaxMin = (path: string): ReturnTypes => {
   ]);
 
   useEffect(() => {
-    registerEvents('resize', [handleUpdateViewport]);
-  }, [handleUpdateViewport, registerEvents]);
+    window.addEventListener('resize', handleUpdateViewport);
+    return () => {
+      window.removeEventListener('resize', handleUpdateViewport);
+    };
+  }, [handleUpdateViewport]);
 
   return {
     toggleMaximizeWindow,

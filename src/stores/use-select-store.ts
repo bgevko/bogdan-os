@@ -1,14 +1,13 @@
 import { create } from 'zustand';
 
-import { type SizePos, Position } from '@/types';
+import { type SizePos } from '@/types';
 
 type Context = 'desktop' | 'folder';
 
 interface SelectState {
   allSelected: Set<string>;
-  clickStart: Position;
-  isSelecting: boolean;
-  selectingRect: SizePos;
+  isUsingSelectRect: boolean;
+  selectRect: SizePos;
   selectRectContext: Context;
 }
 
@@ -17,9 +16,8 @@ interface SelectActions {
   setSelected: (selected: string[]) => void;
   addSelected: (path: string) => void;
   removeSelected: (path: string) => void;
-  setClickStart: (clickStart: Position) => void;
-  setSelecting: (selecting: boolean) => void;
-  setSelectingRect: (selectingRect: SizePos) => void;
+  setIsUsingSelectRect: (isUsingSelectRect: boolean) => void;
+  setSelectRect: (selectRect: SizePos) => void;
   setSelectContext: (selectContext: 'desktop' | 'folder') => void;
 }
 
@@ -30,8 +28,8 @@ const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
     x: 0,
     y: 0,
   },
-  isSelecting: false,
-  selectingRect: {
+  isUsingSelectRect: false,
+  selectRect: {
     size: {
       width: 0,
       height: 0,
@@ -65,14 +63,11 @@ const useSelectStore = create<SelectState & SelectActions>((set, get) => ({
       };
     });
   },
-  setClickStart: (clickStart: Position) => {
-    set({ clickStart });
+  setIsUsingSelectRect: (isUsingSelectRect: boolean) => {
+    set({ isUsingSelectRect });
   },
-  setSelecting: (selecting: boolean) => {
-    set({ isSelecting: selecting });
-  },
-  setSelectingRect: (selectingRect: SizePos) => {
-    set({ selectingRect });
+  setSelectRect: (selectRect: SizePos) => {
+    set({ selectRect });
   },
   setSelectContext: (selectContext: 'desktop' | 'folder') => {
     set({ selectRectContext: selectContext });

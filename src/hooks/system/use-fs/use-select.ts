@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 
-import useEvents from '@/hooks/use-events';
 import useGridStore from '@/stores/use-grid-store';
 import useSelectStore from '@/stores/use-select-store';
 import { selectionIntersectsElement, parseParentPath } from '@/utils/fs';
@@ -25,16 +24,14 @@ const UseSelect = (path: string): UseSelectReturn => {
   const removeSelected = useSelectStore((state) => state.removeSelected);
   const setSelected = useSelectStore((state) => state.setSelected);
 
-  const isUsingSelectRect = useSelectStore((state) => state.isSelecting);
-  const selectingRect = useSelectStore((state) => state.selectingRect);
+  const isUsingSelectRect = useSelectStore((state) => state.isUsingSelectRect);
+  const selectingRect = useSelectStore((state) => state.selectRect);
 
   const isSelected = allSelected.includes(path);
   const isMultipleSelected = allSelected.length > 1;
 
   const selectContext = useSelectStore((state) => state.selectRectContext);
   const localContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
-
-  const { registerEvents } = useEvents();
 
   const [shiftIsPressed, setShiftIsPressed] = useState(false);
 
@@ -92,7 +89,8 @@ const UseSelect = (path: string): UseSelectReturn => {
     }
   }, [shiftIsPressed, isSelected, setSelected, addSelected, removeSelected, path, isSameParent]);
 
-  const handleDragSelect = useCallback(() => {
+  // Select rect listener
+  useEffect(() => {
     if (!isUsingSelectRect || !isCorrectContext) return;
     const iconPosition = indexToPosition(gridIndex, lineSize, { multiplier: 100 });
     if (selectionIntersectsElement(selectingRect, iconPosition)) {
@@ -100,23 +98,18 @@ const UseSelect = (path: string): UseSelectReturn => {
     } else if (!shiftIsPressed) {
       removeSelected(path);
     }
-  }, [
-    isCorrectContext,
-    isUsingSelectRect,
-    selectingRect,
-    addSelected,
-    removeSelected,
-    shiftIsPressed,
-    path,
-    lineSize,
-    gridIndex,
-  ]);
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectingRect.size]);
 
   useEffect(() => {
-    registerEvents('keydown', [handleShiftPress]);
-    registerEvents('keyup', [handleShiftRelease]);
-    registerEvents('mousemove', [handleDragSelect]);
-  }, [handleShiftPress, handleShiftRelease, registerEvents, handleDragSelect]);
+    window.addEventListener('keydown', handleShiftPress);
+    window.addEventListener('keyup', handleShiftRelease);
+    return () => {
+      window.removeEventListener('keydown', handleShiftPress);
+      window.removeEventListener('keyup', handleShiftRelease);
+    };
+  }, [handleShiftPress, handleShiftRelease]);
 
   return {
     handleFocusSelect,

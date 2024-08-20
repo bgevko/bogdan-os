@@ -1,6 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
 
-import useEvents from '@/hooks/use-events';
 import useProcessesStore from '@/stores/use-processes-store';
 import { TASKBAR_HEIGHT } from '@/themes';
 import { Position } from '@/types';
@@ -17,7 +16,6 @@ const UseWindowMove = (path: string): ReturnTypes => {
 
   const size = useProcessesStore((state) => state.getWindowSize(path));
 
-  const { registerEvents } = useEvents();
   const [start, setStart] = useState<Position>({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
 
@@ -50,11 +48,17 @@ const UseWindowMove = (path: string): ReturnTypes => {
   }, []);
 
   useEffect(() => {
-    registerEvents('mousemove', [handleWindowMove]);
-    registerEvents('mouseup', [handleStopMove]);
-    registerEvents('contextmenu', [handleStopMove]);
-    registerEvents('selectstart', [handlePreventSelect]);
-  }, [registerEvents, handleWindowMove, handleStopMove, handlePreventSelect]);
+    document.addEventListener('mousemove', handleWindowMove);
+    document.addEventListener('mouseup', handleStopMove);
+    document.addEventListener('contextmenu', handleStopMove);
+    document.addEventListener('selectstart', handlePreventSelect);
+    return () => {
+      document.removeEventListener('mousemove', handleWindowMove);
+      document.removeEventListener('mouseup', handleStopMove);
+      document.removeEventListener('contextmenu', handleStopMove);
+      document.removeEventListener('selectstart', handlePreventSelect);
+    };
+  }, [handleWindowMove, handleStopMove, handlePreventSelect]);
 
   useEffect(() => {
     // Make sure window is within the viewport when first opened

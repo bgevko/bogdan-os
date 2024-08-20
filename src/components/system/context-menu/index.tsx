@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 
 import UseMenuContext from '@/hooks/system/use-menu-context';
-import useEvents from '@/hooks/use-events';
 import useMenuStore from '@/stores/use-menu-store';
 import { TASKBAR_HEIGHT } from '@/themes';
 import { ContextMenuItems } from '@/types';
@@ -32,10 +31,9 @@ const MenuEntry = ({ label, callback }: MenuEntryProps): React.ReactElement => {
 
 const ContextMenu = (): React.ReactElement => {
   const [menuPos, setMenuPos] = useState({ x: -500, y: 0 });
-  const { registerEvents } = useEvents();
   const menuContext = useMenuStore((state) => state.menuContext);
-  const setIsVisible = useMenuStore((state) => state.setIsVisible);
-  const isVisible = useMenuStore((state) => state.isVisible);
+  const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
+  const isVisible = useMenuStore((state) => state.contextMenuVisible);
   const isMouseOver = useMenuStore((state) => state.isMouseOver);
   const setIsMouseOver = useMenuStore((state) => state.setIsMouseOver);
 
@@ -53,8 +51,10 @@ const ContextMenu = (): React.ReactElement => {
 
   const handleShowMenu = useCallback(
     (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
       if (isMouseOver) return;
-      setIsVisible(true);
+      setContextMenuVisible(true);
       const width = 200;
       const height = calculatedHeight;
       const viewportWidth = window.innerWidth;
@@ -64,27 +64,26 @@ const ContextMenu = (): React.ReactElement => {
       const y = event.clientY + height > viewportHeight ? event.clientY - height : event.clientY;
       setMenuPos({ x, y });
     },
-    [setIsVisible, calculatedHeight, isMouseOver],
+    [setContextMenuVisible, calculatedHeight, isMouseOver],
   );
 
   const handleHideMenu = useCallback(
     (event: MouseEvent) => {
       if (event.button !== 0) return;
       if (isMouseOver) return;
-      setIsVisible(false);
+      setContextMenuVisible(false);
     },
-    [setIsVisible, isMouseOver],
+    [setContextMenuVisible, isMouseOver],
   );
 
-  const preventDefault = useCallback((event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  }, []);
-
   useEffect(() => {
-    registerEvents('contextmenu', [preventDefault, handleShowMenu]);
-    registerEvents('mousedown', [handleHideMenu]);
-  }, [handleShowMenu, preventDefault, registerEvents, handleHideMenu]);
+    document.addEventListener('contextmenu', handleShowMenu);
+    document.addEventListener('mousedown', handleHideMenu);
+    return () => {
+      document.removeEventListener('contextmenu', handleShowMenu);
+      document.removeEventListener('mousedown', handleHideMenu);
+    };
+  }, [handleShowMenu, handleHideMenu]);
   return (
     <>
       {isVisible && menuItems.size > 0 && (
