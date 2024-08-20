@@ -49,8 +49,6 @@
 
 ### Issues
 
-- Some mouse events aren't working in the production build of the app.
-- Context menu doesn't go away unless specifically clicked on desktop or folder background.
 - Dragging an item after it's been opened to a different parent causes the app to crash.
   - Write more FS tests to ensure mv / delete are also properly affecting the processes state
 - Multi-drag items from folder to desktop only drags out the last item.
