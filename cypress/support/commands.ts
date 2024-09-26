@@ -57,3 +57,35 @@ Cypress.Commands.add(
     });
   },
 );
+
+Cypress.Commands.add('getIconRowCol', { prevSubject: 'element' }, (subject: JQuery) => {
+  const element = subject[0];
+  const gridColumnStart = window.getComputedStyle(element).getPropertyValue('grid-column-start');
+  const gridRowStart = window.getComputedStyle(element).getPropertyValue('grid-row-start');
+  return cy.wrap({
+    row: Number.parseInt(gridRowStart, 10),
+    col: Number.parseInt(gridColumnStart, 10),
+  });
+});
+
+Cypress.Commands.add('dragIcon', { prevSubject: 'element' }, (subject, deltaX, deltaY) => {
+  const element = subject[0];
+
+  cy.wrap(subject)
+    .getIconRowCol()
+    .then(({ row: initialRow, col: initialCol }) => {
+      cy.wrap(subject)
+        .trigger('mousedown', { which: 1 })
+        .trigger('mousemove', { clientX: deltaX, clientY: deltaY })
+        .trigger('mouseup', { force: true });
+
+      cy.wrap(subject)
+        .getIconRowCol()
+        .then(({ row: finalRow, col: finalCol }) => {
+          return cy.wrap({
+            initial: { x: initialCol, y: initialRow },
+            final: { x: finalCol, y: finalRow },
+          });
+        });
+    });
+});

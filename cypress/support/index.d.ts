@@ -8,6 +8,11 @@ interface WindowDimensions {
   y: number;
 }
 
+interface IconPos {
+  x: number;
+  y: number;
+}
+
 interface DragOptions {
   offset: 'width' | 'height' | 'both';
 }
@@ -18,6 +23,7 @@ declare namespace Cypress {
     getDimensions(
       options?: Partial<TypeOptions>,
     ): Chainable<{ width: number; height: number; x: number; y: number }>;
+
     dragWindow(
       deltaX: number,
       deltaY: number,
@@ -27,5 +33,13 @@ declare namespace Cypress {
       initial: WindowDimensions;
       final: WindowDimensions;
     }>;
+
+    getIconRowCol(options?: Partial<TypeOptions>): Chainable<{ row: number; col: number }>;
+
+    dragIcon(
+      deltaX: number,
+      deltaY: number,
+      options?: Partial<TypeOptions>,
+    ): Chainable<{ initial: IconPos; final: IconPos }>;
   }
 }

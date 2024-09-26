@@ -45,6 +45,7 @@ const FileSystemIcon = ({ path, icon }: { path: string; icon: string }): ReactEl
     <>
       <li
         data-id="file-icon"
+        data-testid={`icon-li-${fileName}`}
         className="flex items-center justify-center"
         style={{
           gridColumnStart: gridPos.x.toString(),
