@@ -95,6 +95,21 @@ export interface WindowState {
   opacity: number;
 }
 
+export interface ProcessOptions {
+  icon?: string;
+  fileName?: string;
+  fileExt?: string;
+  hasWindow?: boolean;
+  position?: Position;
+  minSize?: Size;
+  size?: Size;
+  defaultSizePos?: SizePos;
+  disableDelete?: boolean;
+  component?: LazyAppComponent;
+}
+
+export type AppOptions = Map<string, ProcessOptions>;
+
 export interface ProcessNode {
   path: string;
   hasWindow: boolean;

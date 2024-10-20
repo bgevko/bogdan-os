@@ -5,21 +5,23 @@ import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+import { appOptions } from '@/constants';
 import useFsStore from '@/stores/use-fs-store';
 import { MIN_WINDOW_SIZE, DEFAULT_WINDOW_SIZE, DEFAULT_WINDOW_POSITION } from '@/themes';
-import { type Position, Size, SizePos, ProcessNode, WindowState } from '@/types';
+import { type Position, Size, SizePos, ProcessNode, WindowState, ProcessOptions } from '@/types';
+import { parseFullFileName } from '@/utils/fs';
 
 enableMapSet();
 
-interface ProcessOptions {
-  fileName?: string;
-  fileExt?: string;
-  hasWindow?: boolean;
-  position?: Position;
-  minSize?: Size;
-  size?: Size;
-  defaultSizePos?: SizePos;
-}
+// interface ProcessOptions {
+//   fileName?: string;
+//   fileExt?: string;
+//   hasWindow?: boolean;
+//   position?: Position;
+//   minSize?: Size;
+//   size?: Size;
+//   defaultSizePos?: SizePos;
+// }
 
 const validatePath = (path: string): void => {
   const state = useFsStore.getState();
@@ -41,19 +43,22 @@ function offsetWindowPos(position: Position, size: Size): Position {
 
 function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode {
   const zeroSizePos = { size: { width: 0, height: 0 }, position: { x: 0, y: 0 } };
-  // We're going to try and get the window in the center of the screen when first opened
+  const minSize = options.minSize ?? MIN_WINDOW_SIZE;
+  const size = options.size ?? options.minSize ?? MIN_WINDOW_SIZE;
+
+  // Center the window in the center of the screen when first opened
   let pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
   pos = options.position ?? {
-    x: window.innerWidth / 2 - DEFAULT_WINDOW_SIZE.width / 2,
-    y: window.innerHeight / 2 - DEFAULT_WINDOW_SIZE.height / 2,
+    x: window.innerWidth / 2 - size.width / 2,
+    y: window.innerHeight / 2 - size.height / 2,
   };
 
   return {
     path,
     hasWindow: options.hasWindow ?? true,
     window: {
-      minSize: options.minSize ?? MIN_WINDOW_SIZE,
-      size: options.size ?? DEFAULT_WINDOW_SIZE,
+      minSize,
+      size,
       position: pos,
       defaultSizePos: { size: DEFAULT_WINDOW_SIZE, position: DEFAULT_WINDOW_POSITION },
       isMaximized: false,
@@ -163,8 +168,9 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
 
       set((state) => {
         for (const path of paths) {
+          const customOptions = appOptions.get(parseFullFileName(paths[0])) ?? options;
           const cachedOptions = get().getCachedProcess(path);
-          const defaultOptions = { ...cachedOptions, ...options };
+          const defaultOptions = { ...cachedOptions, ...customOptions };
           const node = newProcessNode(path, defaultOptions);
 
           if (!state.isCached(path) && state.openedProcesses.size > 0) {

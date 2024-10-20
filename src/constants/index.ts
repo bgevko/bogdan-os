@@ -1,14 +1,15 @@
 import { lazy } from 'react';
 
-import { AppDirectory, Paths } from '@/types';
+import { AppDirectory, Paths, AppOptions } from '@/types';
 
 // File System
 export const startingDir: Paths = [
   '/',
-  '/Desktop/file1',
-  '/Desktop/file2',
-  '/Desktop/Terminal.app',
-  '/Desktop/MyFolder/MyFile',
+  // '/Desktop/file1',
+  // '/Desktop/file2',
+  // '/Desktop/Terminal.app',
+  // '/Desktop/MyFolder/MyFile',
+  '/Desktop/Solitaire.app',
 ];
 
 // Processes
@@ -25,6 +26,25 @@ export const appDirectory: AppDirectory = new Map([
     {
       icon: 'executable',
       component: lazy(() => import('@/components/apps/terminal')),
+    },
+  ],
+]);
+
+// Options
+export const appOptions: AppOptions = new Map([
+  [
+    'Solitaire.app',
+    {
+      icon: 'solitaire',
+      minSize: { width: 800, height: 600 },
+      disableDelete: true,
+      component: lazy(() => import('@/components/apps/solitaire')),
+      //   fileName?: string;
+      //   fileExt?: string;
+      //   hasWindow?: boolean;
+      //   position?: Position;
+      //   size?: Size;
+      //   defaultSizePos?: SizePos;
     },
   ],
 ]);
