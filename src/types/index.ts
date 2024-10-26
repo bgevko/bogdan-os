@@ -92,6 +92,8 @@ export interface WindowState {
   unMinimizedSizePos: SizePos;
   isAnimating: boolean;
   isUpdatingSize: boolean;
+  isUpdatingPosition: boolean;
+  disableSelection: boolean;
   opacity: number;
 }
 
@@ -105,6 +107,7 @@ export interface ProcessOptions {
   size?: Size;
   defaultSizePos?: SizePos;
   disableDelete?: boolean;
+  disableSelection?: boolean;
   component?: LazyAppComponent;
 }
 

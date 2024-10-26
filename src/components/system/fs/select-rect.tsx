@@ -11,6 +11,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const selectContext = useSelectStore((state) => state.selectRectContext);
 
   const getWindow = useProcessesStore((state) => state.getWindow);
+  const isSelectionDisabled = useProcessesStore((state) => state.isSelectionDisabled);
 
   const [isVisible, setIsVisible] = useState(false);
   const [start, setStart] = useState({ x: 0, y: 0 });
@@ -55,7 +56,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const drawSelectRect = useCallback(
     (event: MouseEvent) => {
       event.stopPropagation();
-      if (!selecting) return;
+      if (!selecting || isSelectionDisabled(rootPath)) return;
       setIsVisible(true);
       const { folderX, folderY } = getFolderPosition();
       const adjustedX = event.clientX - folderX;
@@ -74,7 +75,15 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
       setSelectRect({ size: rectSize, position: rectPos });
     },
-    [selecting, start, setSelectRect, getFolderPosition, selectContext],
+    [
+      selecting,
+      start,
+      setSelectRect,
+      getFolderPosition,
+      selectContext,
+      isSelectionDisabled,
+      rootPath,
+    ],
   );
 
   const handleMouseUp = useCallback(() => {

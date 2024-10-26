@@ -1,0 +1,26 @@
+/* excalidraw.module.scss */
+// .excalidrawContainer {
+//   --default-bg-color: #121212;
+// }
+
+:global(.excalidraw-container .layer-ui__wrapper .help-icon) {
+  display: none;
+}
+
+:global(.excalidraw .sidebar-trigger) {
+  display: none;
+}
+
+:global(.excalidraw *) {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+:global(.excalidraw *) {
+  --default-bg-color: #121212 !important;
+  --color-surface-low: #b59682 !important;
+  --color-surface-high: #cf6466 !important;
+  --color-surface-primary-container: #9abac6 !important;
+  --select-highlight-color: #cf6466 !important;
+  --button-hover-bg: #cf6466 !important;
+}

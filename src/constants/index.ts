@@ -5,7 +5,7 @@ import { AppDirectory, Paths, AppOptions } from '@/types';
 // File System
 export const startingDir: Paths = [
   '/',
-  // '/Desktop/file1',
+  '/Desktop/Excalidraw.app',
   // '/Desktop/file2',
   // '/Desktop/Terminal.app',
   // '/Desktop/MyFolder/MyFile',
@@ -45,6 +45,16 @@ export const appOptions: AppOptions = new Map([
       //   position?: Position;
       //   size?: Size;
       //   defaultSizePos?: SizePos;
+    },
+  ],
+  [
+    'Excalidraw.app',
+    {
+      icon: 'executable',
+      minSize: { width: 900, height: 800 },
+      disableDelete: true,
+      disableSelection: true,
+      component: lazy(() => import('@/components/apps/excalidraw')),
     },
   ],
 ]);

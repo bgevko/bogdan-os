@@ -13,16 +13,6 @@ import { parseFullFileName } from '@/utils/fs';
 
 enableMapSet();
 
-// interface ProcessOptions {
-//   fileName?: string;
-//   fileExt?: string;
-//   hasWindow?: boolean;
-//   position?: Position;
-//   minSize?: Size;
-//   size?: Size;
-//   defaultSizePos?: SizePos;
-// }
-
 const validatePath = (path: string): void => {
   const state = useFsStore.getState();
   state.validatePath(path);
@@ -69,6 +59,8 @@ function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode
       unMinimizedSizePos: { ...zeroSizePos },
       isAnimating: false,
       isUpdatingSize: false,
+      isUpdatingPosition: false,
+      disableSelection: options.disableSelection ?? false,
       opacity: 1,
     },
   };
@@ -142,6 +134,9 @@ interface ProcessesActions {
   getUnmaximizedWindow: (path: string) => SizePos;
   setIsUpdatingSize: (path: string, isResizing: boolean) => void;
   getIsUpdatingSize: (path: string) => boolean;
+  setIsUpdatingPosition: (path: string, isMoving: boolean) => void;
+  getIsUpdatingPosition: (path: string) => boolean;
+  isSelectionDisabled: (path: string) => boolean;
   reset: () => void;
 }
 
@@ -366,6 +361,23 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     getIsUpdatingSize: (path) => {
       try {
         return getWindowPropHelper('isUpdatingSize', path);
+      } catch {
+        return false;
+      }
+    },
+    setIsUpdatingPosition: (path, isMoving) => {
+      setWindowPropHelper('isUpdatingPosition', path, isMoving);
+    },
+    getIsUpdatingPosition: (path) => {
+      try {
+        return getWindowPropHelper('isUpdatingPosition', path);
+      } catch {
+        return false;
+      }
+    },
+    isSelectionDisabled: (path) => {
+      try {
+        return !getWindowPropHelper('disableSelection', path);
       } catch {
         return false;
       }
