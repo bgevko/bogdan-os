@@ -8,7 +8,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const setIsUsingSelectRect = useSelectStore((state) => state.setIsUsingSelectRect);
   const selectRect = useSelectStore((state) => state.selectRect);
   const setSelectRect = useSelectStore((state) => state.setSelectRect);
-  const selectContext = useSelectStore((state) => state.selectRectContext);
+  const mouseDownContext = useSelectStore((state) => state.mouseDownContext);
 
   const getWindow = useProcessesStore((state) => state.getWindow);
 
@@ -17,49 +17,46 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
   const localContext = rootPath === '/Desktop' ? 'desktop' : 'folder';
 
-  const getFolderPosition = useCallback(() => {
-    if (selectContext === 'desktop') {
+  const getMousePos = useCallback(
+    (event: MouseEvent): { x: number; y: number } => {
+      // Get desktop position
+      if (localContext === 'desktop') {
+        return { x: event.clientX, y: event.clientY };
+      }
+
+      // Get folder position
+      const folder = getWindow(rootPath);
       return {
-        folderX: 0,
-        folderY: 0,
+        x: event.clientX - folder.position.x,
+        y: event.clientY - folder.position.y,
       };
-    }
-    const folder = getWindow(rootPath);
-    return {
-      folderX: folder.position.x,
-      folderY: folder.position.y,
-    };
-  }, [selectContext, rootPath, getWindow]);
+    },
+    [localContext, getWindow, rootPath],
+  );
 
   const handleMouseDown = useCallback(
     (event: MouseEvent) => {
-      // Button should be left click
-      if (event.button !== 0) return;
+      if (event.button !== 0) return; // Not left click
+      if (localContext !== mouseDownContext) return; // Clashing context
 
-      // Renders only when context matches. Destkop / desktop, or folder / folder
-      if (localContext !== selectContext) return;
-
-      // Determine offset if selecting in folder
-      const { folderX, folderY } = getFolderPosition();
-      const x = event.clientX - folderX;
-      const y = event.clientY - folderY;
+      // Get the position reference of the current window
+      const { x, y } = getMousePos(event);
 
       // Set the select rect start position
       setStart({ x, y });
       setSelectRect({ size: { width: 0, height: 0 }, position: { x: 0, y: 0 } });
       setIsUsingSelectRect(true);
     },
-    [setIsUsingSelectRect, setSelectRect, getFolderPosition, localContext, selectContext, setStart],
+    [setIsUsingSelectRect, setSelectRect, getMousePos, setStart, localContext, mouseDownContext],
   );
 
   const drawSelectRect = useCallback(
     (event: MouseEvent) => {
       event.stopPropagation();
       if (!selecting) return;
+
       setIsVisible(true);
-      const { folderX, folderY } = getFolderPosition();
-      const adjustedX = event.clientX - folderX;
-      const adjustedY = event.clientY - folderY;
+      const { x: adjustedX, y: adjustedY } = getMousePos(event);
       const x = Math.min(start.x, adjustedX);
       const y = Math.min(start.y, adjustedY);
 
@@ -68,13 +65,13 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
       const rectSize = { width, height };
       const rectPos = {
-        x: selectContext === 'folder' ? x - 16 : x,
-        y: selectContext === 'folder' ? y - 48 : y,
+        x,
+        y,
       };
 
       setSelectRect({ size: rectSize, position: rectPos });
     },
-    [selecting, start, setSelectRect, getFolderPosition, selectContext],
+    [selecting, start, setSelectRect, getMousePos],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -93,19 +90,19 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
     };
   }, [handleMouseDown, drawSelectRect, handleMouseUp]);
 
+  if (mouseDownContext !== localContext) return <></>;
+
   return (
     <>
-      {localContext === selectContext && (
-        <span
-          className="fixed z-50 border border-dashed border-accent bg-accent/10"
-          style={{
-            display: selecting && isVisible ? 'block' : 'none',
-            width: selectRect.size.width,
-            height: selectRect.size.height,
-            transform: `translate(${selectRect.position.x.toString()}px, ${selectRect.position.y.toString()}px)`,
-          }}
-        />
-      )}
+      <span
+        className="fixed z-50 border border-dashed border-accent bg-accent/10"
+        style={{
+          display: selecting && isVisible ? 'block' : 'none',
+          width: selectRect.size.width,
+          height: selectRect.size.height,
+          transform: `translate(${selectRect.position.x.toString()}px, ${selectRect.position.y.toString()}px)`,
+        }}
+      />
     </>
   );
 };

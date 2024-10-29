@@ -92,8 +92,25 @@ export interface WindowState {
   unMinimizedSizePos: SizePos;
   isAnimating: boolean;
   isUpdatingSize: boolean;
+  isUpdatingPosition: boolean;
   opacity: number;
 }
+
+export interface ProcessOptions {
+  icon?: string;
+  iconName?: string;
+  fileName?: string;
+  fileExt?: string;
+  hasWindow?: boolean;
+  position?: Position;
+  minSize?: Size;
+  size?: Size;
+  defaultSizePos?: SizePos;
+  disableDelete?: boolean;
+  component?: LazyAppComponent;
+}
+
+export type AppOptions = Map<string, ProcessOptions>;
 
 export interface ProcessNode {
   path: string;
@@ -113,7 +130,13 @@ export type ResizeDirection =
   | 'BOTTOM_RIGHT';
 
 // Menu Context
-export type MouseContext = 'desktop' | 'file-icon' | 'taskbar' | 'window' | 'taskbar-entry';
+export type MouseContext =
+  | 'desktop'
+  | 'file-icon'
+  | 'taskbar'
+  | 'taskbar-entry'
+  | 'none'
+  | 'folder';
 export type MenuContext =
   | 'desktop'
   | 'file-icon'

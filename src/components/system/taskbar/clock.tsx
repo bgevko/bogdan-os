@@ -35,8 +35,7 @@ const Clock = (): JSX.Element => {
 
   return (
     <>
-      <span className="debossed-line-border-l h-full w-1" />
-      <time className="debossed-border flex h-full w-[130px] items-center justify-center font-mono text-onSurface">
+      <time className="text-gray800 flex w-[80px] select-none items-center justify-center rounded-[6px] bg-white text-sm font-bold">
         {time}
       </time>
     </>

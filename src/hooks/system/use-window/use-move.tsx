@@ -13,6 +13,7 @@ const UseWindowMove = (path: string): ReturnTypes => {
   const setPosition = useProcessesStore((state) => state.setWindowPosition);
   const defaultWindow = useProcessesStore((state) => state.getDefaultWindow(path));
   const setDefaultWindow = useProcessesStore((state) => state.setDefaultWindow);
+  const setIsUpdatingPosition = useProcessesStore((state) => state.setIsUpdatingPosition);
 
   const size = useProcessesStore((state) => state.getWindowSize(path));
 
@@ -28,8 +29,12 @@ const UseWindowMove = (path: string): ReturnTypes => {
   );
 
   const handleStopMove = useCallback(() => {
+    setIsUpdatingPosition(path, true);
     setDragging(false);
-  }, []);
+    setTimeout(() => {
+      setIsUpdatingPosition(path, false);
+    }, 1);
+  }, [setIsUpdatingPosition, path]);
 
   const handleWindowMove = useCallback(
     (event: MouseEvent) => {

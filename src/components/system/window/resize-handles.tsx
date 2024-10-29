@@ -12,7 +12,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
     <>
       <span
         data-testid="resize-left"
-        className="absolute left-[-16px] h-full w-3 cursor-ew-resize"
+        className="absolute left-[-5px] z-10 h-full w-3 cursor-ew-resize"
         role="toolbar"
         aria-label="Window left resize"
         onMouseDown={(event: React.MouseEvent) => {
@@ -26,7 +26,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
       />
       <span
         data-testid="resize-right"
-        className="absolute right-[-16px] h-full w-3 cursor-ew-resize"
+        className="absolute right-[-5px] z-10 h-full w-3 cursor-ew-resize"
         role="toolbar"
         aria-label="Window right resize"
         onMouseDown={(event: React.MouseEvent) => {
@@ -40,7 +40,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
       />
       <span
         data-testid="resize-top"
-        className="absolute top-[-16px] h-3 w-full cursor-ns-resize"
+        className="absolute top-[-5px] z-10 h-3 w-full cursor-ns-resize"
         role="toolbar"
         aria-label="Window top resize"
         onMouseDown={(event: React.MouseEvent) => {
@@ -54,7 +54,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
       />
       <span
         data-testid="resize-bottom"
-        className="absolute bottom-[-16px] h-3 w-full cursor-ns-resize"
+        className="absolute bottom-[-5px] z-10 h-3 w-full cursor-ns-resize"
         role="toolbar"
         aria-label="Window bottom resize"
         onMouseDown={(event: React.MouseEvent) => {
@@ -68,7 +68,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
       />
       <span
         data-testid="resize-top-left"
-        className="absolute left-[-16px] top-[-16px] size-4 cursor-nwse-resize"
+        className="absolute left-[-5px] top-[-5px] z-10 size-4 cursor-nwse-resize"
         role="toolbar"
         aria-label="Window top left corner resize"
         onMouseDown={(event: React.MouseEvent) => {
@@ -82,7 +82,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
       />
       <span
         data-testid="resize-top-right"
-        className="absolute right-[-16px] top-[-16px] size-4 cursor-nesw-resize"
+        className="absolute right-[-5px] top-[-5px] z-10 size-4 cursor-nesw-resize"
         role="toolbar"
         aria-label="Window top right corner resize"
         onMouseDown={(event: React.MouseEvent) => {
@@ -96,7 +96,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
       />
       <span
         data-testid="resize-bottom-left"
-        className="absolute bottom-[-16px] left-[-16px] size-4 cursor-nesw-resize"
+        className="absolute bottom-[-5px] left-[-5px] z-10 size-4 cursor-nesw-resize"
         role="toolbar"
         aria-label="Window bottom left corner resize"
         onMouseDown={(event: React.MouseEvent) => {
@@ -110,7 +110,7 @@ const WindowResizeHandles = ({ path }: WindowHandlesProperties): ReactElement =>
       />
       <span
         data-testid="resize-bottom-right"
-        className="absolute bottom-[-16px] right-[-16px] size-4 cursor-nwse-resize"
+        className="absolute bottom-[-5px] right-[-5px] z-10 size-4 cursor-nwse-resize"
         role="toolbar"
         aria-label="Window bottom right corner resize"
         onMouseDown={(event: React.MouseEvent) => {

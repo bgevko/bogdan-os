@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { type ReactElement, useState, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
 
@@ -9,8 +10,7 @@ import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { TASKBAR_HEIGHT, WINDOW_HEADER_HEIGHT } from '@/themes';
-import { type TransferData } from '@/types';
-import cn from '@/utils/format';
+import { MenuContext, MouseContext, type TransferData } from '@/types';
 import { parseFullFileName } from '@/utils/fs';
 import { positionToIndex } from '@/utils/grid';
 
@@ -19,7 +19,6 @@ const GRID_SIZE = 100;
 interface GridProps {
   options?: {
     isDesktop?: boolean;
-    flow?: 'row' | 'column';
   };
   path: string;
   children: ReactNode;
@@ -30,7 +29,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const grid = useGridStore((state) => state.getGrid(path));
   const updateGridSize = useGridStore((state) => state.updateSize);
   const getWindow = useProcessesStore((state) => state.getWindow);
-  const setSelectContext = useSelectStore((state) => state.setSelectContext);
+  const setMouseDownContext = useSelectStore((state) => state.setMouseDownContext);
   const setSelected = useSelectStore((state) => state.setSelected);
   const mv = useFsStore((state) => state.mv);
   const resetMouseContext = useMouseStore((state) => state.reset);
@@ -41,15 +40,7 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const setMenuContext = useMenuStore((state) => state.setMenuContext);
   const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
 
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    // eslint-disable-next-line no-param-reassign
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
-
   const [shiftIsPressed, setShiftIsPressed] = useState(false);
-
-  const myContext = path === '/Desktop' ? 'desktop' : 'folder';
 
   const handleShiftPress = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Shift') {
@@ -63,40 +54,38 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     }
   }, []);
 
-  const getFolderPosition = useCallback(() => {
-    if (myContext === 'desktop') {
-      return {
-        folderX: 0,
-        folderY: 0,
-      };
-    }
-    const folder = getWindow(path);
-    return {
-      folderX: folder.position.x,
-      folderY: folder.position.y + WINDOW_HEADER_HEIGHT + 8,
-    };
-  }, [path, myContext, getWindow]);
+  const getDropIndex = useCallback(
+    (event: React.DragEvent): number => {
+      const target = event.target as HTMLElement;
+      const dataId = target.dataset.id ?? 'none';
 
-  const handleDragEnter = useCallback(() => {
-    if (options?.isDesktop) {
-      setDragContext('desktop');
-      setDragoverPath(path);
-    } else {
-      setDragContext('window');
-      setDragoverPath(path);
-    }
-  }, [options?.isDesktop, setDragContext, setDragoverPath, path]);
+      // Get drop index using desktop viewport as the point of reference
+      if (dataId === 'desktop') {
+        return positionToIndex(event.clientX, event.clientY, grid.lineSize);
+      }
+
+      // Otherwise, use the folder as the main point of reference
+      if (dataId === 'folder') {
+        const folder = getWindow(path);
+        const dropX = event.clientX - folder.position.x;
+        const dropY = event.clientY - folder.position.y - WINDOW_HEADER_HEIGHT;
+        return positionToIndex(dropX, dropY, grid.lineSize);
+      }
+
+      // Otherwise, return -1
+      return -1;
+    },
+    [grid.lineSize, getWindow, path],
+  );
 
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
       setIsDragging(false);
-      const { folderX, folderY } = getFolderPosition();
-      const dropX = event.clientX - folderX;
-      const dropY = event.clientY - folderY;
-      const dropIndex = positionToIndex(dropX, dropY, grid.lineSize, {
-        multiplier: GRID_SIZE,
-      });
+
+      const dropIndex = getDropIndex(event);
+      if (dropIndex < 0) return;
+
       const elementPaths: TransferData[] = JSON.parse(
         event.dataTransfer.getData('text/plain'),
       ) as TransferData[];
@@ -120,17 +109,12 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         setGridIndex(element.path, finalIndex);
       }
     },
-    [grid.lineSize, setGridIndex, path, mv, getFolderPosition, setIsDragging],
+    [setGridIndex, path, mv, setIsDragging, getDropIndex],
   );
 
   const handleUpdateGridSize = useCallback(() => {
     updateGridSize(path, window.innerWidth, window.innerHeight - TASKBAR_HEIGHT);
   }, [updateGridSize, path]);
-
-  const handleSelectRectContext = useCallback(() => {
-    const localContext = options?.isDesktop ? 'desktop' : 'folder';
-    setSelectContext(localContext);
-  }, [setSelectContext, options?.isDesktop]);
 
   useEffect(() => {
     window.addEventListener('resize', handleUpdateGridSize);
@@ -143,33 +127,57 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     };
   }, [handleUpdateGridSize, handleShiftPress, handleShiftRelease]);
 
-  const handleBlurWindowFocus = useCallback(() => {
-    const localContext = options?.isDesktop ? 'desktop' : 'folder';
-    if (localContext === 'desktop') {
-      setBlurFocus(true);
-    }
-  }, [setBlurFocus, options?.isDesktop]);
+  const deskopConfig = {
+    id: 'desktop',
+    className: 'grid grid-flow-col p-4',
+    height: `calc(100vh - ${TASKBAR_HEIGHT.toString()}px)`,
+  };
+
+  const folderConfig = {
+    id: 'folder',
+    className: 'grid grid-flow-col p-0',
+    height: '100%',
+  };
+
+  const config = options?.isDesktop ? deskopConfig : folderConfig;
 
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ol
-      className={cn('grid grid-flow-col', options?.isDesktop ? 'p-4' : 'p-0')}
-      data-testid={options?.isDesktop ? 'desktop' : 'folder'}
-      data-id={options?.isDesktop ? 'desktop' : 'folder'}
+      className={config.className}
+      data-testid={config.id}
+      data-id={config.id}
       style={{
-        height: options?.isDesktop ? `calc(100vh - ${TASKBAR_HEIGHT.toString()}px)` : '100%',
+        height: config.height,
         gridTemplateColumns: `repeat(${grid.columns.toString()}, ${GRID_SIZE.toString()}px)`,
         gridTemplateRows: `repeat(${grid.rows.toString()}, ${GRID_SIZE.toString()}px)`,
       }}
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragEnter}
+      onDragOver={(event: React.DragEvent) => {
+        event.preventDefault();
+        // eslint-disable-next-line no-param-reassign
+        event.dataTransfer.dropEffect = 'move';
+      }}
+      onDragEnter={(event: React.DragEvent) => {
+        let target = event.target as HTMLElement;
+        let dataId;
+        while (!dataId) {
+          dataId = target.dataset.id;
+          target = target.parentElement!;
+        }
+        setDragContext(dataId as MouseContext);
+        setDragoverPath(path);
+      }}
       onDrop={handleDrop}
-      onMouseDown={() => {
+      onMouseDown={(event: React.MouseEvent) => {
+        const target = event.target as HTMLElement;
+        const dataId = target.dataset.id ?? 'none';
         if (!shiftIsPressed) {
           setSelected([]);
         }
-        handleSelectRectContext();
-        handleBlurWindowFocus();
+        setMouseDownContext(dataId);
+        if (dataId === 'desktop' || dataId === 'none') {
+          setBlurFocus(true);
+        }
       }}
       onContextMenu={(event: React.MouseEvent) => {
         event.preventDefault();
@@ -178,12 +186,14 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         if (dataId === 'file-icon') {
           return;
         }
-        setMenuContext(options?.isDesktop ? 'desktop' : 'folder');
+        setMenuContext(config.id as MenuContext);
         setMenuTargetPath(path);
       }}
       onMouseEnter={(event: React.MouseEvent) => {
         event.stopPropagation();
-        if (options?.isDesktop) {
+        const target = event.target as HTMLElement;
+        const dataId = target.dataset.id ?? 'none';
+        if (dataId === 'desktop' || dataId === 'none') {
           resetMouseContext();
         }
       }}

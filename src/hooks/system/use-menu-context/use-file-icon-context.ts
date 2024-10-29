@@ -1,7 +1,9 @@
+import { appOptions } from '@/constants';
 import useFsStore from '@/stores/use-fs-store';
 import useMenuStore from '@/stores/use-menu-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { ContextMenuItem, ContextCallback } from '@/types';
+import { parseFullFileName } from '@/utils/fs';
 
 const useFileIconContext = (): ContextCallback => {
   const open = useProcessesStore((state) => state.open);
@@ -19,18 +21,20 @@ const useFileIconContext = (): ContextCallback => {
         open(targetPath);
       },
     ],
-    [
-      'Delete',
-      () => {
-        try {
-          close(targetPath);
-        } catch {
-          // pass
-        }
-        rm(targetPath);
-      },
-    ],
   ]);
+
+  // add a Delete option if disableDelete is false or undefined
+  const disableDelete = appOptions.get(parseFullFileName(targetPath))?.disableDelete ?? false;
+  if (!disableDelete) {
+    fileIconMenuItems.set('Delete', () => {
+      try {
+        close(targetPath);
+      } catch {
+        // pass
+      }
+      rm(targetPath);
+    });
+  }
   return () => fileIconMenuItems;
 };
 

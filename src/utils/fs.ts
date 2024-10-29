@@ -1,11 +1,11 @@
-import { iconsPath, appDirectory, DefaultApp } from '@/constants';
+import { iconsPath, appDirectory, appOptions, DefaultApp } from '@/constants';
 import { ICON_SIZE } from '@/themes';
 import { Position, SizePos, LazyAppComponent } from '@/types';
 
 export const selectionIntersectsElement = (selection: SizePos, element: Position): boolean => {
   if (
-    element.x + ICON_SIZE + 20 < selection.position.x ||
-    element.y + ICON_SIZE + 20 < selection.position.y ||
+    element.x + ICON_SIZE.width + 20 < selection.position.x ||
+    element.y + ICON_SIZE.height + 20 < selection.position.y ||
     element.x > selection.position.x + selection.size.width - 14 ||
     element.y > selection.position.y + selection.size.height - 14
   ) {
@@ -66,6 +66,13 @@ export function parseFileIcon(filePath: string): string {
   if (filePath === '/') {
     return '';
   }
+
+  // If icon exists in app options, use that instead
+  const customIcon = appOptions.get(parseFullFileName(filePath))?.icon;
+  if (customIcon) {
+    return `${iconsPath}/${customIcon}.png`;
+  }
+
   const fileExt = parseFileExt(filePath);
   const iconName = appDirectory.get(fileExt)?.icon ?? 'default';
   const icon = `${iconsPath}/${iconName}.png`;
@@ -74,7 +81,8 @@ export function parseFileIcon(filePath: string): string {
 
 export const parseFileComponent = (filePath: string): LazyAppComponent => {
   const fileExt = parseFileExt(filePath);
-  return appDirectory.get(fileExt)?.component ?? DefaultApp;
+  const fileName = parseFullFileName(filePath);
+  return appOptions.get(fileName)?.component ?? appDirectory.get(fileExt)?.component ?? DefaultApp;
 };
 
 export const splitPath = (path: string): string[] => ['/', ...path.split('/').filter(Boolean)];

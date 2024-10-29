@@ -5,21 +5,13 @@ import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+import { appOptions } from '@/constants';
 import useFsStore from '@/stores/use-fs-store';
 import { MIN_WINDOW_SIZE, DEFAULT_WINDOW_SIZE, DEFAULT_WINDOW_POSITION } from '@/themes';
-import { type Position, Size, SizePos, ProcessNode, WindowState } from '@/types';
+import { type Position, Size, SizePos, ProcessNode, WindowState, ProcessOptions } from '@/types';
+import { parseFullFileName } from '@/utils/fs';
 
 enableMapSet();
-
-interface ProcessOptions {
-  fileName?: string;
-  fileExt?: string;
-  hasWindow?: boolean;
-  position?: Position;
-  minSize?: Size;
-  size?: Size;
-  defaultSizePos?: SizePos;
-}
 
 const validatePath = (path: string): void => {
   const state = useFsStore.getState();
@@ -41,19 +33,22 @@ function offsetWindowPos(position: Position, size: Size): Position {
 
 function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode {
   const zeroSizePos = { size: { width: 0, height: 0 }, position: { x: 0, y: 0 } };
-  // We're going to try and get the window in the center of the screen when first opened
+  const minSize = options.minSize ?? MIN_WINDOW_SIZE;
+  const size = options.size ?? options.minSize ?? MIN_WINDOW_SIZE;
+
+  // Center the window in the center of the screen when first opened
   let pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
   pos = options.position ?? {
-    x: window.innerWidth / 2 - DEFAULT_WINDOW_SIZE.width / 2,
-    y: window.innerHeight / 2 - DEFAULT_WINDOW_SIZE.height / 2,
+    x: window.innerWidth / 2 - size.width / 2,
+    y: window.innerHeight / 2 - size.height / 2,
   };
 
   return {
     path,
     hasWindow: options.hasWindow ?? true,
     window: {
-      minSize: options.minSize ?? MIN_WINDOW_SIZE,
-      size: options.size ?? DEFAULT_WINDOW_SIZE,
+      minSize,
+      size,
       position: pos,
       defaultSizePos: { size: DEFAULT_WINDOW_SIZE, position: DEFAULT_WINDOW_POSITION },
       isMaximized: false,
@@ -64,6 +59,7 @@ function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode
       unMinimizedSizePos: { ...zeroSizePos },
       isAnimating: false,
       isUpdatingSize: false,
+      isUpdatingPosition: false,
       opacity: 1,
     },
   };
@@ -107,6 +103,7 @@ interface ProcessesActions {
   popFocused: () => void;
   setFocused: (path: string) => void;
   getIsFocused: (path: string) => boolean;
+  getIsBlurred: () => boolean;
   setBlurFocus: (blurred: boolean) => void;
 
   // window stuff
@@ -137,6 +134,8 @@ interface ProcessesActions {
   getUnmaximizedWindow: (path: string) => SizePos;
   setIsUpdatingSize: (path: string, isResizing: boolean) => void;
   getIsUpdatingSize: (path: string) => boolean;
+  setIsUpdatingPosition: (path: string, isMoving: boolean) => void;
+  getIsUpdatingPosition: (path: string) => boolean;
   reset: () => void;
 }
 
@@ -163,8 +162,9 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
 
       set((state) => {
         for (const path of paths) {
+          const customOptions = appOptions.get(parseFullFileName(paths[0])) ?? options;
           const cachedOptions = get().getCachedProcess(path);
-          const defaultOptions = { ...cachedOptions, ...options };
+          const defaultOptions = { ...cachedOptions, ...customOptions };
           const node = newProcessNode(path, defaultOptions);
 
           if (!state.isCached(path) && state.openedProcesses.size > 0) {
@@ -254,6 +254,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
         state.blurred = blurred;
       });
     },
+    getIsBlurred: () => get().blurred,
 
     // window helpers
     setWindow: (path, sizePos) => {
@@ -267,6 +268,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
           position: getWindowPropHelper('position', path),
         };
       } catch {
+        // console.error(error);
         return { size: { width: 0, height: 0 }, position: { x: 0, y: 0 } };
       }
     },
@@ -360,6 +362,16 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     getIsUpdatingSize: (path) => {
       try {
         return getWindowPropHelper('isUpdatingSize', path);
+      } catch {
+        return false;
+      }
+    },
+    setIsUpdatingPosition: (path, isMoving) => {
+      setWindowPropHelper('isUpdatingPosition', path, isMoving);
+    },
+    getIsUpdatingPosition: (path) => {
+      try {
+        return getWindowPropHelper('isUpdatingPosition', path);
       } catch {
         return false;
       }

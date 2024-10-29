@@ -1,5 +1,4 @@
 import Clock from '@/components/system/taskbar/clock';
-import StartButton from '@/components/system/taskbar/start-button';
 import TaskbarEntries from '@/components/system/taskbar/taskbar-entries';
 import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
@@ -9,9 +8,10 @@ const Taskbar = (): JSX.Element => {
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
   const setMenuContext = useMenuStore((state) => state.setMenuContext);
+  const taskbarColor = '#FFAFAF';
   return (
     <footer
-      className="embossed-border-t absolute inset-x-0 bottom-0 w-dvw"
+      className="absolute inset-x-0 bottom-0 w-dvw"
       style={{ top: `calc(100% - ${TASKBAR_HEIGHT.toString()}px)` }}
       onMouseLeave={(event: React.MouseEvent) => {
         event.stopPropagation();
@@ -31,8 +31,11 @@ const Taskbar = (): JSX.Element => {
         setMenuContext('taskbar');
       }}
     >
-      <nav className="absolute inset-x-0 bottom-0 top-[-5px] flex gap-1 bg-surface px-[5px] pb-[5px]">
-        <StartButton />
+      <nav
+        style={{ backgroundColor: taskbarColor }}
+        className=" absolute bottom-0 flex h-10 w-full gap-1 px-4 py-1"
+      >
+        {/* <StartButton /> */}
         <TaskbarEntries />
         <Clock />
       </nav>

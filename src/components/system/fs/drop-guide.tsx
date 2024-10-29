@@ -21,7 +21,6 @@ const DropGuide = ({ path }: DropGuideProps): ReactElement => {
   const offsets = useDragStore((state) => state.groupSpacingOffsets);
   const getLineSize = useGridStore((state) => state.getLineSize);
   const componentContext = path === '/Desktop' ? 'desktop' : 'folder';
-  const padding = componentContext === 'desktop' ? 32 : 16;
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
 
   const calcPos = useCallback(
@@ -29,7 +28,7 @@ const DropGuide = ({ path }: DropGuideProps): ReactElement => {
       let myOffset = { x: 0, y: 0 };
 
       // Desktop to folder case
-      if (componentContext === 'desktop' && dragContext === 'window') {
+      if (componentContext === 'desktop' && dragContext === 'folder') {
         const dragoverWindowPos = getWindowPos(dragoverPath);
         myOffset = {
           x: dragoverWindowPos.position.x,
@@ -46,25 +45,17 @@ const DropGuide = ({ path }: DropGuideProps): ReactElement => {
         };
       }
 
-      const guidePos = indexToPosition(guideIndex, getLineSize(path), {
-        multiplier: 100,
-        offsetX: myOffset.x + padding,
-        offsetY: myOffset.y + padding,
+      const guidePos = indexToPosition(
+        guideIndex,
+        getLineSize(path),
+        myOffset.x,
+        myOffset.y,
         offsetIndex,
-      });
+      );
 
       return guidePos;
     },
-    [
-      componentContext,
-      dragContext,
-      dragoverPath,
-      getLineSize,
-      getWindowPos,
-      guideIndex,
-      padding,
-      path,
-    ],
+    [componentContext, dragContext, dragoverPath, getLineSize, getWindowPos, guideIndex, path],
   );
 
   const calculatedZ = useMemo(() => {
@@ -84,7 +75,7 @@ const DropGuide = ({ path }: DropGuideProps): ReactElement => {
   const shouldRender = useMemo(() => {
     if (!isDragging) return false;
     if (dragStartContext !== componentContext) return false;
-    if (!isFocused && componentContext === 'folder' && dragContext === 'window') return false;
+    if (!isFocused && componentContext === 'folder' && dragContext === 'folder') return false;
     return true;
   }, [isDragging, dragStartContext, componentContext, isFocused, dragContext]);
 
@@ -97,8 +88,8 @@ const DropGuide = ({ path }: DropGuideProps): ReactElement => {
           key={offset}
           className="pointer-events-none absolute border-2 border-dashed border-accent-400 transition-all"
           style={{
-            width: `${ICON_SIZE.toString()}px`,
-            height: `${ICON_SIZE.toString()}px`,
+            width: `${ICON_SIZE.width.toString()}px`,
+            height: `${ICON_SIZE.height.toString()}px`,
             transform: `translate( ${calcPos(offset).x.toString()}px, ${calcPos(offset).y.toString()}px)`,
             zIndex: calculatedZ,
           }}

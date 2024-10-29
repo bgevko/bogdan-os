@@ -21,8 +21,8 @@ interface MouseActions {
 
 const useMouseStore = create<MouseState & MouseActions>((set, get) => ({
   pauseTracking: false,
-  mouseoverContext: ['desktop'],
-  dragContext: 'desktop',
+  mouseoverContext: ['none'],
+  dragContext: 'none',
   appendMouseoverContext: (context) => {
     if (get().pauseTracking) return;
     const { mouseoverContext: contextStack } = get();
