@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vitest/config';
 import svgr from 'vite-plugin-svgr';
+import glsl from 'vite-plugin-glsl';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -9,12 +10,23 @@ export default defineConfig(() => {
   const outDir = isProductionBuild ? '/var/www/bogdan-os' : 'dist';
   return {
     plugins: [
+      glsl(),
       react(),
       svgr({
         svgrOptions: {
           plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
           svgoConfig: {
             floatPrecision: 2,
+            plugins: [
+              { name: 'convertStyleToAttrs', active: true }, // Move inline styles to attributes
+              {
+                name: 'removeAttributesBySelector',
+                params: {
+                  selector: '[fill="#fff"]',
+                  attributes: ['fill'],
+                },
+              },
+            ],
           },
         },
       }),

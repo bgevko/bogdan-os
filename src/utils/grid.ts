@@ -1,49 +1,20 @@
 import { Position } from '@/types';
 
-interface GridOptions {
-  flow?: 'row' | 'col';
-  multiplier?: number;
-  offsetX?: number;
-  offsetY?: number;
-  offsetIndex?: number;
-}
-
-export function indexToPosition(
-  index: number,
-  itemsPerLine: number,
-  options?: GridOptions,
-): Position {
+export function indexToPosition(index: number, itemsPerLine: number, flow = 'col'): Position {
   if (itemsPerLine <= 0) {
     return { x: 0, y: 0 };
   }
-  const { flow = 'col' } = options ?? {};
-  const multiplier = options?.multiplier ?? 1;
-  const offsetX = options?.offsetX ?? 0;
-  const offsetY = options?.offsetY ?? 0;
-  const offsetIndex = options?.offsetIndex ?? 0;
-
-  const adjustedIndex = index + offsetIndex;
-
-  const x =
-    flow === 'row' ? adjustedIndex % itemsPerLine : Math.floor(adjustedIndex / itemsPerLine);
-  const y =
-    flow === 'row' ? Math.floor(adjustedIndex / itemsPerLine) : adjustedIndex % itemsPerLine;
-  return { x: x * multiplier + offsetX, y: y * multiplier + offsetY };
+  const x = flow === 'row' ? index % itemsPerLine : Math.floor(index / itemsPerLine);
+  const y = flow === 'row' ? Math.floor(index / itemsPerLine) : index % itemsPerLine;
+  return { x, y };
 }
 
-export function positionToIndex(
-  x: number,
-  y: number,
-  itemsPerLine: number,
-  options?: GridOptions,
-): number {
+export function positionToIndex(x: number, y: number, itemsPerLine: number, flow = 'col'): number {
   if (itemsPerLine <= 0) {
     return 0;
   }
-  const { flow = 'col' } = options ?? {};
-  const multiplier = options?.multiplier ?? 1;
-  const adjustedX = Math.floor(x / multiplier);
-  const adjustedY = Math.floor(y / multiplier);
+  const adjustedX = Math.floor(x / 100);
+  const adjustedY = Math.floor(y / 100);
   return flow === 'row'
     ? adjustedY * itemsPerLine + adjustedX
     : adjustedX * itemsPerLine + adjustedY;

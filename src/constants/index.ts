@@ -8,8 +8,9 @@ export const startingDir: Paths = [
   '/Desktop/Excalidraw.app',
   // '/Desktop/file2',
   // '/Desktop/Terminal.app',
-  // '/Desktop/MyFolder/MyFile',
-  '/Desktop/Solitaire.app',
+  '/Desktop/MyFolder/',
+  '/Desktop/Readme.app',
+  // '/Desktop/Solitaire.app',
 ];
 
 // Processes
@@ -17,15 +18,15 @@ export const appDirectory: AppDirectory = new Map([
   [
     '',
     {
-      icon: 'default',
+      icon: 'file',
       component: lazy(() => import('@/components/apps/hello-world')),
     },
   ],
   [
     'app',
     {
-      icon: 'executable',
-      component: lazy(() => import('@/components/apps/terminal')),
+      icon: 'file',
+      component: lazy(() => import('@/components/apps/readme')),
     },
   ],
 ]);
@@ -36,24 +37,19 @@ export const appOptions: AppOptions = new Map([
     'Solitaire.app',
     {
       icon: 'solitaire',
+      iconName: 'solitaire',
       minSize: { width: 800, height: 600 },
       disableDelete: true,
       component: lazy(() => import('@/components/apps/solitaire')),
-      //   fileName?: string;
-      //   fileExt?: string;
-      //   hasWindow?: boolean;
-      //   position?: Position;
-      //   size?: Size;
-      //   defaultSizePos?: SizePos;
     },
   ],
   [
     'Excalidraw.app',
     {
-      icon: 'executable',
-      minSize: { width: 900, height: 800 },
+      icon: 'excalidraw',
+      iconName: 'excalidraw',
+      minSize: { width: 800, height: 600 },
       disableDelete: true,
-      disableSelection: true,
       component: lazy(() => import('@/components/apps/excalidraw')),
     },
   ],

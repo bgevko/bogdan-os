@@ -39,6 +39,10 @@ interface FileSystemActions {
   validatePath: (path: string) => void;
   validateDir: (path: string) => void;
   validatePathAndDir: (path: string) => void;
+
+  // Debugging
+  printDir: () => void;
+  getDirList: () => string[];
 }
 
 // Updated the store creator with correct typing for middleware
@@ -145,6 +149,15 @@ const useFsStore = create<FileSystem & FileSystemActions>()(
     validatePathAndDir: (path: string) => {
       get().validatePath(path);
       get().validateDir(path);
+    },
+
+    // Debugging
+    printDir: () => {
+      // eslint-disable-next-line no-console
+      console.log(get().dir.keys());
+    },
+    getDirList: () => {
+      return [...get().dir.keys()];
     },
   })),
 );

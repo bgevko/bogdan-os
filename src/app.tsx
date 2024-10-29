@@ -1,4 +1,4 @@
-import Desktop from '@/components/system/desktop/index';
+import Desktop from '@/components/system/desktop';
 import ProcessLoader from '@/components/system/process-loader';
 import Taskbar from '@/components/system/taskbar';
 import Wallpaper from '@/components/system/wallpaper';

@@ -17,7 +17,7 @@ const MenuEntry = ({ label, callback }: MenuEntryProps): React.ReactElement => {
   return (
     <button
       data-testid={testId}
-      className="w-full p-2 text-left hover:bg-secondary hover:text-surface"
+      className="w-full p-2 text-left hover:bg-[#ffafaf]"
       type="button"
       onClick={() => {
         callback();
@@ -92,7 +92,7 @@ const ContextMenu = (): React.ReactElement => {
           role="menu"
           className={cn(
             `h-[${calculatedHeight.toString()}px] w-[200px]`,
-            'embossed-border flex-col fixed z-20 select-none flex bg-surface text-onSurface',
+            'window-shadow flex-col fixed z-20 select-none flex bg-white',
           )}
           style={{
             transform: `translate(${menuPos.x.toString()}px, ${menuPos.y.toString()}px)`,

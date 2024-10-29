@@ -18,8 +18,34 @@ $border-size: 10px;
 }
 
 body {
-  @apply bg-background;
-  @apply text-onBackground;
+  // @apply bg-background;
+  // @apply text-onBackground;
+  font-family: 'Sofia Sans Condensed', sans-serif;
+}
+
+.embossed {
+  background: linear-gradient(112deg, #fc9898 -52.33%, #ffcaca 160.26%);
+  box-shadow:
+    1px 1px 4px 0 rgba(255 255 255 / 50%) inset,
+    -1px -1px 2px 0 rgba(0 0 0 / 31%) inset,
+    0 0 0.7px 1px rgba(0 0 0 / 30%);
+}
+
+.debossed {
+  background: linear-gradient(112deg, #ffafaf -51.91%, #facdcd 27.07%);
+  box-shadow:
+    1px 1px 5px 0 rgba(0 0 0 / 50%) inset,
+    -2px -2px 10px 0 rgba(255 255 255 / 50%) inset,
+    0 0 0.7px 1px rgba(0 0 0 / 30%);
+}
+
+.window-shadow {
+  box-shadow: 0 4px 4px 0 rgba(0 0 0 / 25%);
+}
+
+.icon-shadow {
+  filter: drop-shadow(2px 3px 0 #0d0d0d);
+  overflow: visible;
 }
 
 .embossed-border {
@@ -90,4 +116,37 @@ body {
   border-left: $border-size solid transparent;
   border-image-source: $embossed-source;
   border-image-slice: $image-slice;
+}
+
+// Geocities stuff
+/* Waving animation using individual span elements */
+@keyframes wave {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Apply the wave effect to each character */
+.wave-text span {
+  display: inline-block;
+  animation: wave 1.5s infinite ease-in-out;
+}
+
+/* Add delay to make the wave sequential */
+.wave-text span:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+.wave-text span:nth-child(even) {
+  animation-delay: 0.2s;
+}
+
+/* Subtle link hover effect */
+.link-hover:hover {
+  text-decoration: underline;
+  transform: scale(1.1);
+  transition: transform 0.2s;
 }

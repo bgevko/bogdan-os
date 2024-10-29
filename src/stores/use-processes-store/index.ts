@@ -60,7 +60,6 @@ function newProcessNode(path: string, options: ProcessOptions = {}): ProcessNode
       isAnimating: false,
       isUpdatingSize: false,
       isUpdatingPosition: false,
-      disableSelection: options.disableSelection ?? false,
       opacity: 1,
     },
   };
@@ -104,6 +103,7 @@ interface ProcessesActions {
   popFocused: () => void;
   setFocused: (path: string) => void;
   getIsFocused: (path: string) => boolean;
+  getIsBlurred: () => boolean;
   setBlurFocus: (blurred: boolean) => void;
 
   // window stuff
@@ -136,7 +136,6 @@ interface ProcessesActions {
   getIsUpdatingSize: (path: string) => boolean;
   setIsUpdatingPosition: (path: string, isMoving: boolean) => void;
   getIsUpdatingPosition: (path: string) => boolean;
-  isSelectionDisabled: (path: string) => boolean;
   reset: () => void;
 }
 
@@ -255,6 +254,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
         state.blurred = blurred;
       });
     },
+    getIsBlurred: () => get().blurred,
 
     // window helpers
     setWindow: (path, sizePos) => {
@@ -268,6 +268,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
           position: getWindowPropHelper('position', path),
         };
       } catch {
+        // console.error(error);
         return { size: { width: 0, height: 0 }, position: { x: 0, y: 0 } };
       }
     },
@@ -371,13 +372,6 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     getIsUpdatingPosition: (path) => {
       try {
         return getWindowPropHelper('isUpdatingPosition', path);
-      } catch {
-        return false;
-      }
-    },
-    isSelectionDisabled: (path) => {
-      try {
-        return !getWindowPropHelper('disableSelection', path);
       } catch {
         return false;
       }

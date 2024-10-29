@@ -105,13 +105,21 @@ const useGridStore = create<GridSystem & GridActions>()(
       });
     },
     getIndex: (path) => {
-      validateGridChild(path);
-      const parentPath = parseParentPath(path);
-      return get().gridMap.get(parentPath)!.items.get(path)!;
+      try {
+        validateGridChild(path);
+        const parentPath = parseParentPath(path);
+        return get().gridMap.get(parentPath)!.items.get(path)!;
+      } catch {
+        return 0;
+      }
     },
     getLineSize: (path) => {
-      validateParentPath(path);
-      return get().gridMap.get(path)!.lineSize;
+      try {
+        validateParentPath(path);
+        return get().gridMap.get(path)!.lineSize;
+      } catch {
+        return 0;
+      }
     },
     getNumColumns: (path) => {
       validateParentPath(path);

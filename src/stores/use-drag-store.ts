@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-import useProcessesStore from '@/stores/use-processes-store';
 import { FileSystemContext } from '@/types';
 
 interface DragState {
@@ -8,6 +7,7 @@ interface DragState {
   dragoverPath: string;
   dragStartContext: FileSystemContext;
   guideIndex: number;
+  guideOpacity: number;
   group: string[]; // last index is the current dragging item
   groupSpacingOffsets: number[];
 }
@@ -18,6 +18,7 @@ interface DragActions {
   setDragging: (group: string[]) => void;
   setGroupSpacingOffsets: (offsets: number[]) => void;
   setGuideIndex: (index: number) => void;
+  setGuideOpacity: (opacity: number) => void;
   setDragoverPath: (path: string) => void;
   setIsDragging: (isDragging: boolean) => void;
 }
@@ -28,6 +29,7 @@ const useDragStore = create<DragState & DragActions>((set, get) => ({
   dragoverPath: '/Desktop',
   initialized: false,
   guideIndex: 0,
+  guideOpacity: 0,
   group: [],
   groupSpacingOffsets: [],
 
@@ -46,14 +48,11 @@ const useDragStore = create<DragState & DragActions>((set, get) => ({
   setGuideIndex: (index) => {
     set({ guideIndex: index });
   },
+  setGuideOpacity: (opacity) => {
+    set({ guideOpacity: opacity });
+  },
   setDragoverPath: (path) => {
-    const { setFocused } = useProcessesStore.getState();
-    const { setBlurFocus } = useProcessesStore.getState();
-    if (path === '/Desktop') {
-      setBlurFocus(true);
-    } else {
-      setFocused(path);
-    }
+    if (path === get().dragoverPath) return;
     set({ dragoverPath: path });
   },
   setIsDragging: (isDragging) => {

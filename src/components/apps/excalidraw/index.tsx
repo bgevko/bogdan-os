@@ -7,7 +7,6 @@ import cn from '@/utils/format'; // Assuming 'cn' is your classnames utility
 
 // Import CSS Module
 // eslint-disable-next-line no-relative-import-paths/no-relative-import-paths
-import styles from './excalidraw.module.scss';
 
 const ExcalidrawWrapper = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const resized = useProcessesStore((state) => state.getIsUpdatingSize(rootPath));
@@ -27,10 +26,7 @@ const ExcalidrawWrapper = ({ rootPath }: { rootPath: string }): React.ReactEleme
       onMouseDown={(event: React.MouseEvent) => {
         event.stopPropagation();
       }}
-      className={cn(
-        styles.excalidrawContainer,
-        'debossed-border flex size-full items-center justify-center',
-      )}
+      className={cn('flex size-full items-center justify-center')}
     >
       <Excalidraw
         excalidrawAPI={(api) => {
@@ -38,7 +34,7 @@ const ExcalidrawWrapper = ({ rootPath }: { rootPath: string }): React.ReactEleme
         }}
         initialData={{
           appState: {
-            viewBackgroundColor: '#f8f6f4',
+            viewBackgroundColor: '#fff',
           },
         }}
       />

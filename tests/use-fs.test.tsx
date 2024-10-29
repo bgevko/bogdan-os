@@ -197,19 +197,19 @@ describe('useFsStore', () => {
       expect(fs.getNode('/test/1/2/3').icon).toBe(`${iconsPath}/folder.png`);
 
       fs.touch('/test.app');
-      expect(fs.getNode('/test.app').icon).toBe(`${iconsPath}/executable.png`);
+      expect(fs.getNode('/test.app').icon).toBe(`${iconsPath}/file.png`);
 
       fs.touch('/test/1/2/3.app');
       expect(fs.getNode('/test').icon).toBe(`${iconsPath}/folder.png`);
       expect(fs.getNode('/test/1').icon).toBe(`${iconsPath}/folder.png`);
       expect(fs.getNode('/test/1/2').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/test/1/2/3.app').icon).toBe(`${iconsPath}/executable.png`);
+      expect(fs.getNode('/test/1/2/3.app').icon).toBe(`${iconsPath}/file.png`);
 
       fs.initDir();
       fs.touch('/1.app/2/3');
       expect(fs.getNode('/1.app').icon).toBe(`${iconsPath}/folder.png`);
       expect(fs.getNode('/1.app/2').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/1.app/2/3').icon).toBe(`${iconsPath}/default.png`);
+      expect(fs.getNode('/1.app/2/3').icon).toBe(`${iconsPath}/file.png`);
     });
   });
 
@@ -587,6 +587,41 @@ describe('useFsStore - move and delete side effects', () => {
       fs.rm('/Desktop/MyFolder2');
       expect([...fs.getChildPaths('/Desktop')]).toEqual([...grid.getItems('/Desktop').keys()]);
       expect([...fs.getChildPaths('/')]).toEqual([...grid.getItems('/').keys()]);
+    });
+  });
+
+  it.only('should transfer items with similar names correctly correctly', () => {
+    act(() => {
+      fs.initDir(['/Desktop/MyFile2', '/Desktop/MyFile', '/Desktop/MyFolder/']);
+      fs.mv('/Desktop/MyFile', '/Desktop/MyFolder/MyFile');
+      let dirs = fs.getDirList();
+      expect(dirs).toEqual([
+        '/',
+        '/Desktop',
+        '/Desktop/MyFile2',
+        '/Desktop/MyFolder',
+        '/Desktop/MyFolder/MyFile',
+      ]);
+
+      fs.initDir(['/Desktop/MyFile2', '/Desktop/MyFile', '/Desktop/MyFolder/']);
+      fs.mv('/Desktop/MyFile2', '/Desktop/MyFolder/MyFile2');
+      dirs = fs.getDirList();
+      expect(dirs).toEqual([
+        '/',
+        '/Desktop',
+        '/Desktop/MyFile',
+        '/Desktop/MyFolder',
+        '/Desktop/MyFolder/MyFile2',
+      ]);
+      fs.mv('/Desktop/MyFolder/MyFile2', '/Desktop/MyFile2');
+      dirs = fs.getDirList();
+      expect(dirs).toEqual([
+        '/',
+        '/Desktop',
+        '/Desktop/MyFile',
+        '/Desktop/MyFolder',
+        '/Desktop/MyFile2',
+      ]);
     });
   });
 });

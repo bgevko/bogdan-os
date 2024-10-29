@@ -1,14 +1,26 @@
 import React from 'react';
 
-import FileSystemIcons from '@/components/system/fs/fs-icons';
-import SelectRect from '@/components/system/fs/select-rect';
+import DropGuide from '@/components/apps/file-explorer/drop-guide';
+import Grid from '@/components/apps/file-explorer/grid';
+import SelectRect from '@/components/apps/file-explorer/select-rect';
+import FileSystemIcon from '@/components/system/fs/fs-icon';
+import useFsStore from '@/stores/use-fs-store';
+import useProcessesStore from '@/stores/use-processes-store';
+import cn from '@/utils/format';
 
 const FileExplorer = ({ rootPath }: { rootPath: string }): React.ReactElement => {
+  const isFocused = useProcessesStore((state) => state.getIsFocused(rootPath));
+  const folderItems = useFsStore((state) => state.getChildren(rootPath));
   return (
     <>
-      <SelectRect rootPath={rootPath} />
-      <div className="debossed-border flex size-full overflow-hidden">
-        <FileSystemIcons rootPath={rootPath} />
+      {isFocused && <SelectRect path={rootPath} />}
+      <div className={cn('flex size-full overflow-hidden', !isFocused && 'opacity-25')}>
+        {isFocused && <DropGuide path={rootPath} />}
+        <Grid path={rootPath}>
+          {folderItems.map((fileNode) => {
+            return <FileSystemIcon key={fileNode.path} path={fileNode.path} />;
+          })}
+        </Grid>
       </div>
     </>
   );

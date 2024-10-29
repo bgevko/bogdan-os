@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { type ReactElement, ReactNode, useCallback } from 'react';
 
 import WindowResizeHandles from '@/components/system/window/resize-handles';
@@ -24,6 +25,13 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
   const setMenuContext = useMenuStore((state) => state.setMenuContext);
   const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
+  const isFocused = useProcessesStore((state) => state.getIsFocused(path));
+
+  // Set background to background: 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)' if focused, otherwise to
+  // background: linear-gradient(180deg, #FFE9C6 0%, rgba(91, 91, 91, 0.10) 100%);
+  const background = isFocused
+    ? 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)'
+    : 'linear-gradient(180deg, #FFE9C6 0%, rgba(91, 91, 91, 0.10) 100%)';
 
   const handleWindowFocus = useCallback(() => {
     setFocused(path);
@@ -40,11 +48,12 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
       role="application"
       data-testid="window"
       className={cn(
-        'z-10 embossed-border absolute flex flex-col',
+        'window-shadow z-10 absolute flex flex-col rounded-lg',
         isAnimating && 'transition-all duration-200',
       )}
       style={{
         transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
+        background,
         width: size.width,
         height: size.height,
         opacity,
@@ -53,15 +62,23 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
       onMouseDownCapture={handleWindowFocus}
       onMouseEnter={(event: React.MouseEvent) => {
         event.stopPropagation();
-        appendMouseContext('window');
+        appendMouseContext('folder');
       }}
       onMouseLeave={() => {
         popMouseContext();
       }}
+      onDragOver={(event: React.DragEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
       onContextMenu={(event: React.MouseEvent) => {
         event.preventDefault();
-        const target = event.target as HTMLElement;
-        const dataId = target.dataset.id;
+        let target = event.target as HTMLElement;
+        let dataId;
+        while (!dataId) {
+          dataId = target.dataset.id;
+          target = target.parentElement!;
+        }
         if (dataId === 'window-header' || dataId === 'folder' || dataId === 'file-icon') {
           return;
         }
@@ -73,8 +90,8 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
         <>
           <WindowResizeHandles path={path} />
           <WindowHeader path={path} />
-          <article className={cn('relative flex flex-1 bg-surface pt-2 text-onSurface')}>
-            <div className="absolute inset-x-[-5px] bottom-0 top-1">{children}</div>
+          <article className={cn('relative flex flex-1 rounded-b-lg')}>
+            <div className="absolute inset-y-0 w-full rounded-b-lg">{children}</div>
           </article>
         </>
       )}

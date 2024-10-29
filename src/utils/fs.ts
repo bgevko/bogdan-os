@@ -4,8 +4,8 @@ import { Position, SizePos, LazyAppComponent } from '@/types';
 
 export const selectionIntersectsElement = (selection: SizePos, element: Position): boolean => {
   if (
-    element.x + ICON_SIZE + 20 < selection.position.x ||
-    element.y + ICON_SIZE + 20 < selection.position.y ||
+    element.x + ICON_SIZE.width + 20 < selection.position.x ||
+    element.y + ICON_SIZE.height + 20 < selection.position.y ||
     element.x > selection.position.x + selection.size.width - 14 ||
     element.y > selection.position.y + selection.size.height - 14
   ) {

@@ -149,7 +149,7 @@ export function rmHelper(
   }
 
   for (const dirPath of dir.keys()) {
-    if (dirPath.startsWith(path)) {
+    if (dirPath === path || dirPath.startsWith(`${path}/`)) {
       dir.delete(dirPath);
     }
   }
@@ -176,6 +176,7 @@ export function mvHelper(
   if (sourcePath === targetPath) {
     throw new Error('Source and target paths are the same');
   }
+
   if (dir.has(targetPath)) {
     throw new Error(`Target path already exists: ${targetPath}`);
   }

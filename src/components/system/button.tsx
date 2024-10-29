@@ -10,8 +10,6 @@ interface ButtonProperties extends React.ButtonHTMLAttributes<HTMLButtonElement>
   children: ReactNode;
 }
 
-// TODO: Figure out the proper way to handle typing when it's necessary to pass props through a spread operator.
-
 // eslint-disable-next-line react/prop-types
 const Button: React.FC<ButtonProperties> = ({ className, children, ...properties }) => {
   const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
@@ -33,8 +31,8 @@ const Button: React.FC<ButtonProperties> = ({ className, children, ...properties
   return (
     <button
       className={cn(
-        'relative bg-surface',
-        buttonDown ? 'debossed-border ' : 'button-border',
+        'px-4 relative rounded-[4px] h-8 font-semibold text-gray-800',
+        buttonDown ? 'debossed' : 'embossed',
         className,
       )}
       {...properties}
@@ -62,14 +60,7 @@ const Button: React.FC<ButtonProperties> = ({ className, children, ...properties
         event.preventDefault();
       }}
     >
-      <span
-        className={cn(
-          'absolute inset-[-5px] flex items-center justify-center select-none',
-          buttonDown ? 'bg-surface-200 translate-y-[1px]' : 'transparent',
-        )}
-      >
-        {children}
-      </span>
+      {children}
     </button>
   );
 };
