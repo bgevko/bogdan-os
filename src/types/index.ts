@@ -136,7 +136,8 @@ export type MouseContext =
   | 'taskbar'
   | 'taskbar-entry'
   | 'none'
-  | 'folder';
+  | 'folder'
+  | 'window';
 export type MenuContext =
   | 'desktop'
   | 'file-icon'

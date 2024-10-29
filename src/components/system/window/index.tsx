@@ -62,7 +62,7 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
       onMouseDownCapture={handleWindowFocus}
       onMouseEnter={(event: React.MouseEvent) => {
         event.stopPropagation();
-        appendMouseContext('folder');
+        appendMouseContext('window');
       }}
       onMouseLeave={() => {
         popMouseContext();

@@ -27,6 +27,10 @@ const ExcalidrawWrapper = ({ rootPath }: { rootPath: string }): React.ReactEleme
         event.stopPropagation();
       }}
       className={cn('flex size-full items-center justify-center')}
+      onContextMenu={(event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
     >
       <Excalidraw
         excalidrawAPI={(api) => {
