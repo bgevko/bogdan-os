@@ -1,7 +1,5 @@
 ### Issues
 
-- Dropping a group of items out of a folder into the desktop unselects all items. It should keep the items selected by default
-  This happens from the desktop to a folder as well.
 - Resizing the screen from the left and up causes the window to jump.
   - Does not happen when initially trying to resize the window. After clicking somewhere else and attempting
     to resize it, the bug happens every time.

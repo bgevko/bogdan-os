@@ -36,6 +36,8 @@ const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
   // SELECT
   const setMouseDownContext = useSelectStore((state) => state.setMouseDownContext);
   const setSelected = useSelectStore((state) => state.setSelected);
+  const addSelected = useSelectStore((state) => state.addSelected);
+  const removeSelected = useSelectStore((state) => state.removeSelected);
 
   // FS
   const mv = useFsStore((state) => state.mv);
@@ -99,6 +101,8 @@ const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
         } else {
           try {
             mv(element.path, destinationPath, { gridIndex: finalIndex });
+            removeSelected(element.path);
+            addSelected(destinationPath);
           } catch {
             // Handle errors silently
           }
