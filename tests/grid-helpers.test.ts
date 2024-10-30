@@ -15,12 +15,12 @@ describe('Index to Position', () => {
     expect(indexToPosition(7, 4)).toEqual({ x: 1, y: 3 });
   });
 
-  it('should convert index 7 to position [100, 300] with 4 lines, multiplier=100', () => {
-    expect(indexToPosition(7, 4, { multiplier: 100 })).toEqual({ x: 100, y: 300 });
+  it('should convert index 7 to position [100, 300] with 4 lines', () => {
+    expect(indexToPosition(7, 4)).toEqual({ x: 1, y: 3 });
   });
 
   it('should convert index 7 to position [3, 1] with 4 lines when flow is row', () => {
-    expect(indexToPosition(7, 4, { flow: 'row' })).toEqual({ x: 3, y: 1 });
+    expect(indexToPosition(7, 4, 'row')).toEqual({ x: 3, y: 1 });
   });
 
   it('should convert index 8 to position [2, 0] with 4 lines', () => {
@@ -38,24 +38,20 @@ describe('Position to Index', () => {
     expect(positionToIndex(0, 0, 4)).toBe(0);
   });
 
-  it('should convert position [1, 3] to index 7 with 4 lines', () => {
-    expect(positionToIndex(1, 3, 4)).toBe(7);
+  it('should convert position [100, 300] to index 7 with 4 lines', () => {
+    expect(positionToIndex(100, 300, 4)).toBe(7);
   });
 
-  it('should convert position [3, 1] to index 7 with 4 lines when flow is row', () => {
-    expect(positionToIndex(3, 1, 4, { flow: 'row' })).toBe(7);
+  it('should convert position [300, 100] to index 7 with 4 lines when flow is row', () => {
+    expect(positionToIndex(300, 100, 4, 'row')).toBe(7);
   });
 
-  it('should convert position [100, 300] to index 7 with 4 lines, multiplier=100', () => {
-    expect(positionToIndex(100, 300, 4, { multiplier: 100 })).toBe(7);
+  it('should convert position [200, 0] to index 8 with 4 lines', () => {
+    expect(positionToIndex(200, 0, 4)).toBe(8);
   });
 
-  it('should convert position [2, 0] to index 8 with 4 lines', () => {
-    expect(positionToIndex(2, 0, 4)).toBe(8);
-  });
-
-  it('should correctly convert position [3, 7], 10 lines, to index 37', () => {
-    expect(positionToIndex(3, 7, 10)).toBe(37);
+  it('should correctly convert position [300, 700], 10 lines, to index 37', () => {
+    expect(positionToIndex(300, 700, 10)).toBe(37);
   });
 });
 

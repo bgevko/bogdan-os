@@ -60,7 +60,7 @@ describe('Fs Utils', () => {
     let icon = parseFileIcon(path);
     expect(name).toBe('file');
     expect(ext).toBe('app');
-    expect(icon).toBe(`${iconsPath}/executable.png`);
+    expect(icon).toBe(`${iconsPath}/file.png`);
 
     name = parseFileName('/');
     ext = parseFileExt('/');
