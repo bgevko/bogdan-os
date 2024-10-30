@@ -75,7 +75,7 @@ const Renderer = ({ children }: { children: React.ReactNode }): React.ReactEleme
   }
 
   return (
-    <div className="w-full" ref={mountRef}>
+    <div className="size-full" ref={mountRef}>
       {children}
     </div>
   );

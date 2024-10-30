@@ -12,7 +12,7 @@ interface ButtonProperties extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 // eslint-disable-next-line react/prop-types
 const Button: React.FC<ButtonProperties> = ({ className, children, ...properties }) => {
-  const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
+  const setIsVisible = useMenuStore((state) => state.setIsVisible);
   const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
 
@@ -40,7 +40,7 @@ const Button: React.FC<ButtonProperties> = ({ className, children, ...properties
         event.stopPropagation();
         setButtonDown(true);
         setMouseDown(true);
-        setContextMenuVisible(false);
+        setIsVisible(false);
       }}
       onMouseUp={() => {
         setButtonDown(false);

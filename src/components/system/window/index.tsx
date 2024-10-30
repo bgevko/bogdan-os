@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { type ReactElement, ReactNode, useCallback } from 'react';
 
 import WindowResizeHandles from '@/components/system/window/resize-handles';
 import WindowHeader from '@/components/system/window/window-header';
-import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
@@ -23,8 +21,6 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const allFocused = useProcessesStore((state) => state.getFocused());
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
-  const setMenuContext = useMenuStore((state) => state.setMenuContext);
-  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
 
   // Set background to background: 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)' if focused, otherwise to
@@ -72,18 +68,8 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
         event.stopPropagation();
       }}
       onContextMenu={(event: React.MouseEvent) => {
+        event.stopPropagation();
         event.preventDefault();
-        let target = event.target as HTMLElement;
-        let dataId;
-        while (!dataId) {
-          dataId = target.dataset.id;
-          target = target.parentElement!;
-        }
-        if (dataId === 'window-header' || dataId === 'folder' || dataId === 'file-icon') {
-          return;
-        }
-        setMenuContext('window');
-        setMenuTargetPath(path);
       }}
     >
       {!isMinimized && (

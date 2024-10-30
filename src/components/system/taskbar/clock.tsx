@@ -35,7 +35,13 @@ const Clock = (): JSX.Element => {
 
   return (
     <>
-      <time className="text-gray800 flex w-[80px] select-none items-center justify-center rounded-[6px] bg-white text-sm font-bold">
+      <time
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        className="text-gray800 flex w-[80px] select-none items-center justify-center rounded-[6px] bg-white text-sm font-bold"
+      >
         {time}
       </time>
     </>

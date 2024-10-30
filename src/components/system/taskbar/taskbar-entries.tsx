@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
 import DynamicIcon from '@/components/system/icons';
+import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import UseWindowState from '@/hooks/system/use-window';
 import { appOptions } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
@@ -25,9 +26,8 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
   const isDir = useFsStore((state) => state.isDir(path));
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
-  const setMenuContext = useMenuStore((state) => state.setMenuContext);
-  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
-  const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
+  const setIsVisible = useMenuStore((state) => state.setIsVisible);
+  const { handleContextMenu } = UseHandleContextMenu();
 
   const title = parseFileName(path);
   const iconName = appOptions.get(parseFullFileName(path))?.iconName ?? (isDir ? 'folder' : 'file');
@@ -93,7 +93,7 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
 
         // if not right click, hide context menu
         if (event.button !== 2) {
-          setContextMenuVisible(false);
+          setIsVisible(false);
         }
       }}
       onMouseUp={() => {
@@ -116,21 +116,11 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
       }}
       onContextMenu={(event: React.MouseEvent) => {
         event.preventDefault();
-        setMenuContext('taskbar-entry');
-        setMenuTargetPath(path);
+        event.stopPropagation();
+        handleContextMenu(event, 'taskbar-entry', path);
       }}
     >
       <DynamicIcon iconName={iconName} color="white" size={32} shadow={false} />
-      {/* {!imgError && ( */}
-      {/*   <img */}
-      {/*     src={icon} */}
-      {/*     alt={title} */}
-      {/*     width="24" */}
-      {/*     onError={() => { */}
-      {/*       setImgError(true); */}
-      {/*     }} */}
-      {/*   /> */}
-      {/* )} */}
       {title}
     </button>
   );

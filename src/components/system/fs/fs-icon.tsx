@@ -2,11 +2,11 @@
 import React, { ReactElement, useMemo, useEffect, useState, useCallback } from 'react';
 
 import DynamicIcon from '@/components/system/icons';
+import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import { appOptions } from '@/static';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
-import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
@@ -38,8 +38,6 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
   // MOUSE
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
-  const setMenuContext = useMenuStore((state) => state.setMenuContext);
-  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
   const dragContext = useMouseStore((state) => state.dragContext);
   const setDragContext = useMouseStore((state) => state.setDragContext);
   const setDragoverPath = useDragStore((state) => state.setDragoverPath);
@@ -61,6 +59,9 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
   const setGroupSpacingOffsets = useDragStore((state) => state.setGroupSpacingOffsets);
   const setGuideIndex = useDragStore((state) => state.setGuideIndex);
   const setGuideOpacity = useDragStore((state) => state.setGuideOpacity);
+
+  // HOOKS
+  const { handleContextMenu } = UseHandleContextMenu();
 
   // LOCAL
   const fileName = parseFileName(path);
@@ -403,8 +404,8 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
           }}
           onContextMenu={(event: React.MouseEvent) => {
             event.preventDefault();
-            setMenuContext('file-icon');
-            setMenuTargetPath(path);
+            event.stopPropagation();
+            handleContextMenu(event, 'file-icon', path);
           }}
         >
           <DynamicIcon iconName={iconName} />

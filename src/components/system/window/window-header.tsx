@@ -1,6 +1,7 @@
 import React, { useState, type ReactElement } from 'react';
 
 import DynamicIcon from '@/components/system/icons';
+import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import UseWindowState from '@/hooks/system/use-window';
 import useDragStore from '@/stores/use-drag-store';
 import useMenuStore from '@/stores/use-menu-store';
@@ -29,6 +30,7 @@ const HeaderButtons = ({
   handleWindowFullSize,
 }: HeaderButtonsProps): ReactElement => {
   const isMaximized = useProcessesStore((state) => state.getIsMaximized(path));
+  const { handleContextMenu } = UseHandleContextMenu();
 
   const maximizeButtonName = isMaximized ? 'unmax' : 'max';
 
@@ -66,6 +68,7 @@ const HeaderButtons = ({
           onContextMenu={(event: React.MouseEvent) => {
             event.preventDefault();
             event.stopPropagation();
+            handleContextMenu(event, 'window-header', path);
           }}
         >
           <span
@@ -140,11 +143,10 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
   const close = useProcessesStore((state) => state.close);
   const title = parseFileName(path);
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
-  const setMenuContext = useMenuStore((state) => state.setMenuContext);
-  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
-  const setContextMenuVisible = useMenuStore((state) => state.setContextMenuVisible);
+  const setIsVisible = useMenuStore((state) => state.setIsVisible);
   const setGuideIndex = useDragStore((state) => state.setGuideIndex);
   const setGuideOpacity = useDragStore((state) => state.setGuideOpacity);
+  const { handleContextMenu } = UseHandleContextMenu();
 
   const headerColor = isFocused ? 'bg-[#4A4947]' : 'bg-gray-800/20';
   const headerTextColor = isFocused ? 'text-white' : 'text-gray-800';
@@ -166,7 +168,7 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
           handleMouseDownMove(event);
-          setContextMenuVisible(false);
+          setIsVisible(false);
         }}
         onDoubleClick={(event) => {
           event.stopPropagation();
@@ -174,8 +176,8 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
         }}
         onContextMenu={(event: React.MouseEvent) => {
           event.preventDefault();
-          setMenuContext('window-header');
-          setMenuTargetPath(path);
+          event.stopPropagation();
+          handleContextMenu(event, 'window-header', path);
         }}
         onDragOver={(event: React.DragEvent) => {
           event.preventDefault();

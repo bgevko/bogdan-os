@@ -1,7 +1,7 @@
-import useFileIconContext from '@/hooks/system/use-menu-context/use-file-icon-context';
-import useFolderContext from '@/hooks/system/use-menu-context/use-folder-context';
-import useTaskbarEntryContext from '@/hooks/system/use-menu-context/use-taskbar-entry-context';
-import useWindowHeaderContext from '@/hooks/system/use-menu-context/use-window-header-context';
+import useFileIconContext from '@/hooks/system/use-context-menu/use-file-icon-context';
+import useFolderContext from '@/hooks/system/use-context-menu/use-folder-context';
+import useTaskbarEntryContext from '@/hooks/system/use-context-menu/use-taskbar-entry-context';
+import useWindowHeaderContext from '@/hooks/system/use-context-menu/use-window-header-context';
 import { ContextCallbacks } from '@/types';
 
 interface Returns {

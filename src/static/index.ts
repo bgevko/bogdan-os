@@ -8,7 +8,7 @@ export const startingDir: Paths = [
   '/Desktop/Excalidraw.app',
   // '/Desktop/file2',
   // '/Desktop/Terminal.app',
-  '/Desktop/MyFolder/',
+  '/Desktop/MyFolder/hello',
   '/Desktop/Readme.app',
   // '/Desktop/Solitaire.app',
 ];

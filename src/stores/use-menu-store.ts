@@ -1,46 +1,49 @@
 import { create } from 'zustand';
 
-import { MenuContext } from '@/types';
+import { MenuContext, Position } from '@/types';
 
 interface ContextState {
-  contextMenuVisible: boolean;
+  isVisible: boolean;
   isMouseOver: boolean;
   menuContext: MenuContext;
   targetPath: string;
+  menuPos: { x: number; y: number };
 }
 
 interface ContextActions {
   setMenuContext: (context: MenuContext) => void;
-  setContextMenuVisible: (contextMenuVisible: boolean) => void;
-  setIsMouseOver: (isMouseOver: boolean) => void;
+  setIsVisible: (isVisible: boolean) => void;
   setTargetPath: (path: string) => void;
+  setMenuPos: (pos: Position) => void;
   reset: () => void;
 }
 
 const useMenuStore = create<ContextState & ContextActions>((set) => ({
-  contextMenuVisible: false,
+  isVisible: false,
   isMouseOver: false,
   menuContext: 'desktop',
   targetPath: '/Desktop',
+  menuPos: { x: -500, y: 0 },
   setMenuContext: (context) => {
     set({ menuContext: context });
   },
-  setContextMenuVisible: (isVisible) => {
-    set({ contextMenuVisible: isVisible });
-  },
-  setIsMouseOver: (isMouseOver) => {
-    set({ isMouseOver });
+  setIsVisible: (isVisible) => {
+    set({ isVisible });
   },
 
   setTargetPath: (path) => {
     set({ targetPath: path });
   },
+  setMenuPos: (pos) => {
+    set({ menuPos: pos });
+  },
   reset: () => {
     set({
-      contextMenuVisible: false,
+      isVisible: false,
       isMouseOver: false,
       menuContext: 'desktop',
       targetPath: '/Desktop',
+      menuPos: { x: -500, y: 0 },
     });
   },
 }));

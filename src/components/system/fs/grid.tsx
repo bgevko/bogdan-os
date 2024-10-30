@@ -3,15 +3,15 @@
 import React, { type ReactElement, useState, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
 
+import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
-import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
 import { TASKBAR_HEIGHT, WINDOW_HEADER_HEIGHT } from '@/themes';
-import { MenuContext, MouseContext, type TransferData } from '@/types';
+import { MouseContext, type TransferData } from '@/types';
 import { parseFullFileName } from '@/utils/fs';
 import { positionToIndex } from '@/utils/grid';
 
@@ -23,24 +23,35 @@ interface GridProps {
 }
 
 const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
+  // PROCESSES
+  const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
+  const getWindow = useProcessesStore((state) => state.getWindow);
+  const setFocused = useProcessesStore((state) => state.setFocused);
+
+  // GRID
   const setGridIndex = useGridStore((state) => state.setIndex);
   const grid = useGridStore((state) => state.getGrid(path));
   const updateGridSize = useGridStore((state) => state.updateSize);
+
+  // SELECT
   const setMouseDownContext = useSelectStore((state) => state.setMouseDownContext);
   const setSelected = useSelectStore((state) => state.setSelected);
+
+  // FS
   const mv = useFsStore((state) => state.mv);
+
+  // MOUSE
   const resetMouseContext = useMouseStore((state) => state.reset);
   const setDragContext = useMouseStore((state) => state.setDragContext);
+
+  // DRAG
   const setDragoverPath = useDragStore((state) => state.setDragoverPath);
   const setIsDragging = useDragStore((state) => state.setIsDragging);
-  const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
-  const setFocused = useProcessesStore((state) => state.setFocused);
-  const setMenuContext = useMenuStore((state) => state.setMenuContext);
-  const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
-  const getWindow = useProcessesStore((state) => state.getWindow);
+
+  // HOOKS
+  const { handleContextMenu } = UseHandleContextMenu();
 
   const [shiftIsPressed, setShiftIsPressed] = useState(false);
-
   const isDesktop = path === '/Desktop';
 
   const handleShiftPress = useCallback((event: KeyboardEvent) => {
@@ -168,17 +179,9 @@ const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
       }}
       onContextMenu={(event: React.MouseEvent) => {
         event.preventDefault();
-        let target = event.target as HTMLElement;
-        let dataId;
-        while (!dataId) {
-          dataId = target.dataset.id;
-          target = target.parentElement!;
-        }
-        if (dataId === 'file-icon') {
-          return;
-        }
-        setMenuContext(config.id as MenuContext);
-        setMenuTargetPath(path);
+        event.stopPropagation();
+        const menuContext = isDesktop ? 'desktop' : 'folder';
+        handleContextMenu(event, menuContext, path);
       }}
       onMouseEnter={(event: React.MouseEvent) => {
         event.stopPropagation();
