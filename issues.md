@@ -1,8 +1,6 @@
 ### Issues
 
-- Resizing the screen from the left and up causes the window to jump.
-  - Does not happen when initially trying to resize the window. After clicking somewhere else and attempting
-    to resize it, the bug happens every time.
+- Dragging mouse and letting go on the minimize or close button triggers that action on the window.
 - Dragging an item after it's been opened to a different parent causes the app to crash.
   - Write more FS tests to ensure mv / delete are also properly affecting the processes state
 - Dragging an item across a non-drop target makes the drop guide fly off screen.
