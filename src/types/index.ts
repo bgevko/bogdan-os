@@ -7,13 +7,6 @@ interface AppComponent {
 
 export type LazyAppComponent = LazyExoticComponent<ComponentType<AppComponent>>;
 
-export interface App {
-  component: LazyAppComponent;
-  icon: string;
-}
-
-export type AppDirectory = Map<string, App>;
-
 // Units
 export interface Size {
   width: number;
@@ -41,7 +34,6 @@ export type FileSystemContext = 'desktop' | 'folder';
 
 export interface FileNode {
   path: string;
-  icon: string;
   isDir: boolean;
   children: Map<string, FileNode>;
 }
@@ -96,27 +88,26 @@ export interface WindowState {
   opacity: number;
 }
 
-export interface ProcessOptions {
-  icon?: string;
-  iconName?: string;
-  fileName?: string;
-  fileExt?: string;
-  hasWindow?: boolean;
-  position?: Position;
-  minSize?: Size;
-  size?: Size;
-  defaultSizePos?: SizePos;
-  disableDelete?: boolean;
-  component?: LazyAppComponent;
-}
-
-export type AppOptions = Map<string, ProcessOptions>;
-
-export interface ProcessNode {
+export interface ProcessState {
   path: string;
   hasWindow: boolean;
   window: WindowState;
 }
+
+export interface InitialProcessConfig {
+  iconName: string;
+  iconColor?: string; // wil be a hex string
+  fileName: string;
+  fileExt: string;
+  hasWindow: boolean;
+  disableDelete: boolean;
+  component: LazyAppComponent;
+
+  // Initial Window State
+  size: Size;
+}
+
+export type AppOptions = Map<string, InitialProcessConfig>;
 
 export type ResizeDirection =
   | 'NONE'

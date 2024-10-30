@@ -22,55 +22,100 @@ const UseWindowResize = (path: string): usewindowReturnTypes => {
 
   const setIsUpdatingSize = useProcessesStore((state) => state.setIsUpdatingSize);
 
-  const [start, setStart] = useState<Position>({ x: 0, y: 0 });
-
-  const getMouseClickStart = useCallback(
-    (event: MouseEvent) => {
-      setStart({ x: event.clientX - position.x, y: event.clientY - position.y });
-    },
-    [position],
-  );
-
   const [resizeDirection, setResizeDirection] = useState<ResizeDirection>('NONE');
 
   const resizeWindow = useCallback(
     (event: MouseEvent) => {
-      if (resizeDirection === 'NONE') return;
-      let newWidth = size.width;
-      let newHeight = size.height;
-      let newX = position.x;
-      let newY = position.y;
+      const { clientX, clientY } = event;
+      const { x: posX, y: posY } = position;
+      const { width: currentWidth, height: currentHeight } = size;
 
-      if (resizeDirection.includes('RIGHT')) {
-        newWidth = Math.max(event.clientX - position.x, minSize.width);
-        newWidth = Math.min(newWidth, window.innerWidth - position.x);
+      let newWidth = currentWidth;
+      let newHeight = currentHeight;
+      let newX = posX;
+      let newY = posY;
+
+      switch (resizeDirection) {
+        case 'RIGHT': {
+          newWidth = Math.max(clientX - posX, minSize.width);
+          break;
+        }
+
+        case 'BOTTOM': {
+          newHeight = Math.max(clientY - posY, minSize.height);
+          break;
+        }
+
+        case 'LEFT': {
+          newX = Math.min(clientX, posX + currentWidth - minSize.width);
+          newX = Math.max(0, newX);
+          newWidth = currentWidth + posX - newX;
+          break;
+        }
+
+        case 'TOP': {
+          newY = Math.min(clientY, posY + currentHeight - minSize.height);
+          newY = Math.max(0, newY);
+          newHeight = currentHeight + posY - newY;
+          break;
+        }
+
+        case 'TOP_LEFT': {
+          // Handle TOP
+          newY = Math.min(clientY, posY + currentHeight - minSize.height);
+          newY = Math.max(0, newY);
+          newHeight = currentHeight + posY - newY;
+          // Handle LEFT
+          newX = Math.min(clientX, posX + currentWidth - minSize.width);
+          newX = Math.max(0, newX);
+          newWidth = currentWidth + posX - newX;
+          break;
+        }
+
+        case 'TOP_RIGHT': {
+          // Handle TOP
+          newY = Math.min(clientY, posY + currentHeight - minSize.height);
+          newY = Math.max(0, newY);
+          newHeight = currentHeight + posY - newY;
+          // Handle RIGHT
+          newWidth = Math.max(clientX - posX, minSize.width);
+          break;
+        }
+
+        case 'BOTTOM_LEFT': {
+          // Handle BOTTOM
+          newHeight = Math.max(clientY - posY, minSize.height);
+          // Handle LEFT
+          newX = Math.min(clientX, posX + currentWidth - minSize.width);
+          newX = Math.max(0, newX);
+          newWidth = currentWidth + posX - newX;
+          break;
+        }
+
+        case 'BOTTOM_RIGHT': {
+          // Handle BOTTOM
+          newHeight = Math.max(clientY - posY, minSize.height);
+          // Handle RIGHT
+          newWidth = Math.max(clientX - posX, minSize.width);
+          break;
+        }
+
+        default: {
+          // 'NONE' or any other unhandled case
+          return;
+        }
       }
-      if (resizeDirection.includes('BOTTOM')) {
-        newHeight = Math.max(event.clientY - position.y, minSize.height);
-        newHeight = Math.min(newHeight, window.innerHeight - position.y);
-      }
-      if (resizeDirection.includes('LEFT')) {
-        newX = Math.max(
-          0,
-          Math.min(event.clientX - start.x, position.x + size.width - minSize.width),
-        );
-        newWidth = size.width + position.x - newX;
-      }
-      if (resizeDirection.includes('TOP')) {
-        newY = Math.max(
-          0,
-          Math.min(event.clientY - start.y, position.y + size.height - minSize.height),
-        );
-        newHeight = size.height + position.y - newY;
-      }
+
+      // Ensure the window does not exceed the viewport boundaries
+      newWidth = Math.min(newWidth, window.innerWidth - newX);
+      newHeight = Math.min(newHeight, window.innerHeight - newY);
 
       setSize(path, { width: newWidth, height: newHeight });
       setPosition(path, { x: newX, y: newY });
       setIsMaximized(path, false);
     },
-    [path, start, minSize, position, size, resizeDirection, setIsMaximized, setPosition, setSize],
+    [path, minSize, position, size, resizeDirection, setIsMaximized, setPosition, setSize],
   );
-
   const handleSetResizeDirection = (direction: ResizeDirection) => {
     setResizeDirection(direction);
   };
@@ -93,15 +138,13 @@ const UseWindowResize = (path: string): usewindowReturnTypes => {
   );
 
   useEffect(() => {
-    document.addEventListener('mousedown', getMouseClickStart);
     document.addEventListener('mouseup', handleStopResize);
     document.addEventListener('mousemove', handleWindowResize);
     return () => {
-      document.removeEventListener('mousedown', getMouseClickStart);
       document.removeEventListener('mouseup', handleStopResize);
       document.removeEventListener('mousemove', handleWindowResize);
     };
-  }, [getMouseClickStart, handleStopResize, handleWindowResize]);
+  }, [handleStopResize, handleWindowResize]);
 
   return {
     handleWindowResize,

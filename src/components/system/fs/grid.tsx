@@ -109,7 +109,17 @@ const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
         }
       }
     },
-    [setGridIndex, mv, setIsDragging, grid.lineSize, getWindow, path, isDesktop],
+    [
+      setGridIndex,
+      mv,
+      setIsDragging,
+      grid.lineSize,
+      getWindow,
+      path,
+      isDesktop,
+      addSelected,
+      removeSelected,
+    ],
   );
 
   const handleUpdateGridSize = useCallback(() => {

@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { it, expect, describe, beforeEach } from 'vitest';
 
-import { iconsPath } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import { getChildPathsDeep } from '@/stores/use-fs-store/fs-helpers';
 import useGridStore from '@/stores/use-grid-store';
@@ -180,36 +179,6 @@ describe('useFsStore', () => {
       expect(fs.isDir('/1')).toBe(true);
       expect(fs.isDir('/1/2')).toBe(true);
       expect(fs.isDir('/1/2/3')).toBe(true);
-    });
-  });
-
-  it('it should set the folder icon correctly', () => {
-    act(() => {
-      fs.initDir();
-      expect(fs.getNode('/').icon).toBe(`${iconsPath}/folder.png`);
-
-      fs.mkdir('/test');
-      expect(fs.getNode('/test').icon).toBe(`${iconsPath}/folder.png`);
-
-      fs.mkdir('/test/1/2/3');
-      expect(fs.getNode('/test/1').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/test/1/2').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/test/1/2/3').icon).toBe(`${iconsPath}/folder.png`);
-
-      fs.touch('/test.app');
-      expect(fs.getNode('/test.app').icon).toBe(`${iconsPath}/file.png`);
-
-      fs.touch('/test/1/2/3.app');
-      expect(fs.getNode('/test').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/test/1').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/test/1/2').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/test/1/2/3.app').icon).toBe(`${iconsPath}/file.png`);
-
-      fs.initDir();
-      fs.touch('/1.app/2/3');
-      expect(fs.getNode('/1.app').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/1.app/2').icon).toBe(`${iconsPath}/folder.png`);
-      expect(fs.getNode('/1.app/2/3').icon).toBe(`${iconsPath}/file.png`);
     });
   });
 
@@ -491,7 +460,7 @@ describe('useFsStore - move and delete side effects', () => {
     act(() => {
       fs.initDir(['myFile.txt']);
       expect([...fs.getPaths()]).toEqual(['/', '/myFile.txt']);
-      pr.open('/myFile.txt');
+      pr.openProcess('/myFile.txt');
       expect(pr.getOpenedPaths()).toEqual(['/myFile.txt']);
       expect([...grid.getItems('/').keys()]).toEqual(['/myFile.txt']);
 
@@ -500,18 +469,15 @@ describe('useFsStore - move and delete side effects', () => {
       expect(pr.getOpenedPaths()).toEqual(['/myFile2.txt']);
       expect([...grid.getItems('/').keys()]).toEqual(['/myFile2.txt']);
       expect(() => fs.getNode('/myFile.txt')).toThrowError();
-      expect(pr.getCachedPaths()).toEqual([]);
 
-      pr.close('/myFile2.txt');
+      pr.closeProcess('/myFile2.txt');
       expect(pr.getOpenedPaths()).toEqual([]);
-      expect(pr.getCachedPaths()).toEqual(['/myFile2.txt']);
 
       fs.mv('/myFile2.txt', '/myFile.txt');
       expect([...fs.getPaths()]).toEqual(['/', '/myFile.txt']);
       expect([...grid.getItems('/').keys()]).toEqual(['/myFile.txt']);
       expect(() => fs.getNode('/myFile2.txt')).toThrowError();
-      expect(pr.getCachedPaths()).toEqual(['/myFile.txt']);
-      pr.open('/myFile.txt');
+      pr.openProcess('/myFile.txt');
       expect(pr.getOpenedPaths()).toEqual(['/myFile.txt']);
     });
   });

@@ -1,7 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { iconsPath } from '@/static';
-import { parseFileExt, parseFileName, parseFileIcon, splitPath, parseParentPath } from '@/utils/fs';
+import { parseFileExt, parseFileName, splitPath, parseParentPath } from '@/utils/fs';
 
 const root = '/';
 const path = '/path/to/file.app';
@@ -57,17 +56,13 @@ describe('Fs Utils', () => {
   it('should return the file info', () => {
     let name = parseFileName(path);
     let ext = parseFileExt(path);
-    let icon = parseFileIcon(path);
     expect(name).toBe('file');
     expect(ext).toBe('app');
-    expect(icon).toBe(`${iconsPath}/file.png`);
 
     name = parseFileName('/');
     ext = parseFileExt('/');
-    icon = parseFileIcon('/');
     expect(name).toBe('');
     expect(ext).toBe('');
-    expect(icon).toBe('');
   });
 
   it('should correctly split a path into path components', () => {

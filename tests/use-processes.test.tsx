@@ -3,8 +3,9 @@ import { it, expect, describe, beforeEach } from 'vitest';
 
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
-import { MIN_WINDOW_SIZE } from '@/themes';
 import { SizePos, Position, Size } from '@/types';
+
+const MIN_WINDOW_SIZE = { width: 400, height: 400 };
 
 beforeEach(() => {
   const { result } = renderHook(() => useProcessesStore());
@@ -28,21 +29,21 @@ describe('useProcessesStore', () => {
       expect(store).toBeDefined();
     });
   });
-  it('should open and close a process', () => {
+  it('should openProcess and closeProcess a process', () => {
     act(() => {
-      store.open('/test.app');
+      store.openProcess('/test.app');
       let openedPaths = store.getOpenedPaths();
       expect(openedPaths).toEqual(['/test.app']);
 
-      store.close('/test.app');
+      store.closeProcess('/test.app');
       openedPaths = store.getOpenedPaths();
       expect(openedPaths).toEqual([]);
 
-      store.open(['/test.app', '/file', '/folder']);
+      store.openProcess(['/test.app', '/file', '/folder']);
       openedPaths = store.getOpenedPaths();
       expect(openedPaths).toEqual(['/test.app', '/file', '/folder']);
 
-      store.close(['/test.app', '/file']);
+      store.closeProcess(['/test.app', '/file']);
       openedPaths = store.getOpenedPaths();
       expect(openedPaths).toEqual(['/folder']);
     });
@@ -50,7 +51,7 @@ describe('useProcessesStore', () => {
 
   it('Should be able to set various window attributes', () => {
     act(() => {
-      store.open('/test.app');
+      store.openProcess('/test.app');
       const newSizePos: SizePos = {
         size: { width: 100, height: 100 },
         position: { x: 100, y: 100 },
@@ -91,28 +92,9 @@ describe('useProcessesStore', () => {
     });
   });
 
-  it('should cache processes when closed', () => {
-    act(() => {
-      let cachedPaths = store.getCachedPaths();
-      expect(cachedPaths).toEqual([]);
-
-      store.open(['/test.app', '/file', '/folder']);
-      cachedPaths = store.getCachedPaths();
-      expect(cachedPaths).toEqual([]);
-
-      store.close(['/test.app', '/file']);
-      cachedPaths = store.getCachedPaths();
-      expect(cachedPaths).toEqual(['/test.app', '/file']);
-
-      store.close('/folder');
-      cachedPaths = store.getCachedPaths();
-      expect(cachedPaths).toEqual(['/test.app', '/file', '/folder']);
-    });
-  });
-
   it('should preserve state when opening and closing a process', () => {
     act(() => {
-      store.open(['/test.app', '/file', '/folder']);
+      store.openProcess(['/test.app', '/file', '/folder']);
       const sizePos1 = { size: { width: 100, height: 100 }, position: { x: 100, y: 100 } };
       const sizePos2 = { size: { width: 200, height: 200 }, position: { x: 200, y: 200 } };
       const sizePos3 = { size: { width: 300, height: 300 }, position: { x: 300, y: 300 } };
@@ -124,7 +106,7 @@ describe('useProcessesStore', () => {
       expect(store.getWindow('/folder')).toEqual(sizePos3);
 
       store.closeAll();
-      store.open(['/test.app', '/file', '/folder']);
+      store.openProcess(['/test.app', '/file', '/folder']);
       expect(store.getWindow('/test.app')).toEqual(sizePos1);
       expect(store.getWindow('/file')).toEqual(sizePos2);
       expect(store.getWindow('/folder')).toEqual(sizePos3);
@@ -236,27 +218,27 @@ describe('useProcessesStore', () => {
       fs.initDir(['/1', '/2', '/3']);
 
       // Open and focus processes
-      store.open('/1');
+      store.openProcess('/1');
       expect(store.getIsFocused('/1')).toBe(true);
 
-      store.open('/2');
+      store.openProcess('/2');
       expect(store.getIsFocused('/2')).toBe(true);
       expect(store.getIsFocused('/1')).toBe(false);
 
-      store.open('/3');
+      store.openProcess('/3');
       expect(store.getIsFocused('/3')).toBe(true);
       expect(store.getIsFocused('/2')).toBe(false);
       expect(store.getIsFocused('/1')).toBe(false);
 
-      store.close('/3');
+      store.closeProcess('/3');
       expect(store.getIsFocused('/2')).toBe(true);
       expect(store.getIsFocused('/1')).toBe(false);
 
-      store.close('/2');
+      store.closeProcess('/2');
       expect(store.getIsFocused('/1')).toBe(true);
       expect(store.getIsFocused('/2')).toBe(false);
 
-      store.close('/1');
+      store.closeProcess('/1');
       expect(store.getIsFocused('/1')).toBe(false);
     });
   });

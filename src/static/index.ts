@@ -1,63 +1,118 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { lazy } from 'react';
 
-import { AppDirectory, Paths, AppOptions } from '@/types';
+import { Paths, AppOptions, InitialProcessConfig } from '@/types';
+import { parseFullFileName } from '@/utils/fs';
 
 // File System
 export const startingDir: Paths = [
   '/',
   '/Desktop/Excalidraw.app',
-  // '/Desktop/file2',
-  // '/Desktop/Terminal.app',
-  '/Desktop/MyFolder/hello',
+  '/Desktop/MyFolder/',
   '/Desktop/Readme.app',
   // '/Desktop/Solitaire.app',
 ];
 
 // Processes
-export const appDirectory: AppDirectory = new Map([
+const FileOrFolder: AppOptions = new Map([
+  // default placeholder for now
   [
-    '',
+    'file',
     {
-      icon: 'file',
+      iconName: 'file',
+      fileName: 'file',
+      fileExt: '',
+      hasWindow: true,
+      disableDelete: false,
       component: lazy(() => import('@/components/apps/hello-world')),
+
+      // Initial window state
+      size: { width: 400, height: 400 },
     },
   ],
   [
-    'app',
+    'folder',
     {
-      icon: 'file',
-      component: lazy(() => import('@/components/apps/readme')),
+      iconName: 'folder',
+      fileName: 'folder',
+      fileExt: '',
+      hasWindow: true,
+      disableDelete: false,
+      component: lazy(() => import('@/components/system/file-explorer')),
+
+      // Initial window state
+      size: { width: 400, height: 400 },
     },
   ],
 ]);
 
 // Options
-export const appOptions: AppOptions = new Map([
+const appOptions: AppOptions = new Map([
   [
     'Solitaire.app',
     {
-      icon: 'solitaire',
       iconName: 'solitaire',
-      minSize: { width: 800, height: 600 },
+      fileName: 'Solitaire.app',
+      fileExt: '.app',
+      hasWindow: true,
       disableDelete: true,
       component: lazy(() => import('@/components/apps/solitaire')),
+
+      // Initial window state
+      size: { width: 800, height: 600 },
     },
   ],
   [
     'Excalidraw.app',
     {
-      icon: 'excalidraw',
       iconName: 'excalidraw',
-      minSize: { width: 800, height: 600 },
+      fileName: 'Excalidraw.app',
+      fileExt: '.app',
+      hasWindow: true,
       disableDelete: true,
       component: lazy(() => import('@/components/apps/excalidraw')),
+
+      // Initial window state
+      size: { width: 800, height: 600 },
+    },
+  ],
+  [
+    'Readme.app',
+    {
+      iconName: 'file',
+      iconColor: '#FED8C6',
+      fileName: 'Readme.app',
+      fileExt: '.app',
+      hasWindow: true,
+      disableDelete: true,
+      component: lazy(() => import('@/components/apps/readme')),
+
+      // Initial window state
+      size: { width: 400, height: 500 },
     },
   ],
 ]);
 
-export const FileExplorer = lazy(() => import('@/components/system/file-explorer'));
-export const DefaultApp = lazy(() => import('@/components/apps/hello-world'));
+export function getProcessOptions(path: string, isDir: boolean): InitialProcessConfig {
+  // if the path isn't a key in one of the app options, we'll return either a file or folder,
+  // depending on how the path is formatted
+  const key = parseFullFileName(path);
 
-// Other
-export const iconsPath = '/icons/system';
-export const folderIconPath = '/icons/system/folder.png';
+  if (!appOptions.has(key)) {
+    // grab file explorer if isDir is set
+    if (isDir) {
+      return FileOrFolder.get('folder')!;
+    }
+    // Otherwise, we'll default to a file
+    return FileOrFolder.get('file')!;
+  }
+
+  // Otherwise, return the app options
+  const options = appOptions.get(key)!;
+
+  // If no color set, default to white
+  if (!options.iconColor) {
+    options.iconColor = 'white';
+  }
+  return options;
+}

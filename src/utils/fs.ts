@@ -1,6 +1,5 @@
-import { iconsPath, appDirectory, appOptions, DefaultApp } from '@/static';
 import { ICON_SIZE } from '@/themes';
-import { Position, SizePos, LazyAppComponent } from '@/types';
+import { Position, SizePos } from '@/types';
 
 export const selectionIntersectsElement = (selection: SizePos, element: Position): boolean => {
   if (
@@ -40,7 +39,8 @@ export function parseParentPath(filePath: string): string {
     path = path.slice(0, -1);
   }
 
-  return path.split('/').slice(0, -1).join('/') || '/';
+  const parent = path.split('/').slice(0, -1).join('/') || '/';
+  return parent;
 }
 
 export function normalizePath(filePath: string): string {
@@ -61,28 +61,5 @@ export function parseFullFileName(filePath: string): string {
   const fileExt = parseFileExt(filePath);
   return fileExt ? `${fileName}.${fileExt}` : fileName;
 }
-
-export function parseFileIcon(filePath: string): string {
-  if (filePath === '/') {
-    return '';
-  }
-
-  // If icon exists in app options, use that instead
-  const customIcon = appOptions.get(parseFullFileName(filePath))?.icon;
-  if (customIcon) {
-    return `${iconsPath}/${customIcon}.png`;
-  }
-
-  const fileExt = parseFileExt(filePath);
-  const iconName = appDirectory.get(fileExt)?.icon ?? 'default';
-  const icon = `${iconsPath}/${iconName}.png`;
-  return icon;
-}
-
-export const parseFileComponent = (filePath: string): LazyAppComponent => {
-  const fileExt = parseFileExt(filePath);
-  const fileName = parseFullFileName(filePath);
-  return appOptions.get(fileName)?.component ?? appDirectory.get(fileExt)?.component ?? DefaultApp;
-};
 
 export const splitPath = (path: string): string[] => ['/', ...path.split('/').filter(Boolean)];

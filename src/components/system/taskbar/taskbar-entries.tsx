@@ -1,15 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
-import DynamicIcon from '@/components/system/icons';
+import DynamicIcons from '@/components/system/dynamic-icons';
 import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import UseWindowState from '@/hooks/system/use-window';
-import { appOptions } from '@/static';
-import useFsStore from '@/stores/use-fs-store';
 import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
-import { parseFileName, parseFullFileName } from '@/utils/fs';
+import { parseFileName } from '@/utils/fs';
 
 interface taskbarEntryProperties {
   path: string;
@@ -23,14 +21,12 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
   const tabReference = useRef<HTMLButtonElement>(null);
   const setFocused = useProcessesStore((state) => state.setFocused);
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
-  const isDir = useFsStore((state) => state.isDir(path));
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
   const setIsVisible = useMenuStore((state) => state.setIsVisible);
   const { handleContextMenu } = UseHandleContextMenu();
 
   const title = parseFileName(path);
-  const iconName = appOptions.get(parseFullFileName(path))?.iconName ?? (isDir ? 'folder' : 'file');
 
   const { handleWindowMinimizeToggle } = UseWindowState(path);
 
@@ -120,7 +116,7 @@ const TaskbarEntry = ({ path }: taskbarEntryProperties): JSX.Element => {
         handleContextMenu(event, 'taskbar-entry', path);
       }}
     >
-      <DynamicIcon iconName={iconName} color="white" size={32} shadow={false} />
+      <DynamicIcons path={path} color="white" size={32} shadow={false} />
       {title}
     </button>
   );

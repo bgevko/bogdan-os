@@ -1,6 +1,6 @@
 import React, { useState, type ReactElement } from 'react';
 
-import DynamicIcon from '@/components/system/icons';
+import { DynamicIconsByName } from '@/components/system/dynamic-icons';
 import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import UseWindowState from '@/hooks/system/use-window';
 import useDragStore from '@/stores/use-drag-store';
@@ -17,7 +17,7 @@ interface WindowHandlesProperties {
 interface HeaderButtonsProps {
   isFocused: boolean;
   path: string;
-  close: (path: string) => void;
+  closeProcess: (path: string) => void;
   handleWindowMinimizeToggle: () => void;
   handleWindowFullSize: () => void;
 }
@@ -25,7 +25,7 @@ interface HeaderButtonsProps {
 const HeaderButtons = ({
   isFocused,
   path,
-  close,
+  closeProcess,
   handleWindowMinimizeToggle,
   handleWindowFullSize,
 }: HeaderButtonsProps): ReactElement => {
@@ -58,12 +58,12 @@ const HeaderButtons = ({
       <span className="flex gap-1">
         <button
           type="button"
-          data-testid="window-close"
+          data-testid="window-closeProcess"
           className={cn('flex items-center justify-center', headerButtonSize)}
           onMouseUpCapture={(event: React.MouseEvent) => {
             if (event.button !== 0) return;
             event.stopPropagation();
-            close(path);
+            closeProcess(path);
           }}
           onContextMenu={(event: React.MouseEvent) => {
             event.preventDefault();
@@ -78,7 +78,7 @@ const HeaderButtons = ({
               innerButtonSize,
             )}
           >
-            {showIcons && <DynamicIcon iconName="close" size={6} shadow={false} />}
+            {showIcons && <DynamicIconsByName iconName="close" size={6} shadow={false} />}
           </span>
         </button>
 
@@ -103,7 +103,7 @@ const HeaderButtons = ({
               innerButtonSize,
             )}
           >
-            {showIcons && <DynamicIcon iconName="min" size={8} shadow={false} />}
+            {showIcons && <DynamicIconsByName iconName="min" size={8} shadow={false} />}
           </span>
         </button>
 
@@ -128,7 +128,12 @@ const HeaderButtons = ({
             )}
           >
             {showIcons && (
-              <DynamicIcon iconName={maximizeButtonName} color="black" size={8} shadow={false} />
+              <DynamicIconsByName
+                iconName={maximizeButtonName}
+                color="black"
+                size={8}
+                shadow={false}
+              />
             )}
           </span>
         </button>
@@ -140,7 +145,7 @@ const HeaderButtons = ({
 const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
   const { handleWindowFullSize, handleMouseDownMove, handleWindowMinimizeToggle } =
     UseWindowState(path);
-  const close = useProcessesStore((state) => state.close);
+  const closeProcess = useProcessesStore((state) => state.closeProcess);
   const title = parseFileName(path);
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
   const setIsVisible = useMenuStore((state) => state.setIsVisible);
@@ -190,7 +195,7 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
         <HeaderButtons
           isFocused={isFocused}
           path={path}
-          close={close}
+          closeProcess={closeProcess}
           handleWindowMinimizeToggle={handleWindowMinimizeToggle}
           handleWindowFullSize={handleWindowFullSize}
         />

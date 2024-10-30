@@ -3,7 +3,7 @@ import useProcessesStore from '@/stores/use-processes-store';
 import { ContextMenuItem, ContextCallback } from '@/types';
 
 const useWindowHeaderContext = (): ContextCallback => {
-  const close = useProcessesStore((state) => state.close);
+  const closeProcess = useProcessesStore((state) => state.closeProcess);
   const targetPath = useMenuStore((state) => state.targetPath);
 
   type WindowHeaderMenuNames = 'Close';
@@ -13,7 +13,7 @@ const useWindowHeaderContext = (): ContextCallback => {
     [
       'Close',
       () => {
-        close(targetPath);
+        closeProcess(targetPath);
       },
     ],
   ]);

@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { ReactElement, useMemo, useEffect, useState, useCallback } from 'react';
 
-import DynamicIcon from '@/components/system/icons';
+import DynamicIcons from '@/components/system/dynamic-icons';
 import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
-import { appOptions } from '@/static';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
@@ -24,7 +23,7 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
   const mv = useFsStore((state) => state.mv);
 
   // PROCESSES
-  const open = useProcessesStore((state) => state.open);
+  const openProcess = useProcessesStore((state) => state.openProcess);
   const getWindow = useProcessesStore((state) => state.getWindow);
   const setFocused = useProcessesStore((state) => state.setFocused);
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
@@ -65,8 +64,6 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
 
   // LOCAL
   const fileName = parseFileName(path);
-  const iconName =
-    appOptions.get(parseFullFileName(path))?.iconName ?? (isDir(path) ? 'folder' : 'file');
   const componentContext: FileSystemContext = parentPath === '/Desktop' ? 'desktop' : 'folder';
 
   const gridPos = useMemo(() => {
@@ -400,7 +397,7 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
             appendMouseContext('file-icon');
           }}
           onDoubleClickCapture={() => {
-            open(path);
+            openProcess(path);
           }}
           onContextMenu={(event: React.MouseEvent) => {
             event.preventDefault();
@@ -408,7 +405,7 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
             handleContextMenu(event, 'file-icon', path);
           }}
         >
-          <DynamicIcon iconName={iconName} />
+          <DynamicIcons path={path} />
           <span className="text-base font-bold">{fileName}</span>
         </button>
       </li>

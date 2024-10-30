@@ -1,21 +1,17 @@
 /* eslint-disable no-use-before-define */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-param-reassign */
-import { iconsPath, startingDir } from '@/static';
+import { startingDir } from '@/static';
 import useGridStore from '@/stores/use-grid-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { GRID_CELL_SIZE } from '@/themes';
 import { Paths, FileNode, FileNodeOptions, DirectoryMap, FileRemoveOptions } from '@/types';
-import { parseParentPath, normalizePath, parseFileIcon } from '@/utils/fs';
+import { parseParentPath, normalizePath } from '@/utils/fs';
 
 export function newFileNode(options: FileNodeOptions = {}): FileNode {
   const isDir = options.isDir ?? true;
-  const folderIcon = isDir ? `${iconsPath}/folder.png` : '';
-  const fileIcon = options.path ? parseFileIcon(options.path) : '';
-  const icon = isDir ? folderIcon : fileIcon;
   return {
     path: options.path ?? '',
-    icon,
     isDir,
     children: new Map<string, FileNode>(),
   };
