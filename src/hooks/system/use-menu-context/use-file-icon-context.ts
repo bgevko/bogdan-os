@@ -1,4 +1,4 @@
-import { appOptions } from '@/constants';
+import { appOptions } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import useMenuStore from '@/stores/use-menu-store';
 import useProcessesStore from '@/stores/use-processes-store';

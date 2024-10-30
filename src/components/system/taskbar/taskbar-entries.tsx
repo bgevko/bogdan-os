@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
 import DynamicIcon from '@/components/system/icons';
-import { appOptions } from '@/constants';
 import UseWindowState from '@/hooks/system/use-window';
+import { appOptions } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';

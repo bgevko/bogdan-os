@@ -5,7 +5,7 @@ import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import { appOptions } from '@/constants';
+import { appOptions } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import { MIN_WINDOW_SIZE, DEFAULT_WINDOW_SIZE, DEFAULT_WINDOW_POSITION } from '@/themes';
 import { type Position, Size, SizePos, ProcessNode, WindowState, ProcessOptions } from '@/types';

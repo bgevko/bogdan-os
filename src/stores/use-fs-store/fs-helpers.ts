@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-param-reassign */
-import { iconsPath, startingDir } from '@/constants';
+import { iconsPath, startingDir } from '@/static';
 import useGridStore from '@/stores/use-grid-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { GRID_CELL_SIZE } from '@/themes';
@@ -179,6 +179,10 @@ export function mvHelper(
 
   if (dir.has(targetPath)) {
     throw new Error(`Target path already exists: ${targetPath}`);
+  }
+
+  if (targetPath.startsWith(`${sourcePath}/`)) {
+    throw new Error('Cannot move a directory into itself or its subdirectories');
   }
 
   // Replace the source path with the target path in all children

@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { type ReactElement, useState, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
@@ -17,18 +18,14 @@ import { positionToIndex } from '@/utils/grid';
 const GRID_SIZE = 100;
 
 interface GridProps {
-  options?: {
-    isDesktop?: boolean;
-  };
-  path: string;
+  path?: string; // Optional, defaults to '/Desktop'
   children: ReactNode;
 }
 
-const Grid = ({ children, path, options }: GridProps): ReactElement => {
+const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
   const setGridIndex = useGridStore((state) => state.setIndex);
   const grid = useGridStore((state) => state.getGrid(path));
   const updateGridSize = useGridStore((state) => state.updateSize);
-  const getWindow = useProcessesStore((state) => state.getWindow);
   const setMouseDownContext = useSelectStore((state) => state.setMouseDownContext);
   const setSelected = useSelectStore((state) => state.setSelected);
   const mv = useFsStore((state) => state.mv);
@@ -37,10 +34,14 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
   const setDragoverPath = useDragStore((state) => state.setDragoverPath);
   const setIsDragging = useDragStore((state) => state.setIsDragging);
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
+  const setFocused = useProcessesStore((state) => state.setFocused);
   const setMenuContext = useMenuStore((state) => state.setMenuContext);
   const setMenuTargetPath = useMenuStore((state) => state.setTargetPath);
+  const getWindow = useProcessesStore((state) => state.getWindow);
 
   const [shiftIsPressed, setShiftIsPressed] = useState(false);
+
+  const isDesktop = path === '/Desktop';
 
   const handleShiftPress = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Shift') {
@@ -54,67 +55,57 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     }
   }, []);
 
-  const getDropIndex = useCallback(
-    (event: React.DragEvent): number => {
-      const target = event.target as HTMLElement;
-      const dataId = target.dataset.id ?? 'none';
-
-      // Get drop index using desktop viewport as the point of reference
-      if (dataId === 'desktop') {
-        return positionToIndex(event.clientX, event.clientY, grid.lineSize);
-      }
-
-      // Otherwise, use the folder as the main point of reference
-      if (dataId === 'folder') {
-        const folder = getWindow(path);
-        const dropX = event.clientX - folder.position.x;
-        const dropY = event.clientY - folder.position.y - WINDOW_HEADER_HEIGHT;
-        return positionToIndex(dropX, dropY, grid.lineSize);
-      }
-
-      // Otherwise, return -1
-      return -1;
-    },
-    [grid.lineSize, getWindow, path],
-  );
-
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
       setIsDragging(false);
 
-      const dropIndex = getDropIndex(event);
-      if (dropIndex < 0) return;
+      let dropIndex = 0;
+
+      if (isDesktop) {
+        // For desktop, use clientX and clientY directly
+        dropIndex = positionToIndex(event.clientX, event.clientY, grid.lineSize);
+      } else {
+        // For file explorer, adjust for window position and header
+        const folder = getWindow(path);
+        const dropX = event.clientX - folder.position.x;
+        const dropY = event.clientY - folder.position.y - WINDOW_HEADER_HEIGHT;
+        dropIndex = positionToIndex(dropX, dropY, grid.lineSize);
+      }
 
       const elementPaths: TransferData[] = JSON.parse(
         event.dataTransfer.getData('text/plain'),
       ) as TransferData[];
       const headElement = elementPaths.find((element) => element.isHead) ?? elementPaths[0];
       const indexDifference = dropIndex - headElement.startingGridIndex;
-      for (const element of elementPaths) {
-        const sourcePath = element.path;
-        const sourceName = parseFullFileName(sourcePath);
-        const desinationName = parseFullFileName(path);
-        if (sourceName === desinationName) {
-          // eslint-disable-next-line no-continue
-          continue;
-        }
-        const finalIndex = element.startingGridIndex + indexDifference;
-        const destinationPath = `${path}/${parseFullFileName(sourcePath)}`;
-        if (sourcePath !== destinationPath) {
-          mv(sourcePath, destinationPath, { gridIndex: finalIndex });
-          return;
-        }
 
-        setGridIndex(element.path, finalIndex);
+      for (const element of elementPaths) {
+        const finalIndex = element.startingGridIndex + indexDifference;
+        const destinationPath = `${path}/${parseFullFileName(element.path)}`;
+
+        if (element.path === destinationPath) {
+          setGridIndex(element.path, finalIndex);
+        } else {
+          try {
+            mv(element.path, destinationPath, { gridIndex: finalIndex });
+          } catch {
+            // Handle errors silently
+          }
+        }
       }
     },
-    [setGridIndex, path, mv, setIsDragging, getDropIndex],
+    [setGridIndex, mv, setIsDragging, grid.lineSize, getWindow, path, isDesktop],
   );
 
   const handleUpdateGridSize = useCallback(() => {
-    updateGridSize(path, window.innerWidth, window.innerHeight - TASKBAR_HEIGHT);
-  }, [updateGridSize, path]);
+    if (isDesktop) {
+      updateGridSize(path, window.innerWidth, window.innerHeight - TASKBAR_HEIGHT);
+    } else {
+      // For file explorer, adjust height accordingly if needed
+      // Assuming the grid size is based on window dimensions
+      updateGridSize(path, window.innerWidth, window.innerHeight - TASKBAR_HEIGHT);
+    }
+  }, [updateGridSize, path, isDesktop]);
 
   useEffect(() => {
     window.addEventListener('resize', handleUpdateGridSize);
@@ -127,19 +118,11 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
     };
   }, [handleUpdateGridSize, handleShiftPress, handleShiftRelease]);
 
-  const deskopConfig = {
-    id: 'desktop',
+  const config = {
+    id: isDesktop ? 'desktop' : 'folder',
     className: 'grid grid-flow-col p-4',
     height: `calc(100vh - ${TASKBAR_HEIGHT.toString()}px)`,
   };
-
-  const folderConfig = {
-    id: 'folder',
-    className: 'grid grid-flow-col p-0',
-    height: '100%',
-  };
-
-  const config = options?.isDesktop ? deskopConfig : folderConfig;
 
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
@@ -154,7 +137,6 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
       }}
       onDragOver={(event: React.DragEvent) => {
         event.preventDefault();
-        // eslint-disable-next-line no-param-reassign
         event.dataTransfer.dropEffect = 'move';
       }}
       onDragEnter={(event: React.DragEvent) => {
@@ -166,6 +148,11 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
         }
         setDragContext(dataId as MouseContext);
         setDragoverPath(path);
+        if (isDesktop) {
+          setBlurFocus(true);
+        } else {
+          setFocused(path);
+        }
       }}
       onDrop={handleDrop}
       onMouseDown={(event: React.MouseEvent) => {
@@ -175,14 +162,18 @@ const Grid = ({ children, path, options }: GridProps): ReactElement => {
           setSelected([]);
         }
         setMouseDownContext(dataId);
-        if (dataId === 'desktop' || dataId === 'none') {
+        if (isDesktop && (dataId === 'desktop' || dataId === 'none')) {
           setBlurFocus(true);
         }
       }}
       onContextMenu={(event: React.MouseEvent) => {
         event.preventDefault();
-        const target = event.target as HTMLElement;
-        const dataId = target.dataset.id;
+        let target = event.target as HTMLElement;
+        let dataId;
+        while (!dataId) {
+          dataId = target.dataset.id;
+          target = target.parentElement!;
+        }
         if (dataId === 'file-icon') {
           return;
         }

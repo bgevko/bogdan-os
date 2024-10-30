@@ -2,52 +2,43 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
+import { WINDOW_HEADER_HEIGHT } from '@/themes';
 
-const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
+interface SelectRectProps {
+  path?: string; // Optional, defaults to '/Desktop'
+}
+
+const SelectRect = ({ path = '/Desktop' }: SelectRectProps): React.ReactElement => {
   const selecting = useSelectStore((state) => state.isUsingSelectRect);
   const setIsUsingSelectRect = useSelectStore((state) => state.setIsUsingSelectRect);
   const selectRect = useSelectStore((state) => state.selectRect);
   const setSelectRect = useSelectStore((state) => state.setSelectRect);
-  const mouseDownContext = useSelectStore((state) => state.mouseDownContext);
-
   const getWindow = useProcessesStore((state) => state.getWindow);
 
   const [isVisible, setIsVisible] = useState(false);
   const [start, setStart] = useState({ x: 0, y: 0 });
 
-  const localContext = rootPath === '/Desktop' ? 'desktop' : 'folder';
-
-  const getMousePos = useCallback(
-    (event: MouseEvent): { x: number; y: number } => {
-      // Get desktop position
-      if (localContext === 'desktop') {
-        return { x: event.clientX, y: event.clientY };
-      }
-
-      // Get folder position
-      const folder = getWindow(rootPath);
-      return {
-        x: event.clientX - folder.position.x,
-        y: event.clientY - folder.position.y,
-      };
-    },
-    [localContext, getWindow, rootPath],
-  );
+  const isDesktop = path === '/Desktop';
 
   const handleMouseDown = useCallback(
     (event: MouseEvent) => {
       if (event.button !== 0) return; // Not left click
-      if (localContext !== mouseDownContext) return; // Clashing context
 
-      // Get the position reference of the current window
-      const { x, y } = getMousePos(event);
+      let x = event.clientX;
+      let y = event.clientY;
+
+      if (!isDesktop) {
+        const folder = getWindow(path);
+        x = event.clientX - folder.position.x;
+        y = event.clientY - folder.position.y - WINDOW_HEADER_HEIGHT;
+      }
 
       // Set the select rect start position
       setStart({ x, y });
       setSelectRect({ size: { width: 0, height: 0 }, position: { x: 0, y: 0 } });
       setIsUsingSelectRect(true);
     },
-    [setIsUsingSelectRect, setSelectRect, getMousePos, setStart, localContext, mouseDownContext],
+    [setIsUsingSelectRect, setSelectRect, setStart, getWindow, path, isDesktop],
   );
 
   const drawSelectRect = useCallback(
@@ -56,7 +47,19 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
       if (!selecting) return;
 
       setIsVisible(true);
-      const { x: adjustedX, y: adjustedY } = getMousePos(event);
+
+      let adjustedX = event.clientX;
+      let adjustedY = event.clientY;
+
+      if (!isDesktop) {
+        const folder = getWindow(path);
+        const folderX = folder.position.x;
+        const folderY = folder.position.y + WINDOW_HEADER_HEIGHT;
+
+        adjustedX = event.clientX - folderX;
+        adjustedY = event.clientY - folderY;
+      }
+
       const x = Math.min(start.x, adjustedX);
       const y = Math.min(start.y, adjustedY);
 
@@ -71,7 +74,7 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
 
       setSelectRect({ size: rectSize, position: rectPos });
     },
-    [selecting, start, setSelectRect, getMousePos],
+    [selecting, start, setSelectRect, getWindow, path, isDesktop],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -89,8 +92,6 @@ const SelectRect = ({ rootPath }: { rootPath: string }): React.ReactElement => {
       document.removeEventListener('mousemove', drawSelectRect);
     };
   }, [handleMouseDown, drawSelectRect, handleMouseUp]);
-
-  if (mouseDownContext !== localContext) return <></>;
 
   return (
     <>

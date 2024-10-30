@@ -55,7 +55,7 @@ export const appOptions: AppOptions = new Map([
   ],
 ]);
 
-export const FileExplorer = lazy(() => import('@/components/apps/file-explorer'));
+export const FileExplorer = lazy(() => import('@/components/system/file-explorer'));
 export const DefaultApp = lazy(() => import('@/components/apps/hello-world'));
 
 // Other

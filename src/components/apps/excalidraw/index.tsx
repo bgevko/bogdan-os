@@ -5,9 +5,6 @@ import { useEffect, useRef } from 'react';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format'; // Assuming 'cn' is your classnames utility
 
-// Import CSS Module
-// eslint-disable-next-line no-relative-import-paths/no-relative-import-paths
-
 const ExcalidrawWrapper = ({ rootPath }: { rootPath: string }): React.ReactElement => {
   const resized = useProcessesStore((state) => state.getIsUpdatingSize(rootPath));
   const moved = useProcessesStore((state) => state.getIsUpdatingPosition(rootPath));

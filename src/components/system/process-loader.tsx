@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 
 import Window from '@/components/system/window';
-import { FileExplorer } from '@/constants';
+import { FileExplorer } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { parseFileComponent } from '@/utils/fs';

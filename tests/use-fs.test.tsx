@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { it, expect, describe, beforeEach } from 'vitest';
 
-import { iconsPath } from '@/constants';
+import { iconsPath } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import { getChildPathsDeep } from '@/stores/use-fs-store/fs-helpers';
 import useGridStore from '@/stores/use-grid-store';

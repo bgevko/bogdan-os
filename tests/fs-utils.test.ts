@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { iconsPath } from '@/constants';
+import { iconsPath } from '@/static';
 import { parseFileExt, parseFileName, parseFileIcon, splitPath, parseParentPath } from '@/utils/fs';
 
 const root = '/';

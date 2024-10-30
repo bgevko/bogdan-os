@@ -18,7 +18,7 @@ export default defineConfig(() => {
           svgoConfig: {
             floatPrecision: 2,
             plugins: [
-              { name: 'convertStyleToAttrs', active: true }, // Move inline styles to attributes
+              { name: 'convertStyleToAttrs' }, // Move inline styles to attributes
               {
                 name: 'removeAttributesBySelector',
                 params: {

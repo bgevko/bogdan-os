@@ -1,9 +1,9 @@
 import React from 'react';
 
-import DropGuide from '@/components/apps/file-explorer/drop-guide';
-import Grid from '@/components/apps/file-explorer/grid';
-import SelectRect from '@/components/apps/file-explorer/select-rect';
+import DropGuide from '@/components/system/fs/drop-guide';
 import FileSystemIcon from '@/components/system/fs/fs-icon';
+import Grid from '@/components/system/fs/grid';
+import SelectRect from '@/components/system/fs/select-rect';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';

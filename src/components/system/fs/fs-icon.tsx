@@ -2,7 +2,7 @@
 import React, { ReactElement, useMemo, useEffect, useState, useCallback } from 'react';
 
 import DynamicIcon from '@/components/system/icons';
-import { appOptions } from '@/constants';
+import { appOptions } from '@/static';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';

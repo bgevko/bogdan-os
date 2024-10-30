@@ -1,4 +1,4 @@
-import { iconsPath, appDirectory, appOptions, DefaultApp } from '@/constants';
+import { iconsPath, appDirectory, appOptions, DefaultApp } from '@/static';
 import { ICON_SIZE } from '@/themes';
 import { Position, SizePos, LazyAppComponent } from '@/types';
 
