@@ -1,32 +1,28 @@
-### Window
+### Text files
 
-- When in mobile mode, all screens should open to max viewport width and height
+- Editable text files (`.txt`)
+- Support for dropping in text files from local computer
 
-### File Explorer
+### Images
 
-- Right clicking on a file or folder should open a context menu with options:
-  - Rename
-  - Copy
-- Right clicking on the desktop / folder should open a context menu with options:
-  - Paste
-- Implement sound for file drop
+- Support for dropping in images from local computer
 
-### File System Icon
+### System
 
-- Implement a new state for renaming / new folder / new file, where the user should type a name and press enter
+- File renaming
 
-### System dialog
+  - Creating a new file should allow you to name it
+  - Right clicking on a file should allow you to rename it
 
-- Implement system dialog for various operations.
+- Copy and paste
 
-### Theme
+  - Through context menu, or through keyboard shortcuts
 
-- SelectRect color
-- Window color
-- OnDesktop select color
-- OnFolder select color
+- File drop should have a sound
 
-### File System
+- Official apps that are not meant to be editable should be system shortcuts
+  on the desktop. The file itself should be housed in a different directory
 
-- Implement cp (copy)
-- Implement option for custom icons
+### Theme system
+
+- Predefined themes, can be switched from the taskbar
