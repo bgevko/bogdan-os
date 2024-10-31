@@ -1,4 +1,4 @@
-import React, { useState, type ReactElement } from 'react';
+import React, { useState, useEffect, type ReactElement } from 'react';
 
 import { DynamicIconsByName } from '@/components/system/dynamic-icons';
 import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
@@ -13,6 +13,100 @@ import { parseFileName } from '@/utils/fs';
 interface WindowHandlesProperties {
   path: string;
 }
+
+interface WindowHeaderButtonProps {
+  iconName: string;
+  iconSize: number;
+  iconColor?: string;
+  onClick: (event: React.MouseEvent) => void;
+  onContextMenu?: (event: React.MouseEvent) => void;
+  dataTestId?: string;
+  buttonColor: string;
+  showIcons: boolean;
+}
+
+const WindowHeaderButton = ({
+  iconName,
+  iconSize,
+  iconColor,
+  onClick,
+  onContextMenu,
+  dataTestId,
+  buttonColor,
+  showIcons,
+}: WindowHeaderButtonProps): ReactElement => {
+  const [buttonDown, setButtonDown] = useState(false);
+  const [mouseDown, setMouseDown] = useState(false);
+
+  const headerButtonSize = 'w-4 h-4'; // 14px hitbox
+  const innerButtonSize = 'w-3 h-3'; // 12px visible button
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setMouseDown(false);
+    };
+
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [mouseDown]);
+
+  return (
+    <button
+      type="button"
+      data-testid={dataTestId}
+      className={cn('flex items-center justify-center', headerButtonSize)}
+      onMouseDown={(event: React.MouseEvent) => {
+        event.stopPropagation();
+        setButtonDown(true);
+        setMouseDown(true);
+      }}
+      onMouseUp={() => {
+        setButtonDown(false);
+      }}
+      onMouseLeave={() => {
+        setButtonDown(false);
+      }}
+      onMouseEnter={() => {
+        if (mouseDown) {
+          setButtonDown(true);
+        }
+      }}
+      onClick={(event: React.MouseEvent) => {
+        if (event.button !== 0) return;
+        event.stopPropagation();
+        onClick(event);
+      }}
+      onContextMenu={(event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (onContextMenu) {
+          onContextMenu(event);
+        }
+      }}
+    >
+      <span
+        className={cn(
+          'rounded-full flex items-center justify-center',
+          buttonColor,
+          innerButtonSize,
+          buttonDown ? 'filter brightness-[.8]' : '',
+        )}
+      >
+        {showIcons && (
+          <DynamicIconsByName
+            iconName={iconName}
+            size={iconSize}
+            color={iconColor}
+            shadow={false}
+          />
+        )}
+      </span>
+    </button>
+  );
+};
 
 interface HeaderButtonsProps {
   isFocused: boolean;
@@ -30,20 +124,25 @@ const HeaderButtons = ({
   handleWindowFullSize,
 }: HeaderButtonsProps): ReactElement => {
   const isMaximized = useProcessesStore((state) => state.getIsMaximized(path));
+  const isDisabledResize = useProcessesStore((state) => state.getIsDisabledResize(path));
   const { handleContextMenu } = UseHandleContextMenu();
 
   const maximizeButtonName = isMaximized ? 'unmax' : 'max';
 
   const [isHovered, setIsHovered] = useState(false);
 
+  // Button colors
   const closeButtonColor = isFocused || isHovered ? 'bg-red-400' : 'bg-gray-400';
   const minimizeButtonColor = isFocused || isHovered ? 'bg-yellow-500' : 'bg-gray-400';
   const maximizeButtonColor = isFocused || isHovered ? 'bg-green-500' : 'bg-gray-400';
 
   const showIcons = isHovered;
 
-  const headerButtonSize = 'w-4 h-4'; // 14px hitbox
-  const innerButtonSize = 'w-3 h-3'; // 12px visible button
+  const commonOnContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    handleContextMenu(event, 'window-header', path);
+  };
 
   return (
     <span
@@ -56,87 +155,44 @@ const HeaderButtons = ({
       }}
     >
       <span className="flex gap-1">
-        <button
-          type="button"
-          data-testid="window-closeProcess"
-          className={cn('flex items-center justify-center', headerButtonSize)}
-          onMouseUpCapture={(event: React.MouseEvent) => {
-            if (event.button !== 0) return;
-            event.stopPropagation();
+        <WindowHeaderButton
+          iconName="close"
+          iconSize={6}
+          onClick={() => {
             closeProcess(path);
           }}
-          onContextMenu={(event: React.MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-            handleContextMenu(event, 'window-header', path);
-          }}
-        >
-          <span
-            className={cn(
-              'rounded-full flex items-center justify-center',
-              closeButtonColor,
-              innerButtonSize,
-            )}
-          >
-            {showIcons && <DynamicIconsByName iconName="close" size={6} shadow={false} />}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          data-testid="window-minimize"
-          className={cn('flex items-center justify-center', headerButtonSize)}
-          onMouseUpCapture={(event: React.MouseEvent) => {
-            if (event.button !== 0) return;
-            event.stopPropagation();
-            handleWindowMinimizeToggle();
-          }}
-          onContextMenu={(event: React.MouseEvent) => {
+          onContextMenu={commonOnContextMenu}
+          dataTestId="window-closeProcess"
+          buttonColor={closeButtonColor}
+          showIcons={showIcons}
+        />
+        <WindowHeaderButton
+          iconName="min"
+          iconSize={8}
+          onClick={handleWindowMinimizeToggle}
+          onContextMenu={(event) => {
             event.preventDefault();
             event.stopPropagation();
           }}
-        >
-          <span
-            className={cn(
-              'rounded-full flex items-center justify-center',
-              minimizeButtonColor,
-              innerButtonSize,
-            )}
-          >
-            {showIcons && <DynamicIconsByName iconName="min" size={8} shadow={false} />}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          data-testid="window-maximize"
-          className={cn('flex items-center justify-center', headerButtonSize)}
-          onClick={(event) => {
-            event.stopPropagation();
-            handleWindowFullSize();
-          }}
-          onContextMenu={(event: React.MouseEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-        >
-          <span
-            className={cn(
-              'rounded-full flex items-center justify-center',
-              maximizeButtonColor,
-              innerButtonSize,
-            )}
-          >
-            {showIcons && (
-              <DynamicIconsByName
-                iconName={maximizeButtonName}
-                color="black"
-                size={8}
-                shadow={false}
-              />
-            )}
-          </span>
-        </button>
+          dataTestId="window-minimize"
+          buttonColor={minimizeButtonColor}
+          showIcons={showIcons}
+        />
+        {!isDisabledResize && (
+          <WindowHeaderButton
+            iconName={maximizeButtonName}
+            iconSize={8}
+            iconColor="black"
+            onClick={handleWindowFullSize}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            dataTestId="window-maximize"
+            buttonColor={maximizeButtonColor}
+            showIcons={showIcons}
+          />
+        )}
       </span>
     </span>
   );

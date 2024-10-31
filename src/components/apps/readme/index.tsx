@@ -18,7 +18,7 @@ const Solitaire = (): React.ReactElement => (
       <span className="wave">e</span>
     </h1>
     <p>
-      This is my <em>browser-in-the-web</em> project, a work in progress.
+      This is my <em>desktop-in-the-web</em> project, a work in progress.
     </p>
 
     <p className="font-bold"> You can:</p>

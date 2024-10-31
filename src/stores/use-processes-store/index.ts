@@ -7,6 +7,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import { getProcessOptions } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
+import { TASKBAR_HEIGHT } from '@/themes';
 import { type Position, Size, SizePos, ProcessState, WindowState } from '@/types';
 
 enableMapSet();
@@ -26,6 +27,7 @@ interface ProcessesActions {
   // focus context
   getFocused: () => string[];
   appendFocused: (path: string) => void;
+  replaceFocused: (oldPath: string, newPath: string) => void;
   popFocused: () => void;
   setFocused: (path: string) => void;
   getIsFocused: (path: string) => boolean;
@@ -42,6 +44,7 @@ interface ProcessesActions {
   getWindowMinSize: (path: string) => Size;
   setDefaultWindow: (path: string, sizePos: SizePos) => void;
   getDefaultWindow: (path: string) => SizePos;
+  getIsDisabledResize: (path: string) => boolean;
   setIsMaximized: (path: string, maximized: boolean) => void;
   getIsMaximized: (path: string) => boolean;
   setIsMinimized: (path: string, isMinimized: boolean) => void;
@@ -89,20 +92,31 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
         for (const path of paths) {
           const options = getProcessOptions(path, useFsStore.getState().isDir(path));
           const zeroSizePos = { size: { width: 0, height: 0 }, position: { x: 0, y: 0 } };
-          const { size, hasWindow } = options;
+          const { hasWindow } = options;
+          let { size } = options;
 
-          // center the position based on viewport size and window size
-          // with slight random (50-100 px) offset to make opening multiple windows a little bit more natural
-          const offset = Math.floor(Math.random() * 50);
-          const addOrSubtract = Math.random() < 0.5 ? -1 : 1;
-          const position = {
-            x: window.innerWidth / 2 - size.width / 2 + offset * addOrSubtract,
-            y: window.innerHeight / 2 - size.height / 2 + offset * addOrSubtract,
-          };
+          // Non-mobile mode (screen width > 400px)
+          let position: Position;
+          let disableResize = false;
+          const isMobile = window.innerWidth <= 400 || window.innerHeight <= 400;
 
+          if (isMobile) {
+            position = { x: 0, y: 0 };
+            size = { width: window.innerWidth, height: window.innerHeight - TASKBAR_HEIGHT };
+            disableResize = true;
+          } else {
+            // center the position based on viewport size and window size
+            // with slight random (50-100 px) offset to make opening multiple windows a little bit more natural
+            const offset = Math.floor(Math.random() * 50);
+            const addOrSubtract = Math.random() < 0.5 ? -1 : 1;
+            position = {
+              x: window.innerWidth / 2 - size.width / 2 + offset * addOrSubtract,
+              y: window.innerHeight / 2 - size.height / 2 + offset * addOrSubtract,
+            };
+            disableResize = false;
+          }
           // default sizepos is the same thing as initial size and position
           const defaultSizePos = { size, position };
-
           // Assume minSize is the same as size
           const minSize = size;
 
@@ -116,6 +130,7 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
               defaultSizePos,
               isMaximized: false,
               isMinimized: false,
+              disableResize,
               maximizedSizePos: { ...zeroSizePos },
               unMaximizedSizePos: { ...zeroSizePos },
               minimizedSizePos: { ...zeroSizePos },
@@ -167,6 +182,14 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
       set((state) => {
         if (!state.focused.includes(path)) {
           state.focused.push(path);
+        }
+      });
+    },
+    replaceFocused: (oldPath, newPath) => {
+      set((state) => {
+        const index = state.focused.indexOf(oldPath);
+        if (index !== -1) {
+          state.focused[index] = newPath;
         }
       });
     },
@@ -229,6 +252,9 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
     },
     setDefaultWindow: (path, sizePos) => {
       setWindowPropHelper('defaultSizePos', path, sizePos);
+    },
+    getIsDisabledResize: (path) => {
+      return getWindowPropHelper('disableResize', path);
     },
     getDefaultWindow: (path) => {
       return getWindowPropHelper('defaultSizePos', path);

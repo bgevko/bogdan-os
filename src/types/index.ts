@@ -78,6 +78,7 @@ export interface WindowState {
   defaultSizePos: SizePos;
   isMaximized: boolean;
   isMinimized: boolean;
+  disableResize: boolean;
   maximizedSizePos: SizePos;
   unMaximizedSizePos: SizePos;
   minimizedSizePos: SizePos;

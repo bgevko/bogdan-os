@@ -27,6 +27,7 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
   const getWindow = useProcessesStore((state) => state.getWindow);
   const setFocused = useProcessesStore((state) => state.setFocused);
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
+  const replaceFocused = useProcessesStore((state) => state.replaceFocused);
 
   // GRID
   const gridIndex = useGridStore((state) => state.getIndex(path));
@@ -197,14 +198,18 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
         // and the source is not the destination
         if (element.path !== path && isDir(path)) {
           try {
-            mv(element.path, `${path}/${parseFullFileName(element.path)}`);
+            const destinationPath = `${path}/${parseFullFileName(element.path)}`;
+            mv(element.path, destinationPath);
+
+            // Update the focus stack (if the window was open)
+            replaceFocused(element.path, destinationPath);
           } catch {
             // Do nothing
           }
         }
       }
     },
-    [mv, path, isDir, setIsDragging],
+    [mv, path, isDir, setIsDragging, replaceFocused],
   );
 
   // Stop dragging

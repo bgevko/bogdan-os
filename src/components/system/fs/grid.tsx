@@ -27,6 +27,7 @@ const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
   const setBlurFocus = useProcessesStore((state) => state.setBlurFocus);
   const getWindow = useProcessesStore((state) => state.getWindow);
   const setFocused = useProcessesStore((state) => state.setFocused);
+  const replaceFocused = useProcessesStore((state) => state.replaceFocused);
 
   // GRID
   const setGridIndex = useGridStore((state) => state.setIndex);
@@ -101,8 +102,14 @@ const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
         } else {
           try {
             mv(element.path, destinationPath, { gridIndex: finalIndex });
+
+            // This part will keep the dropped files selected
             removeSelected(element.path);
             addSelected(destinationPath);
+
+            // Update the focused stack. This fixes a bug where when you drag an opened process
+            // into another folder, you can no longer click on the process to bring it back to focus
+            replaceFocused(element.path, destinationPath);
           } catch {
             // Handle errors silently
           }
@@ -119,6 +126,7 @@ const Grid = ({ children, path = '/Desktop' }: GridProps): ReactElement => {
       isDesktop,
       addSelected,
       removeSelected,
+      replaceFocused,
     ],
   );
 

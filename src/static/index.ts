@@ -80,7 +80,7 @@ const appOptions: AppOptions = new Map([
     'Readme.app',
     {
       iconName: 'file',
-      iconColor: '#FED8C6',
+      iconColor: '#FFEFE0',
       fileName: 'Readme.app',
       fileExt: '.app',
       hasWindow: true,
