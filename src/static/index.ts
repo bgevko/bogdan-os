@@ -10,7 +10,7 @@ export const startingDir: Paths = [
   '/Desktop/Excalidraw.app',
   '/Desktop/MyFolder/',
   '/Desktop/Readme.app',
-  // '/Desktop/Solitaire.app',
+  '/Desktop/Solitaire.app',
 ];
 
 // Processes

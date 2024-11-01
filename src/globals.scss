@@ -39,6 +39,11 @@ body {
   overflow: visible;
 }
 
+.border-shadow {
+  filter: drop-shadow(0 0 1px rgba(0 0 0));
+  overflow: visible;
+}
+
 .wave {
   color: 'black';
   overflow: visible;

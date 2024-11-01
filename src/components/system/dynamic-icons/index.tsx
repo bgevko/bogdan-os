@@ -28,7 +28,6 @@ const DynamicIcons: React.FC<DynamicIconProps> = ({
 
   useEffect(() => {
     let isMounted = true;
-
     (
       import(`@/components/system/dynamic-icons/assets/${iconName}.svg?react`) as Promise<{
         default: React.ComponentType<React.SVGProps<SVGSVGElement>>;
