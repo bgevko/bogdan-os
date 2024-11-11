@@ -5,9 +5,15 @@ You can see the demo at https://os.bgevko.com
 
 ## Running the Project
 
-You run the project by running the following commands:
-
 ```bash
-npm install
-npm run dev
+yarn install
+yarn run dev
 ```
+
+## Features
+
+- File System with drag/drop support
+- Context menus
+- Dynamic Shader Background
+- Excalidraw Integration
+- Solitaire Game

@@ -117,9 +117,14 @@ const Solitaire = (): React.ReactElement => {
                 <strong>Esc:</strong> Restart game
               </li>
             </ul>
-            <p className="mt-4 px-4 text-sm text-gray-600">
-              The game is playable, but not yet fully featured. You may experience an oaccasional
-              bug.
+            <p
+              style={{
+                textWrap: 'balance',
+              }}
+              className="mt-4 px-4 text-center text-sm text-gray-600"
+            >
+              The game is playable, but I&apos;m adding polish and additional features. You may
+              experience an occassional bug.
             </p>
 
             <button

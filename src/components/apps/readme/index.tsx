@@ -18,7 +18,16 @@ const Solitaire = (): React.ReactElement => (
       <span className="wave">e</span>
     </h1>
     <p>
-      This is my <em>desktop-in-the-web</em> project, a work in progress.
+      This is my <em>desktop-in-the-web</em> project, it&apos;s{' '}
+      <a
+        className="link-hover text-blue-700"
+        href="https://github.com/bgevko/bogdan-os"
+        target="_blank"
+        rel="noreferrer"
+      >
+        open-source
+      </a>
+      !
     </p>
 
     <p className="font-bold"> You can:</p>
