@@ -6,7 +6,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import * as game from '@/components/apps/solitaire/game';
 
-const DEBUG = true;
+const DEBUG = false;
 
 // TODO: Add checks to make sure no other moves can be performed if there's anything in the transfer stack
 
@@ -34,6 +34,7 @@ export interface GameState {
   tableau: number[][];
   moveStack: Move[];
   dragData: DragData;
+  isWon: boolean;
 }
 
 interface Actions {
@@ -47,6 +48,8 @@ interface Actions {
   getDragCards: () => number[];
   getFromTableauIdx: () => number | null;
   getFromFoundationIdx: () => number | null;
+  getIsWon: () => boolean;
+  setWinningConditionIfWon: () => void;
 
   // Setters
   setDragCards: (cards: number[]) => void;
@@ -79,6 +82,7 @@ const useSolitaireStore = create<SolitaireState>()(
       fromTableauIdx: null,
     },
     moveStack: [],
+    isWon: false,
     getStock: () => get().stock,
     getWaste: () => get().waste,
     getFoundations: () => get().foundations,
@@ -87,6 +91,14 @@ const useSolitaireStore = create<SolitaireState>()(
     getFromTableauIdx: () => get().dragData.fromTableauIdx ?? null,
     getFromFoundationIdx: () => get().dragData.fromFoundationIdx ?? null,
     getDragCards: () => get().dragData.dragCards,
+    getIsWon: () => get().isWon,
+    setWinningConditionIfWon: () => {
+      if (get().foundations.every((foundation) => foundation.length === 13)) {
+        set((state) => {
+          state.isWon = true;
+        });
+      }
+    },
 
     // setters
     setFromTableauIdx: (tableauIdx) => {
@@ -437,16 +449,7 @@ const useSolitaireStore = create<SolitaireState>()(
     },
 
     moveWasteToFirstAvailableFoundation: () => {
-      // If waste is empty, return false
-      if (get().waste.length === 0) {
-        if (DEBUG) {
-          console.log('Waste to first foundation: Waste is empty');
-        }
-        return false;
-      }
-
       let didFindFoundation = false;
-
       set((state) => {
         const card = state.waste.at(-1)!;
 
@@ -630,6 +633,7 @@ const useSolitaireStore = create<SolitaireState>()(
           fromTableauIdx: null,
         };
         state.moveStack = [];
+        state.isWon = false;
 
         for (let i = state.stock.length - 1; i > 0; i -= 1) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -648,12 +652,15 @@ const useSolitaireStore = create<SolitaireState>()(
         }
 
         // DEBUG
-        // state.tableau[0] = [15];
-        // state.tableau[1] = [4];
-        // state.tableau[2] = [16];
-        // state.transferData.cards = [2];
-        // state.foundations = [[1], [14], [27], [40]];
-        // state.waste = [7];
+        // state.stock = [];
+        // state.waste = [];
+        // state.tableau = [[13], [], [], [], [], [], []];
+        // state.foundations = [
+        //   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        //   [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26],
+        //   [27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
+        //   [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+        // ];
       });
     },
   })),

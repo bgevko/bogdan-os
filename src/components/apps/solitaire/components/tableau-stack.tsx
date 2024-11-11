@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useState, useCallback, useEffect } from 'react';
@@ -11,8 +12,11 @@ interface TableauStackProps {
 }
 
 const TableauStack = ({ cards, tableauIdx }: TableauStackProps): React.ReactElement => {
-  const moveTablueaToFirstValidFoundation = useSolitaireStore(
+  const moveTableauToFirstAvailableFoundation = useSolitaireStore(
     (state) => state.moveTableauToFirstAvailableFoundation,
+  );
+  const moveWasteToFirstAvailableFoundation = useSolitaireStore(
+    (state) => state.moveWasteToFirstAvailableFoundation,
   );
   const flipTableauCard = useSolitaireStore((state) => state.flipTableauCard);
   const setDragCards = useSolitaireStore((state) => state.setDragCards);
@@ -20,6 +24,7 @@ const TableauStack = ({ cards, tableauIdx }: TableauStackProps): React.ReactElem
   const moveWasteToTableau = useSolitaireStore((state) => state.moveWasteToTableau);
   const moveFoundationToTableau = useSolitaireStore((state) => state.moveFoundationToTableau);
   const moveTableauToTableau = useSolitaireStore((state) => state.moveTableauToTableau);
+  const setWinningConditionIfWon = useSolitaireStore((state) => state.setWinningConditionIfWon);
   const fromFoundationIdx = useSolitaireStore((state) => state.getFromFoundationIdx());
   const fromTableauIdx = useSolitaireStore((state) => state.getFromTableauIdx());
   const dragCards = useSolitaireStore((state) => state.getDragCards());
@@ -56,18 +61,14 @@ const TableauStack = ({ cards, tableauIdx }: TableauStackProps): React.ReactElem
     if (dragCards.length === 0) return;
     if (fromFoundationIdx === null && fromTableauIdx === null) {
       moveWasteToTableau(tableauIdx);
-      return;
-    }
-
-    if (fromFoundationIdx !== null) {
+    } else if (fromFoundationIdx !== null) {
       moveFoundationToTableau(fromFoundationIdx, tableauIdx);
-      return;
-    }
-
-    if (fromTableauIdx !== null) {
+    } else if (fromTableauIdx !== null) {
       const count = dragCards.length;
       moveTableauToTableau(fromTableauIdx, tableauIdx, count);
     }
+
+    // Check if the game is won
   }, [
     fromFoundationIdx,
     fromTableauIdx,
@@ -88,6 +89,39 @@ const TableauStack = ({ cards, tableauIdx }: TableauStackProps): React.ReactElem
       }
     },
     [isDragging, dragStartPos],
+  );
+
+  const handleAutoMoveToFoundation = useCallback(
+    async (tabIdx: number) => {
+      /*
+       * In classic solitaire, double-clicking or right-clicking a card in the waste stack would send it to the foundation when possible
+       * After the move, top cards from the waste and all tableau piles would also be checked for valid moves. This loop would continue until no more moves are possible
+       * This greatly improves the flow of the game, especially toward the end where the user needs to drag a bunch of cards to the foundation
+       * */
+
+      // Helper function to create a delay
+      // eslint-disable-next-line no-promise-executor-return
+      const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      if (moveTableauToFirstAvailableFoundation(tabIdx)) {
+        // Loop with a delay as long as either waste or any tableau pile has a valid move to foundation
+        while (
+          moveWasteToFirstAvailableFoundation() ||
+          [0, 1, 2, 3, 4, 5, 6].some((index) => moveTableauToFirstAvailableFoundation(index))
+        ) {
+          // Add a delay between each loop iteration to create the cascading effect
+          // eslint-disable-next-line no-await-in-loop
+          await delay(10);
+        }
+      }
+      // Set the winning condition if the game is won
+      setWinningConditionIfWon();
+    },
+    [
+      moveWasteToFirstAvailableFoundation,
+      moveTableauToFirstAvailableFoundation,
+      setWinningConditionIfWon,
+    ],
   );
 
   // Listen for mousemove and mouseup events
@@ -147,7 +181,11 @@ const TableauStack = ({ cards, tableauIdx }: TableauStackProps): React.ReactElem
               flipTableauCard(tableauIdx);
             }}
             onDoubleClick={() => {
-              moveTablueaToFirstValidFoundation(tableauIdx);
+              // moveTableauToFirstAvailableFoundation(tableauIdx);
+              handleAutoMoveToFoundation(tableauIdx);
+            }}
+            onContextMenu={() => {
+              handleAutoMoveToFoundation(tableauIdx);
             }}
             onDragTableauStart={(event: React.DragEvent) => {
               handleDragStart(event, index);

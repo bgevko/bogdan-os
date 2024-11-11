@@ -64,6 +64,7 @@ interface CardProps {
   offsetY: number;
   className?: string;
   onDoubleClick?: () => void;
+  onContextMenu?: (event: React.MouseEvent) => void;
   handleFlip?: () => void;
   onDragTableauStart?: (event: React.DragEvent) => void;
 }
@@ -74,6 +75,7 @@ const CardBase = ({
   offsetY = 0,
   className,
   onDoubleClick,
+  onContextMenu,
   handleFlip,
   onDragTableauStart,
 }: CardProps): React.ReactElement => {
@@ -83,6 +85,7 @@ const CardBase = ({
     <span
       draggable
       onDoubleClick={() => onDoubleClick?.()}
+      onContextMenu={(event) => onContextMenu?.(event)}
       onClick={isFlipped ? () => handleFlip?.() : undefined}
       onDragStart={(event) => onDragTableauStart?.(event)}
     >

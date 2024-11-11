@@ -3,7 +3,6 @@
 import React from 'react';
 
 import Card from '@/solitaire/components/card';
-import useSolitaireStore from '@/solitaire/store';
 
 interface StockStackProps {
   cards: number[];
@@ -11,13 +10,10 @@ interface StockStackProps {
 }
 
 const StockStackBase = ({ cards, onClick }: StockStackProps): React.ReactElement => {
-  const moveWasteToFirstAvailableFoundation = useSolitaireStore(
-    (state) => state.moveWasteToFirstAvailableFoundation,
-  );
-
   const isEmpty = cards.length === 0;
 
   // Stack effect
+  const emptyStyle = isEmpty ? 'border border-dashed bg-white/10 rounded-[6px] w-[100px]' : '';
   const stackPeakCount = cards.length >= 21 ? 2 : cards.length >= 11 ? 1 : 0;
 
   return (
@@ -31,7 +27,7 @@ const StockStackBase = ({ cards, onClick }: StockStackProps): React.ReactElement
         onClick={() => onClick?.()}
       >
         {isEmpty ? (
-          <div className="h-[145px] w-[100px]" />
+          <div className={`h-[145px] w-[100px] ${emptyStyle}`} />
         ) : (
           <div className="relative w-[100px]">
             {cards.map((cardValue, index) => {
@@ -54,9 +50,6 @@ const StockStackBase = ({ cards, onClick }: StockStackProps): React.ReactElement
                   className="absolute"
                   offsetX={0}
                   offsetY={offsetY}
-                  onDoubleClick={() => {
-                    moveWasteToFirstAvailableFoundation();
-                  }}
                 />
               );
             })}

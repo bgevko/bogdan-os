@@ -24,6 +24,7 @@ const FoundationStackBase = ({
   const moveWasteToFoundation = useSolitaireStore((state) => state.moveWasteToFoundation);
   const moveTableauToFoundation = useSolitaireStore((state) => state.moveTableauToFoundation);
   const setFromFoundationIdx = useSolitaireStore((state) => state.setFromFoundationIdx);
+  const setWinningConditionIfWon = useSolitaireStore((state) => state.setWinningConditionIfWon);
   const dragCards = useSolitaireStore((state) => state.getDragCards());
   const tableauIdx = useSolitaireStore((state) => state.getFromTableauIdx());
   const isEmpty = cards.length === 0;
@@ -75,7 +76,17 @@ const FoundationStackBase = ({
     } else {
       moveTableauToFoundation(tableauIdx, foundationIdx);
     }
-  }, [dragCards, moveWasteToFoundation, moveTableauToFoundation, foundationIdx, tableauIdx]);
+
+    // Check if the game is won
+    setWinningConditionIfWon();
+  }, [
+    dragCards,
+    moveWasteToFoundation,
+    moveTableauToFoundation,
+    foundationIdx,
+    tableauIdx,
+    setWinningConditionIfWon,
+  ]);
 
   // Listen for mousemove and mouseup events
   useEffect(() => {
