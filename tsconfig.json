@@ -20,6 +20,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@/solitaire/*": ["./src/components/apps/solitaire/*"],
       "@/*": ["./src/*"],
       "/*": ["./public/*"]
     }

@@ -59,7 +59,7 @@ const appOptions: AppOptions = new Map([
       component: lazy(() => import('@/components/apps/solitaire')),
 
       // Initial window state
-      size: { width: 800, height: 600 },
+      size: { width: 850, height: 600 },
     },
   ],
   [

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-for-of */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
@@ -9,7 +10,7 @@
 
 const DEBUG = true;
 
-interface Move {
+export interface Move {
   description: string;
   undoMove: () => void;
 }
@@ -20,6 +21,7 @@ export interface State {
   waste: number[];
   foundations: number[][];
   tableau: number[][];
+  transferStack: number[];
   moveStack: Move[];
 }
 
@@ -34,10 +36,11 @@ export function shuffle(deck: number[]): void {
 // Initializes the game state for Solitaire
 export function initGame(): State {
   const state: State = {
-    stock: Array.from({ length: 52 }, (_, i) => i + 1),
+    stock: Array.from({ length: 52 }, (_, i) => (i + 1) * -1),
     waste: [],
     foundations: [[], [], [], []],
     tableau: [[], [], [], [], [], [], []],
+    transferStack: [],
     moveStack: [],
   };
 
@@ -49,35 +52,205 @@ export function initGame(): State {
     while (pile.length < i + 1) {
       const card = state.stock.pop();
       if (card !== undefined) {
-        pile.push(-card); // Negative values mean face-down
+        pile.push(card); // Negative values mean face-down
       }
     }
     // Flip the last card face-up
     pile[pile.length - 1] = -pile.at(-1)!;
     state.tableau[i] = pile;
   }
+
+  // Flip the face stock card
   return state;
 }
 
-// // Prints the current game state
-// export function printState(state: State): void {
-//   console.log('----- STOCK -----');
-//   console.log(`${state.stock.length} cards\n`);
-//   console.log('----- WASTE -----');
-//   console.log(`${state.waste.length} cards\n`);
-//   console.log('--- FOUNDATIONS ---');
-//   for (const [i, isFoundation] of state.foundations.entries()) {
-//     console.log(`${i}: ${isFoundation.length} cards`);
-//   }
-//   console.log('\n------ TABLEAU -----');
-//   for (const [i, pile] of state.tableau.entries()) {
-//     console.log(`${i}: ${pile.length} cards`);
-//     for (const card of pile) {
-//       printCard(card);
-//     }
-//     console.log();
-//   }
-// }
+// Moves items from waste to the transfer stack
+export function moveWasteToTransfer({ state }: { state: State }): boolean {
+  if (state.waste.length === 0) {
+    if (DEBUG) {
+      console.log('Waste to Transfer: Nothing in waste pile\nFALSE\n');
+    }
+    return false;
+  }
+
+  // if waste card is face-down
+  if (state.waste.at(-1)! < 0) {
+    if (DEBUG) {
+      console.log('Waste to Transfer: Top waste card is face-down\nFALSE\n');
+    }
+    return false;
+  }
+
+  // pop the top waste card into the transfer stack
+  state.transferStack.push(state.waste.pop()!);
+  if (DEBUG) {
+    const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+    const debugTransfer = `[${state.transferStack.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+    const debugStr = `Waste to Transfer: \nWaste: ${debugWaste}, \nTransfer: ${debugTransfer}`;
+    console.log(`${debugStr} \nTRUE\n`);
+  }
+  const undoMove = () => state.waste.push(state.transferStack.pop()!);
+  state.moveStack.push({
+    description: 'Undo Transfer',
+    undoMove,
+  });
+  return true;
+}
+
+export function moveFoundationToTransfer({
+  state,
+  foundationIdx,
+}: {
+  state: State;
+  foundationIdx: number;
+}): boolean {
+  if (
+    (foundationIdx < 0 || foundationIdx > 3 || state.foundations[foundationIdx].length === 0) &&
+    DEBUG
+  ) {
+    console.log('Foundation to Transfer: Foundation empty\nFALSE\n');
+  }
+  state.transferStack.push(state.foundations[foundationIdx].pop()!);
+  if (DEBUG) {
+    const debugFoundation = `[${state.foundations[foundationIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+    const transferStack = `[${state.transferStack.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+    const debugStr = `Foundation to Transfer: \nFoundation: ${debugFoundation}, \nTransfer: ${transferStack}`;
+    console.log(`${debugStr} \nTRUE\n`);
+  }
+  const undoMove = () => state.foundations[foundationIdx].push(state.transferStack.pop()!);
+  state.moveStack.push({
+    description: 'Undo Transfer',
+    undoMove,
+  });
+  return true;
+}
+
+export function moveTableauToTransfer({
+  state,
+  tableauIdx,
+  count,
+}: {
+  state: State;
+  tableauIdx: number;
+  count: number;
+}): boolean {
+  if (tableauIdx < 0 || tableauIdx > 6 || count <= 0 || count > state.tableau[tableauIdx].length) {
+    if (DEBUG) {
+      console.log('Tableau to Transfer: Invalid tableau index or count\nFALSE\n');
+    }
+    return false;
+  }
+  // The substack that will go to transfer is end - count to end
+  const subStack = state.tableau[tableauIdx].slice(-count);
+
+  // If substack is not a valid stack, return false
+  if (!isCardStackValid(subStack)) {
+    if (DEBUG) {
+      const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+      const debugSubStack = `[${subStack.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+      const debugStr = `Tableau to Transfer: \nTableau: ${debugTableau}, \nSubstack: ${debugSubStack}`;
+      console.log(`${debugStr} \nFALSE\n`);
+    }
+    return false;
+  }
+
+  // Move the substack to the transfer stack, pop the substack from the tableau too
+  state.transferStack.push(...subStack);
+  state.tableau[tableauIdx].splice(-count, count);
+
+  const undoMove = () => {
+    state.tableau[tableauIdx].push(...state.transferStack.splice(-count, count));
+  };
+  state.moveStack.push({
+    description: 'Undo Transfer',
+    undoMove,
+  });
+  if (DEBUG) {
+    const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+    const debugTransfer = `[${state.transferStack.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+    const debugStr = `Tableau to Transfer: \nTableau: ${debugTableau}, \nTransfer: ${debugTransfer}`;
+    console.log(`${debugStr} \nTRUE\n`);
+  }
+  return true;
+}
+
+export function moveTransferToFoundation({
+  state,
+  foundationIdx,
+}: {
+  state: State;
+  foundationIdx: number;
+}): boolean {
+  if (foundationIdx < 0 || foundationIdx > 3 || state.transferStack.length !== 1) {
+    if (DEBUG) {
+      console.log('Transfer to Foundation: Invalid transfer length or foundation index\nFALSE\n');
+    }
+    return false;
+  }
+  // It doesn't stack..
+  const transferCard = state.transferStack.at(-1)!;
+  const foundation = state.foundations[foundationIdx].at(-1);
+  if (!aStacksOnB({ a: transferCard, b: foundation, isFoundation: true })) {
+    if (DEBUG) {
+      const debugTransfer = getCardStr(transferCard);
+      const debugFoundation = getCardStr(foundation);
+      const debugStr = `Transfer to Foundation: \nTransfer: ${debugTransfer}, \nFoundation: ${debugFoundation}`;
+      console.log(`${debugStr} \nFALSE\n`);
+    }
+    return false;
+  }
+
+  // Move the transfer card to the foundation
+  state.foundations[foundationIdx].push(state.transferStack.pop()!);
+  const undoMove = () => state.transferStack.push(state.foundations[foundationIdx].pop()!);
+  state.moveStack.push({
+    description: 'Undo Transfer',
+    undoMove,
+  });
+  return true;
+}
+
+export function moveTransferToTableau({
+  state,
+  tableauIdx,
+}: {
+  state: State;
+  tableauIdx: number;
+}): boolean {
+  if (tableauIdx < 0 || tableauIdx > 6 || state.transferStack.length === 0) {
+    if (DEBUG) {
+      console.log('Transfer to Tableau: Invalid transfer length or tableau index\nFALSE\n');
+    }
+    return false;
+  }
+  const bottomTransferCard = state.transferStack.at(0)!;
+  const topTableauCard = state.tableau[tableauIdx].at(-1);
+  if (!aStacksOnB({ a: bottomTransferCard, b: topTableauCard })) {
+    if (DEBUG) {
+      const debugTransfer = getCardStr(bottomTransferCard);
+      const debugTableau = getCardStr(topTableauCard);
+      const debugStr = `Transfer to Tableau: \nTransfer: ${debugTransfer}, \nTableau: ${debugTableau}`;
+      console.log(`${debugStr} \nFALSE\n`);
+    }
+    return false;
+  }
+  // Move the transfer stack to the tableau
+  for (let i = 0; i < state.transferStack.length; i += 1) {
+    state.tableau[tableauIdx].push(state.transferStack[i]);
+  }
+
+  // empty the transfer stack
+  state.transferStack = [];
+
+  const undoMove = () => {
+    state.tableau[tableauIdx].splice(-state.transferStack.length, state.transferStack.length);
+  };
+  state.moveStack.push({
+    description: 'Undo Transfer',
+    undoMove,
+  });
+  return true;
+}
 
 // Moves the top card from the stock to the waste pile
 export function popToWaste(state: State): void {
@@ -85,23 +258,31 @@ export function popToWaste(state: State): void {
     state.stock = state.waste;
     state.waste = [];
     shuffle(state.stock);
+
+    // flip all stock cards face-down
+    for (let i = 0; i < state.stock.length; i += 1) {
+      state.stock[i] *= -1;
+    }
+
     if (DEBUG) {
-      const debugWaste = `[${state.waste.map((c) => getCardStr(c)).join(', ')}]`;
-      const debugEmptyStock = '[]';
-      const debugStr = `Stock to Waste: \nStock: ${debugEmptyStock}, \nWaste: ${debugWaste}`;
+      const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+      const debugShuffledStock = `[${state.stock.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+      const debugStr = `Stock to Waste: \nStock: ${debugShuffledStock}, \nWaste: ${debugWaste}`;
       console.log(`${debugStr} \nRESHUFFLED\n`);
     }
     return;
   }
+
+  // Grab the top card from stock
   const card = state.stock.pop();
-  if (card !== undefined) {
-    state.waste.push(card);
-  }
+
+  // Push the card to waste
+  state.waste.push(-card!);
 
   const undoMove = () => {
     const undoCard = state.waste.pop();
     if (undoCard !== undefined) {
-      state.stock.push(undoCard);
+      state.stock.push(-undoCard);
     }
   };
   state.moveStack.push({
@@ -110,121 +291,11 @@ export function popToWaste(state: State): void {
   });
   if (DEBUG) {
     const debugStockTop = getCardStr(state.waste.at(-1));
-    const debugStock = `[${state.stock.map((c) => getCardStr(c)).join(', ')}]`;
-    const debugWaste = `[${state.waste.map((c) => getCardStr(c)).join(', ')}]`;
-    const debugStr = `Stock to Waste: \nStock: ${debugStock}, \nWaste: ${debugWaste}`;
+    const debugStock = `[${state.stock.map((cardVal) => getCardStr(-cardVal)).join(', ')}]`;
+    const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+    const debugStr = `Stock to Waste: \nStock (Face-Down): ${debugStock}, \nWaste: ${debugWaste}`;
     console.log(`${debugStr} \nMOVED ${debugStockTop}\n`);
   }
-}
-
-// Determines if a card can be moved from the waste pile to a isFoundation
-export function canMoveWasteToFoundation({
-  state,
-  foundationIdx,
-}: {
-  state: State;
-  foundationIdx: number;
-}): boolean {
-  if (foundationIdx < 0 || foundationIdx > 3 || state.waste.length === 0) {
-    return false;
-  }
-  const card = state.waste.at(-1)!;
-  const isFoundation = state.foundations[foundationIdx];
-  const foundationCard = isFoundation.at(-1);
-  return aStacksOnB({ a: card, b: foundationCard, isFoundation: true });
-}
-
-// Moves the top card from the waste pile to the specified isFoundation
-export function moveWasteToFoundation({
-  state,
-  foundationIdx,
-}: {
-  state: State;
-  foundationIdx: number;
-}): boolean {
-  const debugCard =
-    foundationIdx >= 0 && foundationIdx <= 3
-      ? getCardStr(state.foundations[foundationIdx]?.at(-1))
-      : `Undefined Foundation Idx: ${foundationIdx}`;
-  const debugStr = `Waste to Foundation: \nWaste top: ${getCardStr(state.waste.at(-1))}, \nFoundation top: ${debugCard}`;
-
-  if (!canMoveWasteToFoundation({ state, foundationIdx })) {
-    if (DEBUG) {
-      console.log(`${debugStr} \nFALSE\n`);
-    }
-    return false;
-  }
-  state.foundations[foundationIdx].push(state.waste.pop()!);
-
-  const undoMove = () => state.waste.push(state.foundations[foundationIdx].pop()!);
-  state.moveStack.push({
-    description: `Waste to Foundation: Moved ${getCardStr(state.foundations[foundationIdx].at(-1))}`,
-    undoMove,
-  });
-
-  if (DEBUG) {
-    console.log(`${debugStr} \nTRUE\n`);
-  }
-  return true;
-}
-
-// // Checks if a card can be moved to a isFoundation
-// export function canMoveCardToFoundation(state: State, card: number, foundationIdx: number): boolean {
-//   if (foundationIdx < 0 || foundationIdx > 3) {
-//     return false;
-//   }
-//   const isFoundation = state.foundations[foundationIdx];
-//   return aStacksOnB(card, isFoundation.at(-1)) || canAceStack(card, isFoundation.at(-1));
-// }
-//
-// Determines if a card can be moved from the waste pile to a tableau pile
-export function canMoveWasteToTableau({
-  state,
-  tableauIdx,
-}: {
-  state: State;
-  tableauIdx: number;
-}): boolean {
-  if (tableauIdx < 0 || tableauIdx > 6 || state.waste.length === 0) {
-    return false;
-  }
-  const card = state.waste.at(-1)!;
-  const tableau = state.tableau[tableauIdx];
-  const tableauCard = tableau.at(-1);
-  return aStacksOnB({ a: card, b: tableauCard });
-}
-
-// Moves the top card from the waste pile to the specified tableau pile
-export function moveWasteToTableau({
-  state,
-  tableauIdx,
-}: {
-  state: State;
-  tableauIdx: number;
-}): boolean {
-  const debugCard =
-    tableauIdx >= 0 && tableauIdx <= 6
-      ? getCardStr(state.tableau[tableauIdx]?.at(-1))
-      : `Undefined Tableau Idx: ${tableauIdx}`;
-  const debugStr = `Waste to Tableau: \nWaste top: ${getCardStr(state.waste.at(-1))}, \nTableau top: ${debugCard}`;
-  if (!canMoveWasteToTableau({ state, tableauIdx })) {
-    if (DEBUG) {
-      console.log(`${debugStr} \nFALSE\n`);
-    }
-    return false;
-  }
-  state.tableau[tableauIdx].push(state.waste.pop()!);
-
-  const undoMove = () => state.waste.push(state.tableau[tableauIdx].pop()!);
-  state.moveStack.push({
-    description: `Waste to Tableau: Moved ${getCardStr(state.tableau[tableauIdx].at(-1))}`,
-    undoMove,
-  });
-
-  if (DEBUG) {
-    console.log(`${debugStr} \nTRUE\n`);
-  }
-  return true;
 }
 
 // Moves the top card from the waste pile to the first valid isFoundation
@@ -265,83 +336,86 @@ export function moveWasteToFirstValidFoundation({ state }: { state: State }): bo
   return false;
 }
 
-// Determines if a card can be moved from a tableau pile to a isFoundation
-export function canMoveTableauToFoundation({
+export function flipTableauCard({
   state,
   tableauIdx,
-  foundationIdx,
 }: {
   state: State;
   tableauIdx: number;
-  foundationIdx: number;
 }): boolean {
-  if (tableauIdx < 0 || tableauIdx > 6 || foundationIdx < 0 || foundationIdx > 3) {
-    return false;
-  }
-
-  const tableau = state.tableau[tableauIdx];
-  if (tableau.length === 0) {
-    return false;
-  }
-
-  const card = tableau.at(-1)!;
-  const isFoundation = state.foundations[foundationIdx];
-  const foundationCard = isFoundation.at(-1);
-
-  return aStacksOnB({ a: card, b: foundationCard, isFoundation: true });
-}
-
-// Moves the top card from a tableau pile to a isFoundation
-export function moveTableauToFoundation({
-  state,
-  tableauIdx,
-  foundationIdx,
-}: {
-  state: State;
-  tableauIdx: number;
-  foundationIdx: number;
-}): boolean {
-  const debugCardA =
-    tableauIdx >= 0 && tableauIdx <= 6
-      ? getCardStr(state.tableau[tableauIdx]?.at(-1))
-      : `Undefined Tableau Idx: ${tableauIdx}`;
-  const debugCardB =
-    foundationIdx >= 0 && foundationIdx <= 3
-      ? getCardStr(state.foundations[foundationIdx]?.at(-1))
-      : `Undefined Foundation Idx: ${foundationIdx}`;
-  const debugStr = `Tableau to Foundation: \nTableau top: ${debugCardA}, \nFoundation top: ${debugCardB}`;
-  if (!canMoveTableauToFoundation({ state, tableauIdx, foundationIdx })) {
+  if (tableauIdx < 0 || tableauIdx > 6 || state.tableau[tableauIdx].length === 0) {
     if (DEBUG) {
-      console.log(`${debugStr} \nFALSE\n`);
+      console.log('Flip Tableau Card: Tableau Empty. \nFALSE\n');
     }
     return false;
   }
-
-  const card = state.tableau[tableauIdx].pop()!;
-  state.foundations[foundationIdx].push(card);
-
-  let wasFlipped = false;
-  if (state.tableau[tableauIdx].length > 0 && state.tableau[tableauIdx].at(-1)! < 0) {
-    state.tableau[tableauIdx][state.tableau[tableauIdx].length - 1] *= -1;
-    wasFlipped = true;
+  const card = state.tableau[tableauIdx].at(-1)!;
+  if (card > 0) {
+    if (DEBUG) {
+      console.log(`Flip Tableau Card: ${getCardStr(card)} already face-up. \nFALSE\n`);
+    }
+    return false;
   }
+  state.tableau[tableauIdx][state.tableau[tableauIdx].length - 1] = -card;
 
   const undoMove = () => {
-    if (wasFlipped) {
-      state.tableau[tableauIdx][state.tableau[tableauIdx].length - 1] *= -1;
-    }
-    state.tableau[tableauIdx].push(state.foundations[foundationIdx].pop()!);
+    state.tableau[tableauIdx][state.tableau[tableauIdx].length - 1] = -card;
   };
 
   state.moveStack.push({
-    description: `Tableau to Foundation: Moved ${getCardStr(state.foundations[foundationIdx].at(-1))}`,
+    description: `Flip Tableau Card: Flipped ${getCardStr(card)}`,
     undoMove,
   });
 
   if (DEBUG) {
-    console.log(`${debugStr} \nTRUE\n`);
+    console.log(`Flip Tableau Card: Flipped ${getCardStr(card)} \nTRUE\n`);
   }
   return true;
+}
+
+// Move tableau to first valid foundation
+export function moveTableauToFirstValidFoundation({
+  state,
+  tableauIdx,
+}: {
+  state: State;
+  tableauIdx: number;
+}): boolean {
+  if (tableauIdx < 0 || tableauIdx > 6 || state.tableau[tableauIdx].length === 0) {
+    if (DEBUG) {
+      console.log('Tableau to First Valid Foundation: Tableau Empty. \nFALSE\n');
+    }
+    return false;
+  }
+
+  const debugTableauCard = getCardStr(state.tableau[tableauIdx].at(-1));
+  const debugTableau = `[${state.tableau[tableauIdx].map((card) => getCardStr(card)).join(', ')}]`;
+  const debugFoundation = `[${state.foundations.map((foundation) => getCardStr(foundation.at(-1))).join(', ')}]`;
+  const debugStr = `Tableau to First Valid Foundation: \nTableau top: ${debugTableauCard}, \nTableau: ${debugTableau}, \nFoundations: ${debugFoundation}`;
+
+  for (let i = 0; i < 4; i += 1) {
+    const card = state.tableau[tableauIdx].at(-1)!;
+    const foundation = state.foundations[i].at(-1);
+    if (aStacksOnB({ a: card, b: foundation, isFoundation: true })) {
+      state.foundations[i].push(state.tableau[tableauIdx].pop()!);
+      const undoMove = () => {
+        state.tableau[tableauIdx].push(state.foundations[i].pop()!);
+      };
+      state.moveStack.push({
+        description: `Tableau to Foundation: Moved ${getCardStr(state.foundations[i].at(-1))}`,
+        undoMove,
+      });
+      if (DEBUG) {
+        console.log(`${debugStr} \nTRUE\n`);
+      }
+      return true;
+    }
+  }
+  // Didn't happen
+  if (DEBUG) {
+    console.log(`${debugStr} \nFALSE\n`);
+  }
+  return false;
 }
 
 // Determines if a sequence of cards can be moved from one tableau pile to another
@@ -376,76 +450,18 @@ export function canMoveTableauToTableau({
   return aStacksOnB({ a: topCard, b: destCard }) && isCardStackValid(srcPile.slice(-count));
 }
 
-// Moves a sequence of cards from one tableau pile to another
-export function moveTableauToTableau({
-  state,
-  srcIdx,
-  destIdx,
-  count,
-}: {
-  state: State;
-  srcIdx: number;
-  destIdx: number;
-  count: number;
-}): boolean {
-  const debugDestPile =
-    destIdx >= 0 && destIdx <= 6
-      ? // ? state.tableau[destIdx]
-        `[${state.tableau[destIdx].map((card) => getCardStr(card)).join(', ')}]`
-      : `Undefined Destination Pile Idx: ${destIdx}`;
-
-  let debugSrcPile;
-  if (srcIdx >= 0 && srcIdx <= 6) {
-    debugSrcPile =
-      count <= 0 || count > state.tableau[srcIdx].length
-        ? `Invalid Source Pile due to count: ${count}`
-        : `[${state.tableau[srcIdx]
-            .slice(-count)
-            .map((card) => getCardStr(card))
-            .join(', ')}]`;
-  } else {
-    debugSrcPile = `Undefined Source Pile Idx: ${srcIdx}`;
-  }
-
-  const debugStr = `Tableau to tableau: Moving ${debugSrcPile} to ${debugDestPile}`;
-
-  if (!canMoveTableauToTableau({ state, srcIdx, destIdx, count })) {
-    if (DEBUG) {
-      console.log(`${debugStr} \nFALSE\n`);
-    }
+// Checks if a sequence of cards is a valid stack according to game rules
+export function isCardStackValid(stack: number[]): boolean {
+  // stack length 0 not valid
+  if (stack.length === 0) {
     return false;
   }
 
-  const srcPile = state.tableau[srcIdx];
-  const destPile = state.tableau[destIdx];
-  const moveStack = srcPile.splice(-count, count);
-  destPile.push(...moveStack);
-
-  let wasFlipped = false;
-  if (srcPile.length > 0 && srcPile.at(-1)! < 0) {
-    srcPile[srcPile.length - 1] *= -1;
-    wasFlipped = true;
+  // stack length 1 is valid if positive
+  if (stack.length === 1) {
+    return stack[0] > 0;
   }
 
-  const undoMove = () => {
-    if (wasFlipped) {
-      srcPile[srcPile.length - 1] *= -1;
-    }
-    srcPile.push(...destPile.splice(-count, count));
-  };
-  state.moveStack.push({
-    description: `Tableau to Tableau: Moved ${debugSrcPile} to ${debugDestPile}`,
-    undoMove,
-  });
-  if (DEBUG) {
-    console.log(`${debugStr} \nTRUE\n`);
-  }
-
-  return true;
-}
-
-// Checks if a sequence of cards is a valid stack according to game rules
-export function isCardStackValid(stack: number[]): boolean {
   for (let i = 1; i < stack.length; i += 1) {
     if (!aStacksOnB({ a: stack[i], b: stack[i - 1] })) {
       return false;
@@ -472,23 +488,6 @@ export function undo(state: State): void {
   }
 }
 
-// // Prints the card's suit and rank
-// export function printCard(val: number): void {
-//   if (val < 0) {
-//     console.log('[*]'); // Placeholder for a face-down card
-//     return;
-//   }
-//   const card = getCard(val);
-//   if (card) {
-//     const [suit, rank] = card;
-//     const suits = ['♥', '♣', '♦', '♠'];
-//     const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-//     console.log(`${suits[suit]}${ranks[rank]}`);
-//   } else {
-//     console.log('[*]');
-//   }
-// }
-//
 // Gets the suit and rank of a card
 export function getCard(val?: number): { suit: number; rank: number; isFaceUp: boolean } {
   // If no val, the card might be an empty stack
@@ -583,13 +582,3 @@ export function aStacksOnB({
 
   return isValidAdjacency && isValidColor;
 }
-
-// // Helper function: Checks if an Ace can be placed in an empty isFoundation
-// export function canAceStack(card: number, isFoundation?: number): boolean {
-//   return isFoundation === undefined && card % 13 === 1;
-// }
-//
-// // Helper function: Checks if a King can be placed on an empty tableau pile
-// export function canKingStack(card: number, tableau?: number): boolean {
-//   return tableau === undefined && card % 13 === 0;
-// }

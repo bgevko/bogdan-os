@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-console */
 /* eslint-disable no-relative-import-paths/no-relative-import-paths */
@@ -25,6 +26,9 @@ describe('Solitaire', () => {
         expect(pile.slice(0, -1).every((card) => card < 0)).toBe(true);
         expect(pile.slice(-1).every((card) => card > 0)).toBe(true);
       }
+
+      // first stock card be face down
+      expect(state.stock.at(-1)! > 0).toBe(false);
     }
   });
 
@@ -236,9 +240,10 @@ describe('Solitaire', () => {
 
       // Stock should be i cards less
       expect(state.stock.length).toBe(23 - i);
+      expect(state.waste.length).toBe(i + 1);
 
       // Top of waste should be the card popped from stock
-      expect(state.waste.at(-1)).toBe(stockTop);
+      expect(state.waste.at(-1)).toBe(-stockTop!);
     }
 
     // stock is empty and waste is full
@@ -249,139 +254,116 @@ describe('Solitaire', () => {
     game.popToWaste(state);
     expect(state.stock.length).toBe(24);
     expect(state.waste.length).toBe(0);
+
+    // Top stock card should be face down
+    expect(state.stock.at(-1)! < 0).toBe(true);
+    game.popToWaste(state);
+    expect(state.stock.at(-1)! < 0).toBe(true);
   });
 
-  it('should move from waste to foundation pile and also test winning condition', () => {
+  it('Single card from waste or foundation should move to transfer pile correctly', () => {
     const state = initGame();
+    state.waste = [-1, -2];
+    expect(game.moveWasteToTransfer({ state })).toBe(false);
+    state.waste = [-1, 2];
+    expect(game.moveWasteToTransfer({ state })).toBe(true);
+    expect(state.transferStack).toEqual([2]);
+    game.undo(state);
+    expect(state.waste).toEqual([-1, 2]);
+    expect(state.transferStack).toEqual([]);
 
-    // Hearts foundation
-    state.waste = [13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-    let foundationIdx = 0;
-    // attempt to move all heart cards to foundation 0
-    for (let i = 1; i <= 13; i += 1) {
-      const topWaste = state.waste.at(-1);
-      const result = game.moveWasteToFoundation({ state, foundationIdx });
-      if (!result) {
-        const cardA = state.waste.at(-1);
-        const cardB = state.foundations[foundationIdx].at(-1);
-        const shouldMoveMsg = `${game.getCardStr(cardA)} should move to foundation column ${foundationIdx}, top card is ${game.getCardStr(cardB)}`;
-        console.log(shouldMoveMsg);
-      }
-      expect(result).toBe(true);
-      expect(state.foundations[foundationIdx].at(-1)).toBe(topWaste);
-      expect(state.waste.length).toBe(13 - i);
-      expect(state.foundations[foundationIdx].length).toBe(i);
-    }
+    // foundation
+    state.foundations = [[1], [2], [3], [4]];
+    expect(game.moveFoundationToTransfer({ state, foundationIdx: 0 })).toBe(true);
+    expect(state.transferStack).toEqual([1]);
+    expect(state.foundations[0]).toEqual([]);
+    game.undo(state);
+    expect(state.transferStack).toEqual([]);
+    expect(state.foundations[0]).toEqual([1]);
+  });
 
-    // Clubs foundation
-    state.waste = [26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14];
-    foundationIdx = 1;
-    // attempt to move all club cards to foundation 1
-    for (let i = 1; i <= 13; i += 1) {
-      const topWaste = state.waste.at(-1);
-      const result = game.moveWasteToFoundation({ state, foundationIdx });
-      if (!result) {
-        const cardA = state.waste.at(-1);
-        const cardB = state.foundations[foundationIdx].at(-1);
-        const shouldMoveMsg = `${game.getCardStr(cardA)} should move to foundation column ${foundationIdx}, top card is ${game.getCardStr(cardB)}`;
-        console.log(shouldMoveMsg);
-      }
-      expect(result).toBe(true);
-      expect(state.foundations[foundationIdx].at(-1)).toBe(topWaste);
-      expect(state.waste.length).toBe(13 - i);
-      expect(state.foundations[foundationIdx].length).toBe(i);
-    }
+  it('should move one or more cards from the tableau to the transfer pile correctly', () => {
+    const state = initGame();
+    state.tableau = [[-1, -2, -3], [4], [5], [6], [7], [8], [9]];
+    expect(game.moveTableauToTransfer({ state, tableauIdx: 0, count: 1 })).toBe(false);
+    state.tableau[0] = [-1, 2, 3];
+    expect(game.moveTableauToTransfer({ state, tableauIdx: 0, count: 1 })).toBe(true);
+    expect(state.transferStack).toEqual([3]);
+    expect(state.tableau[0]).toEqual([-1, 2]);
+    game.undo(state);
+    expect(state.transferStack).toEqual([]);
+    expect(state.tableau[0]).toEqual([-1, 2, 3]);
 
-    // Diamonds foundation
-    state.waste = [39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27];
-    foundationIdx = 2;
-    // attempt to move all diamond cards to foundation 2
-    for (let i = 1; i <= 13; i += 1) {
-      const topWaste = state.waste.at(-1);
-      const result = game.moveWasteToFoundation({ state, foundationIdx });
-      if (!result) {
-        const cardA = state.waste.at(-1);
-        const cardB = state.foundations[foundationIdx].at(-1);
-        const shouldMoveMsg = `${game.getCardStr(cardA)} should move to foundation column ${foundationIdx}, top card is ${game.getCardStr(cardB)}`;
-        console.log(shouldMoveMsg);
-      }
-      expect(result).toBe(true);
-      expect(state.foundations[foundationIdx].at(-1)).toBe(topWaste);
-      expect(state.waste.length).toBe(13 - i);
-      expect(state.foundations[foundationIdx].length).toBe(i);
-    }
+    // move a card of 2 stacks (valid)
+    state.tableau[0] = [-1, 29, 15];
+    expect(game.moveTableauToTransfer({ state, tableauIdx: 0, count: 2 })).toBe(true);
+    expect(state.transferStack).toEqual([29, 15]);
+    game.undo(state);
+    expect(state.transferStack).toEqual([]);
+    expect(state.tableau[0]).toEqual([-1, 29, 15]);
+    expect(game.moveTableauToTransfer({ state, tableauIdx: 0, count: 3 })).toBe(false);
 
-    // Spades foundation
-    state.waste = [52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40];
-    foundationIdx = 3;
-    // attempt to move all spade cards to foundation 3
-    for (let i = 1; i <= 13; i += 1) {
-      const topWaste = state.waste.at(-1);
-      const result = game.moveWasteToFoundation({ state, foundationIdx });
-      if (!result) {
-        const cardA = state.waste.at(-1);
-        const cardB = state.foundations[foundationIdx].at(-1);
-        const shouldMoveMsg = `${game.getCardStr(cardA)} should move to foundation column ${foundationIdx}, top card is ${game.getCardStr(cardB)}`;
-        console.log(shouldMoveMsg);
-      }
-      expect(result).toBe(true);
-      expect(state.foundations[foundationIdx].at(-1)).toBe(topWaste);
-      expect(state.waste.length).toBe(13 - i);
-      expect(state.foundations[foundationIdx].length).toBe(i);
-    }
+    // try to transfer an entire valid stack
+    state.tableau[0] = [13, 25, 11, 23, 9, 21, 7, 19, 5, 17, 3, 15, 1];
+    expect(game.moveTableauToTransfer({ state, tableauIdx: 0, count: 13 })).toBe(true);
+    expect(state.transferStack).toEqual([13, 25, 11, 23, 9, 21, 7, 19, 5, 17, 3, 15, 1]);
+    expect(state.tableau[0]).toEqual([]);
+    game.undo(state);
+    expect(state.transferStack).toEqual([]);
+    expect(state.tableau[0]).toEqual([13, 25, 11, 23, 9, 21, 7, 19, 5, 17, 3, 15, 1]);
+  });
 
-    // Ensure waste is empty
-    expect(state.waste.length).toBe(0);
-    // Ensure all foundations are full
-    for (const foundation of state.foundations) {
-      expect(foundation.length).toBe(13);
-    }
-    // Expect game to be won
-    expect(game.isGameWon(state)).toBe(true);
+  it('should move transfer to foundation correctly, must only be one card no matter the transfer stack size', () => {
+    const state = initGame();
+    state.transferStack = [15, 1];
+    expect(game.moveTransferToFoundation({ state, foundationIdx: 0 })).toBe(false);
+    expect(state.transferStack).toEqual([15, 1]);
+    expect(state.foundations[0]).toEqual([]);
+    state.transferStack = [1, 15];
+    expect(game.moveTransferToFoundation({ state, foundationIdx: 0 })).toBe(false);
+    expect(state.transferStack).toEqual([1, 15]);
+    state.transferStack = [1];
+    expect(game.moveTransferToFoundation({ state, foundationIdx: 0 })).toBe(true);
+    expect(state.transferStack).toEqual([]);
+    expect(state.foundations[0]).toEqual([1]);
+    game.undo(state);
+    expect(state.foundations[0]).toEqual([]);
+    expect(state.transferStack).toEqual([1]);
+  });
 
-    // Test a few invlalid moves
+  it('should move transfer to tableau correctly, one or more cards', () => {
+    const state = initGame();
+    state.transferStack = [-52];
+    state.tableau[0] = [];
+    expect(game.moveTransferToTableau({ state, tableauIdx: 0 })).toBe(false);
+    state.transferStack = [52];
+    expect(game.moveTransferToTableau({ state, tableauIdx: 0 })).toBe(true);
+    expect(state.tableau[0]).toEqual([52]);
+    expect(state.transferStack).toEqual([]);
 
-    // Empty waste to foundation
-    state.foundations = [[1], [], [], []];
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 0 })).toBe(false);
-    expect(state.foundations[0].length).toBe(1);
-    expect(state.waste.length).toBe(0);
+    // move multiple cards
+    state.transferStack = [-38, 24, 10];
+    expect(game.moveTransferToTableau({ state, tableauIdx: 0 })).toBe(false);
+    state.transferStack = [38, 24, 10];
+    expect(game.moveTransferToTableau({ state, tableauIdx: 0 })).toBe(true);
+    expect(state.tableau[0]).toEqual([52, 38, 24, 10]);
+    expect(state.transferStack).toEqual([]);
 
-    // 2 of clubs on 1 of hearts in foundation idx 0
-    state.waste = [15];
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 0 })).toBe(false);
-    expect(state.foundations[0].length).toBe(1);
-    expect(state.waste.length).toBe(1);
+    // Try to move a value unto a flipped card (invalid)
+    state.tableau[0] = [-10];
+    state.transferStack = [22];
+    expect(game.moveTransferToTableau({ state, tableauIdx: 0 })).toBe(false);
+    state.tableau[0] = [10];
+    expect(game.moveTransferToTableau({ state, tableauIdx: 0 })).toBe(true);
 
-    // try to stack a non ace on empty
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 1 })).toBe(false);
-    expect(state.foundations[1].length).toBe(0);
-    expect(state.waste.length).toBe(1);
-
-    // try to stack same suit 3 on Ace
-    state.foundations = [[1], [], [], []];
-    state.waste = [3];
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 0 })).toBe(false);
-
-    // Try to stack a same suit, ascending adjacent card (this game state should not be possible)
-    state.foundations = [[3], [], [], []];
-    state.waste = [2];
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 0 })).toBe(false);
-
-    // Try to stack a same suit, same value card (this game state should not be possible)
-    state.foundations = [[3], [], [], []];
-    state.waste = [3];
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 0 })).toBe(false);
-
-    // Try to stack a valid 2 on ace, but it's face down
-    state.foundations = [[1], [], [], []];
-    state.waste = [-2];
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 0 })).toBe(false);
-
-    // Try an invalid foundation index
-    state.foundations = [[1], [], [], []];
-    state.waste = [2];
-    expect(game.moveWasteToFoundation({ state, foundationIdx: 4 })).toBe(false);
+    // move partial stack to transfer, then transfer to another partial stack
+    state.tableau = [[-16, 44, 30], [32], [], [], [], [], []];
+    expect(game.moveTableauToTransfer({ state, tableauIdx: 0, count: 2 })).toBe(true);
+    expect(state.transferStack).toEqual([44, 30]);
+    expect(state.tableau[0]).toEqual([-16]);
+    expect(game.moveTransferToTableau({ state, tableauIdx: 1 })).toBe(true);
+    expect(state.tableau[1]).toEqual([32, 44, 30]);
+    expect(state.transferStack).toEqual([]);
   });
 
   it('should move waste to first valid foundation', () => {
@@ -414,189 +396,55 @@ describe('Solitaire', () => {
     expect(state.foundations).toEqual([[1, 2, 3], [14, 15], [], []]);
   });
 
-  it('should move waste to tableau pile', () => {
+  it('should move tableau to first valid foundation', () => {
     const state = initGame();
-
-    // empty to full stack, alternating hearts, clubs, diamonds, spades
-    state.waste = [1, 15, 29, 43, 5, 19, 33, 47, 9, 23, 37, 51, 13];
-    state.tableau = [[], [], [], [], [], [], [], []];
+    state.tableau = [[-4, -3, 1], [14], [27], [40], [2], [15], [28]];
     let tableauIdx = 0;
-    for (let i = 1; i <= 13; i += 1) {
-      expect(game.moveWasteToTableau({ state, tableauIdx })).toBe(true);
-    }
-
-    // alternating hearts and clubs
-    state.waste = [1, 15, 3, 17, 5, 19, 7, 21, 9, 23, 11, 25, 13];
-    state.tableau = [[], [], [], [], [], [], [], []];
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    expect(state.tableau).toEqual([[-4, -3], [14], [27], [40], [2], [15], [28]]);
+    game.flipTableauCard({ state, tableauIdx });
+    expect(state.tableau).toEqual([[-4, 3], [14], [27], [40], [2], [15], [28]]);
     tableauIdx = 1;
-    for (let i = 1; i <= 13; i += 1) {
-      expect(game.moveWasteToTableau({ state, tableauIdx })).toBe(true);
-    }
-
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
     tableauIdx = 2;
-    // invalid moves
-    // empty waste
-    state.waste = [];
-    state.tableau = [[], [], [], [], [], [], [], []];
-    expect(game.moveWasteToTableau({ state, tableauIdx })).toBe(false);
-
-    // correct suit, but ascending adjacent card,
-    // We'll try to stack jack of hearts onto a 10 of clubs
-    state.waste = [11];
-    state.tableau = [[], [], [23], [], [], [], [], []];
-    expect(game.moveWasteToTableau({ state, tableauIdx })).toBe(false);
-
-    // correct suit, but same value card
-    state.waste = [10];
-    state.tableau = [[], [], [23], [], [], [], [], []];
-    expect(game.moveWasteToTableau({ state, tableauIdx })).toBe(false);
-
-    // invalid idx,
-    tableauIdx = 8;
-    state.waste = [13];
-    state.tableau = [[], [], [], [], [], [], [], []];
-    expect(game.moveWasteToTableau({ state, tableauIdx })).toBe(false);
-  });
-
-  it('should move tableau to foundation pile', () => {
-    const state = initGame();
-
-    // Hearts foundation
-    state.tableau = [[8, 1], [9, 2], [10, 3], [11, 4], [12, 5], [13, 6], [7]];
-    state.foundations = [[], [], [], []];
-    for (let i = 0; i < 13; i += 1) {
-      const tableauIdx = i % 7;
-      expect(game.moveTableauToFoundation({ state, tableauIdx, foundationIdx: 0 })).toBe(true);
-    }
-    expect(state.foundations[0].length).toBe(13);
-    expect(state.tableau.every((pile) => pile.length === 0)).toBe(true);
-
-    // Clubs foundation
-    state.tableau = [[26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14], [], [], [], [], [], []];
-    for (let i = 0; i < 13; i += 1) {
-      const tableauIdx = 0;
-      expect(game.moveTableauToFoundation({ state, tableauIdx, foundationIdx: 1 })).toBe(true);
-    }
-
-    // Diamonds foundation
-    state.tableau = [[39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27], [], [], [], [], [], []];
-    for (let i = 0; i < 13; i += 1) {
-      const tableauIdx = 0;
-      expect(game.moveTableauToFoundation({ state, tableauIdx, foundationIdx: 2 })).toBe(true);
-    }
-
-    // Spades foundation
-    state.tableau = [[52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40], [], [], [], [], [], []];
-    for (let i = 0; i < 13; i += 1) {
-      const tableauIdx = 0;
-      expect(game.moveTableauToFoundation({ state, tableauIdx, foundationIdx: 3 })).toBe(true);
-    }
-
-    // Covered cards should flip when uncovered
-    state.tableau = [[-4, -3, -2, 1], [], [], [], [], [], []];
-    state.foundations = [[], [], [], []];
-    expect(game.moveTableauToFoundation({ state, tableauIdx: 0, foundationIdx: 0 })).toBe(true);
-    expect(state.tableau[0]).toEqual([-4, -3, 2]);
-    expect(game.moveTableauToFoundation({ state, tableauIdx: 0, foundationIdx: 0 })).toBe(true);
-    expect(state.tableau[0]).toEqual([-4, 3]);
-    expect(game.moveTableauToFoundation({ state, tableauIdx: 0, foundationIdx: 0 })).toBe(true);
-    expect(state.tableau[0]).toEqual([4]);
-    expect(game.moveTableauToFoundation({ state, tableauIdx: 0, foundationIdx: 0 })).toBe(true);
-    expect(state.tableau[0]).toEqual([]);
-  });
-
-  it('should move single top card from tableau to tableau', () => {
-    const state = initGame();
-
-    // move a single king to another empty pile
-    state.tableau = [[13], [26], [39], [52], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 4, count: 1 })).toBe(true);
-    expect(game.moveTableauToTableau({ state, srcIdx: 1, destIdx: 5, count: 1 })).toBe(true);
-    expect(game.moveTableauToTableau({ state, srcIdx: 2, destIdx: 6, count: 1 })).toBe(true);
-    expect(game.moveTableauToTableau({ state, srcIdx: 3, destIdx: 0, count: 1 })).toBe(true);
-
-    // Aces cannot stack on empty tableau
-    state.tableau = [[1], [14], [27], [40], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 5, count: 1 })).toBe(false);
-    expect(game.moveTableauToTableau({ state, srcIdx: 1, destIdx: 5, count: 1 })).toBe(false);
-    expect(game.moveTableauToTableau({ state, srcIdx: 2, destIdx: 5, count: 1 })).toBe(false);
-    expect(game.moveTableauToTableau({ state, srcIdx: 3, destIdx: 5, count: 1 })).toBe(false);
-
-    // Transfer entire pile to another empty pile, 1 card at a time
-    state.tableau = [[1, 15, 29, 43, 5, 19, 33, 47, 9, 23, 37, 51, 13], [], [], [], [], [], []];
-    for (let i = 0; i < 13; i += 1) {
-      expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 1 })).toBe(true);
-    }
-    expect(state.tableau[0].length).toBe(0);
-    expect(state.tableau[1].length).toBe(13);
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    tableauIdx = 3;
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    tableauIdx = 4;
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    tableauIdx = 5;
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    tableauIdx = 6;
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    tableauIdx = 0;
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    game.flipTableauCard({ state, tableauIdx });
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx })).toBe(true);
+    expect(state.tableau).toEqual([[], [], [], [], [], [], []]);
+    expect(state.foundations).toEqual([[1, 2, 3, 4], [14, 15], [27, 28], [40]]);
 
     // invalid moves
-    // empty src
-    state.tableau = [[], [], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 1 })).toBe(false);
-    // invalid src idx
-    expect(game.moveTableauToTableau({ state, srcIdx: 8, destIdx: 1, count: 1 })).toBe(false);
-    // invalid dest idx
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 8, count: 1 })).toBe(false);
-
-    // Try to move a card that's not supposed to stack
-    state.tableau = [[1], [2], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 1 })).toBe(false);
-    expect(game.moveTableauToTableau({ state, srcIdx: 1, destIdx: 0, count: 1 })).toBe(false);
-
-    // Uncover a covered card when exposed
-    state.tableau = [[-23, -11, -25, 13], [], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 1 })).toBe(true);
-    expect(state.tableau[0]).toEqual([-23, -11, 25]);
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 1 })).toBe(true);
-    expect(state.tableau[0]).toEqual([-23, 11]);
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 1 })).toBe(true);
-    expect(state.tableau[0]).toEqual([23]);
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 1 })).toBe(true);
-    expect(state.tableau[0]).toEqual([]);
+    state.tableau = [[-4, -3, 1], [14], [27], [40], [2], [15], [28]];
+    state.foundations = [[], [], [], []];
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx: 4 })).toBe(false);
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx: 5 })).toBe(false);
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx: 0 })).toBe(true);
+    expect(game.moveTableauToFirstValidFoundation({ state, tableauIdx: 4 })).toBe(true);
   });
 
-  it('should move multiple cards from tableau to tableau', () => {
+  it('should flip tableau card, or ignore it if it is already flipped', () => {
     const state = initGame();
-
-    // Move a partial valid king stack to another empty pile
-    state.tableau = [[13, 25, 37, 49, 9, 21, 33, 45], [], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 8 })).toBe(true);
-    expect(state.tableau[0].length).toBe(0);
-    expect(state.tableau[1].length).toBe(8);
-
-    // Move a partial stack on top of another partial stack
-    state.tableau = [[13, 25, 37, 49, 9], [21, 33, 45, 5, 17], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 5 })).toBe(false);
-    expect(game.moveTableauToTableau({ state, srcIdx: 1, destIdx: 0, count: 5 })).toBe(true);
-
-    // Attempt to move an invalid stack pile, but with the stack top card being valid
-    // i.e. the 8 (8 of hearts) can stack on the 22 (9 of clubs), but the cards below the 8 form an
-    // invalid stack
-    state.tableau = [[8, 7, 6, 5, 4], [22], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 5 })).toBe(false);
-
-    // Attempt to move a valid stack, but some of the cards are face down
-    // i.e. the -9 (9 of hearts) and all cards below form a valid stack, and would
-    // normally stack on the 23(10 of clubs), but the -9 is face down
-    state.tableau = [[-9, -21, -33, 45], [23], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 4 })).toBe(false);
-
-    // If a covered card is exposed, it should uncover
-    // I'll move the 37 (Jack of diamonds) to the 25 (Queen of clubs)
-    // The -1 (Ace of hearts) should uncover
-    state.tableau = [[-2, -1, 37, 23, 9], [25], [], [], [], [], []];
-    expect(game.moveTableauToTableau({ state, srcIdx: 0, destIdx: 1, count: 3 })).toBe(true);
-    expect(state.tableau[0]).toEqual([-2, 1]);
-    expect(state.tableau[1]).toEqual([25, 37, 23, 9]);
-    game.moveTableauToFoundation({ state, tableauIdx: 0, foundationIdx: 0 });
-    expect(state.tableau[0]).toEqual([2]);
+    state.tableau = [[-1], [], [], [], [], [], []];
+    expect(game.flipTableauCard({ state, tableauIdx: 0 })).toBe(true);
+    expect(state.tableau).toEqual([[1], [], [], [], [], [], []]);
+    expect(game.flipTableauCard({ state, tableauIdx: 0 })).toBe(false);
+    expect(state.tableau).toEqual([[1], [], [], [], [], [], []]);
   });
 
   it('should undo moves correctly', () => {
     const initialState = initGame();
     // deep copy the state using strucutred cloning
-    let state = structuredClone(initialState);
+    const state = structuredClone(initialState);
     // single undo
     game.popToWaste(state);
     expect(state).not.toEqual(initialState);
@@ -614,56 +462,6 @@ describe('Solitaire', () => {
     for (let i = 0; i < 5; i += 1) {
       game.undo(state);
     }
-    expect(state).toEqual(initialState);
-
-    // Test waste to foundation undo
-    initialState.waste = [40, 27, 14, 1];
-    initialState.foundations = [[], [], [], []];
-    state = structuredClone(initialState);
-
-    game.moveWasteToFoundation({ state, foundationIdx: 0 });
-    game.moveWasteToFoundation({ state, foundationIdx: 1 });
-    game.moveWasteToFoundation({ state, foundationIdx: 2 });
-    game.moveWasteToFoundation({ state, foundationIdx: 3 });
-    game.undo(state);
-    game.undo(state);
-    game.undo(state);
-    game.undo(state);
-    expect(state).toEqual(initialState);
-
-    // waste to tableau undo
-    initialState.waste = [13, 26, 39, 52];
-    initialState.tableau = [[], [], [], [], [], [], []];
-    state = structuredClone(initialState);
-    game.moveWasteToTableau({ state, tableauIdx: 0 });
-    game.moveWasteToTableau({ state, tableauIdx: 1 });
-    game.moveWasteToTableau({ state, tableauIdx: 2 });
-    game.moveWasteToTableau({ state, tableauIdx: 3 });
-    game.undo(state);
-    game.undo(state);
-    game.undo(state);
-    game.undo(state);
-    expect(state).toEqual(initialState);
-
-    // tableau to foundation undo
-    initialState.tableau = [[1], [14], [27], [40], [], [], []];
-    initialState.foundations = [[], [], [], []];
-    state = structuredClone(initialState);
-    game.moveTableauToFoundation({ state, tableauIdx: 0, foundationIdx: 0 });
-    game.moveTableauToFoundation({ state, tableauIdx: 1, foundationIdx: 1 });
-    game.moveTableauToFoundation({ state, tableauIdx: 2, foundationIdx: 2 });
-    game.moveTableauToFoundation({ state, tableauIdx: 3, foundationIdx: 3 });
-    game.undo(state);
-    game.undo(state);
-    game.undo(state);
-    game.undo(state);
-    expect(state).toEqual(initialState);
-
-    // Tableau to tableau
-    initialState.tableau = [[13, 25, 37, 49, 9], [21, 33, 45, 5, 17], [], [], [], [], []];
-    state = structuredClone(initialState);
-    game.moveTableauToTableau({ state, srcIdx: 1, destIdx: 0, count: 5 });
-    game.undo(state);
     expect(state).toEqual(initialState);
   });
 });
