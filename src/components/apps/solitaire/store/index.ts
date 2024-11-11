@@ -35,6 +35,7 @@ export interface GameState {
   moveStack: Move[];
   dragData: DragData;
   isWon: boolean;
+  score: number;
 }
 
 interface Actions {
@@ -49,6 +50,7 @@ interface Actions {
   getFromTableauIdx: () => number | null;
   getFromFoundationIdx: () => number | null;
   getIsWon: () => boolean;
+  getScore: () => number;
   setWinningConditionIfWon: () => void;
 
   // Setters
@@ -83,6 +85,7 @@ const useSolitaireStore = create<SolitaireState>()(
     },
     moveStack: [],
     isWon: false,
+    score: 0,
     getStock: () => get().stock,
     getWaste: () => get().waste,
     getFoundations: () => get().foundations,
@@ -92,6 +95,7 @@ const useSolitaireStore = create<SolitaireState>()(
     getFromFoundationIdx: () => get().dragData.fromFoundationIdx ?? null,
     getDragCards: () => get().dragData.dragCards,
     getIsWon: () => get().isWon,
+    getScore: () => get().score,
     setWinningConditionIfWon: () => {
       if (get().foundations.every((foundation) => foundation.length === 13)) {
         set((state) => {
@@ -125,6 +129,7 @@ const useSolitaireStore = create<SolitaireState>()(
         if (state.stock.length === 0) {
           state.stock = state.waste.map((card) => -card).reverse();
           state.waste = [];
+          state.score -= 20;
           if (DEBUG) {
             const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
             const debugShuffledStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
@@ -184,6 +189,7 @@ const useSolitaireStore = create<SolitaireState>()(
               console.log(`${debugStr} \nTRUE\n`);
             }
             didFindFoundation = true;
+            state.score += 10;
             return;
           }
         }
@@ -237,6 +243,7 @@ const useSolitaireStore = create<SolitaireState>()(
           console.log(`${debugStr} \nTRUE\n`);
         }
         didMove = true;
+        state.score += 10;
 
         state.moveStack.push({
           type: 'tableauToFoundation',
@@ -283,6 +290,7 @@ const useSolitaireStore = create<SolitaireState>()(
         }
 
         didMove = true;
+        state.score += 10;
 
         state.moveStack.push({
           type: 'wasteToFoundation',
@@ -327,6 +335,7 @@ const useSolitaireStore = create<SolitaireState>()(
           console.log(`${debugStr} \nTRUE\n`);
         }
         didMove = true;
+        state.score += 5;
 
         state.moveStack.push({
           type: 'wasteToTableau',
@@ -375,6 +384,7 @@ const useSolitaireStore = create<SolitaireState>()(
           console.log(`${debugStr} \nTRUE\n`);
         }
         didMove = true;
+        state.score -= 15;
 
         state.moveStack.push({
           type: 'foundationToTableau',
@@ -472,6 +482,7 @@ const useSolitaireStore = create<SolitaireState>()(
               console.log(`${debugStr} \nTRUE\n`);
             }
             didFindFoundation = true;
+            state.score += 10;
             return;
           }
         }
@@ -522,6 +533,7 @@ const useSolitaireStore = create<SolitaireState>()(
           console.log(`Flip Tableau Card: Flipped ${game.getCardStr(card)} \nTRUE\n`);
         }
         didFlipCard = true;
+        state.score += 5;
       });
       return didFlipCard;
     },
@@ -539,6 +551,7 @@ const useSolitaireStore = create<SolitaireState>()(
             if (state.waste.length === 0) {
               state.waste = state.stock.map((card) => -card);
               state.stock = [];
+              state.score += 20;
             } else {
               state.stock.push(-state.waste.pop()!);
             }
@@ -553,6 +566,7 @@ const useSolitaireStore = create<SolitaireState>()(
 
           case 'moveWasteToFirstAvailableFoundation': {
             state.waste.push(state.foundations[move.foundationIdx].pop()!);
+            state.score -= 10;
             if (DEBUG) {
               const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
               const debugFoundation = `[${state.foundations
@@ -566,6 +580,7 @@ const useSolitaireStore = create<SolitaireState>()(
 
           case 'moveTableauToFirstAvailableFoundation': {
             state.tableau[move.tableauIdx].push(state.foundations[move.foundationIdx].pop()!);
+            state.score -= 10;
             if (DEBUG) {
               const debugTableau = `[${state.tableau[move.tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
               const debugFoundation = `[${state.foundations
@@ -580,6 +595,7 @@ const useSolitaireStore = create<SolitaireState>()(
           case 'flipTableauCard': {
             state.tableau[move.tableauIdx][state.tableau[move.tableauIdx].length - 1] =
               -state.tableau[move.tableauIdx].at(-1)!;
+            state.score -= 5;
             if (DEBUG) {
               const debugTableau = `[${state.tableau[move.tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
               const debugStr = `Undo Flip Tableau Card: \nTableau: ${debugTableau}`;
@@ -590,21 +606,25 @@ const useSolitaireStore = create<SolitaireState>()(
 
           case 'tableauToFoundation': {
             state.tableau[move.tableauIdx].push(state.foundations[move.foundationIdx].pop()!);
+            state.score -= 10;
             break;
           }
 
           case 'foundationToTableau': {
             state.foundations[move.foundationIdx].push(state.tableau[move.tableauIdx].pop()!);
+            state.score += 15;
             break;
           }
 
           case 'wasteToFoundation': {
             state.foundations[move.foundationIdx].push(state.waste.pop()!);
+            state.score -= 10;
             break;
           }
 
           case 'wasteToTableau': {
             state.waste.push(state.tableau[move.tableauIdx].pop()!);
+            state.score -= 5;
             break;
           }
 
@@ -633,6 +653,7 @@ const useSolitaireStore = create<SolitaireState>()(
         };
         state.moveStack = [];
         state.isWon = false;
+        state.score = 0;
 
         for (let i = state.stock.length - 1; i > 0; i -= 1) {
           const j = Math.floor(Math.random() * (i + 1));

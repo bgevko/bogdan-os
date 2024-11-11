@@ -9,6 +9,7 @@ const Solitaire = (): React.ReactElement => {
   const init = useSolitaireStore((state) => state.init);
   const undo = useSolitaireStore((state) => state.undo);
   const isGameWon = useSolitaireStore((state) => state.getIsWon());
+  const score = useSolitaireStore((state) => state.getScore());
 
   const [helpVisible, setHelpVisible] = useState(false);
 
@@ -140,6 +141,7 @@ const Solitaire = (): React.ReactElement => {
         </>
       )}
       <div className="absolute bottom-0 flex w-full cursor-default select-none justify-center rounded-b-lg bg-white px-4 py-1">
+        <p>Score: {score}</p>
         <p className="ml-auto">Esc To Restart</p>
         <button
           className="ml-auto size-6 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-200"
