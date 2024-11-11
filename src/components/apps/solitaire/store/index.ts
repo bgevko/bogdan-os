@@ -123,9 +123,8 @@ const useSolitaireStore = create<SolitaireState>()(
       set((state) => {
         // Transfer waste to stock if stock is empty
         if (state.stock.length === 0) {
-          state.stock = state.waste.map((card) => -card);
+          state.stock = state.waste.map((card) => -card).reverse();
           state.waste = [];
-
           if (DEBUG) {
             const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
             const debugShuffledStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
