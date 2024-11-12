@@ -26,3 +26,9 @@
 ### Theme system
 
 - Predefined themes, can be switched from the taskbar
+
+### Solitaire
+
+- Implement a timer
+- Implement hard mode (3 card draw)
+- Implement menu bar (system)
