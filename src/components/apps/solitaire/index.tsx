@@ -8,6 +8,7 @@ import useSolitaireStore from '@/solitaire/store';
 const Solitaire = (): React.ReactElement => {
   const init = useSolitaireStore((state) => state.init);
   const undo = useSolitaireStore((state) => state.undo);
+  const reset = useSolitaireStore((state) => state.reset);
   const isGameWon = useSolitaireStore((state) => state.getIsWon());
   const score = useSolitaireStore((state) => state.getScore());
 
@@ -23,6 +24,7 @@ const Solitaire = (): React.ReactElement => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        reset();
         init();
       }
     };
@@ -38,7 +40,7 @@ const Solitaire = (): React.ReactElement => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keydown', handleUndo);
     };
-  }, [init, undo]);
+  }, [init, undo, reset]);
 
   return (
     <section
@@ -82,7 +84,10 @@ const Solitaire = (): React.ReactElement => {
             <button
               className="rounded-md border px-4 py-1 text-gray-800 hover:bg-gray-100"
               type="button"
-              onClick={init}
+              onClick={() => {
+                reset();
+                init();
+              }}
             >
               Deal Again
             </button>
