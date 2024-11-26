@@ -5,7 +5,6 @@ import { immer } from 'zustand/middleware/immer';
 
 import { getProcessOptions } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
-import { TASKBAR_HEIGHT } from '@/themes';
 import { type Position, Size, SizePos, ProcessState, WindowState } from '@/types';
 
 enableMapSet();
@@ -96,11 +95,18 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
           // Non-mobile mode (screen width > 400px)
           let position: Position;
           let disableResize = false;
-          const isMobile = window.innerWidth <= 400 || window.innerHeight <= 400;
+          const [winWidth, winHeight] = [window.innerWidth, window.innerHeight];
+          const isMobile = winWidth <= 400 || winHeight <= 400;
 
-          if (isMobile) {
-            position = { x: 0, y: 0 };
-            size = { width: window.innerWidth, height: window.innerHeight - TASKBAR_HEIGHT };
+          if (isMobile || options.size.width >= winWidth || options.size.height >= winHeight) {
+            position = {
+              x: winWidth / 2 - size.width / 2,
+              y: winHeight / 2 - size.height / 2,
+            };
+            size = {
+              width: winWidth,
+              height: winHeight,
+            };
             disableResize = true;
           } else {
             // center the position based on viewport size and window size
@@ -108,8 +114,8 @@ const useProcessesStore = create<ProcessesState & ProcessesActions>()(
             const offset = Math.floor(Math.random() * 50);
             const addOrSubtract = Math.random() < 0.5 ? -1 : 1;
             position = {
-              x: window.innerWidth / 2 - size.width / 2 + offset * addOrSubtract,
-              y: window.innerHeight / 2 - size.height / 2 + offset * addOrSubtract,
+              x: winWidth / 2 - size.width / 2 + offset * addOrSubtract,
+              y: winHeight / 2 - size.height / 2 + offset * addOrSubtract,
             };
             disableResize = false;
           }

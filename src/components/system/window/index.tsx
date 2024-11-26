@@ -1,7 +1,10 @@
 import { type ReactElement, ReactNode, useCallback } from 'react';
 
+import { DynamicIconsByName } from '@/components/system/dynamic-icons';
 import WindowResizeHandles from '@/components/system/window/resize-handles';
 import WindowHeader from '@/components/system/window/window-header';
+import { getProcessOptions } from '@/static';
+import useFsStore from '@/stores/use-fs-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import cn from '@/utils/format';
@@ -15,13 +18,20 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const isAnimating = useProcessesStore((state) => state.getIsAnimating(path));
   const position = useProcessesStore((state) => state.getWindowPosition(path));
   const size = useProcessesStore((state) => state.getWindowSize(path));
+  const minSize = useProcessesStore((state) => state.getWindowMinSize(path));
   const opacity = useProcessesStore((state) => state.getOpacity(path));
   const isMinimized = useProcessesStore((state) => state.getIsMinimized(path));
   const setFocused = useProcessesStore((state) => state.setFocused);
   const allFocused = useProcessesStore((state) => state.getFocused());
   const appendMouseContext = useMouseStore((state) => state.appendMouseoverContext);
   const popMouseContext = useMouseStore((state) => state.popMouseoverContext);
+  const isDir = useFsStore((state) => state.isDir);
   const isFocused = useProcessesStore((state) => state.getIsFocused(path));
+
+  // Check if mobile mode is disabled
+  const { disableMobile } = getProcessOptions(path, isDir(path));
+  const willRenderWarning =
+    disableMobile && (window.innerWidth <= minSize.width || window.innerHeight <= minSize.height);
 
   // Set background to background: 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)' if focused, otherwise to
   // background: linear-gradient(180deg, #FFE9C6 0%, rgba(91, 91, 91, 0.10) 100%);
@@ -77,7 +87,17 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
           <WindowResizeHandles path={path} />
           <WindowHeader path={path} />
           <article className={cn('relative flex flex-1 rounded-b-lg')}>
-            <div className="absolute inset-y-0 w-full rounded-b-lg">{children}</div>
+            <div className="absolute inset-y-0 w-full rounded-b-lg">
+              {willRenderWarning ? (
+                <div className="flex size-full flex-col items-center justify-center gap-1">
+                  <p className="font-bold">Psst!</p>
+                  <DynamicIconsByName iconName="secret" size={150} color="#FFBF9A" shadow={false} />
+                  <p className="font-bold"> This app doesn&apos;t work on mobile.. yet!</p>
+                </div>
+              ) : (
+                children
+              )}
+            </div>
           </article>
         </>
       )}

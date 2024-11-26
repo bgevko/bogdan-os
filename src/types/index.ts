@@ -103,6 +103,7 @@ export interface InitialProcessConfig {
   hasWindow: boolean;
   disableDelete: boolean;
   component: LazyAppComponent;
+  disableMobile: boolean;
 
   // Initial Window State
   size: Size;

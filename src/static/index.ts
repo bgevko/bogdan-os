@@ -24,6 +24,7 @@ const FileOrFolder: AppOptions = new Map([
       hasWindow: true,
       disableDelete: false,
       component: lazy(() => import('@/apps/hello-world')),
+      disableMobile: false,
 
       // Initial window state
       size: { width: 400, height: 400 },
@@ -38,6 +39,7 @@ const FileOrFolder: AppOptions = new Map([
       hasWindow: true,
       disableDelete: false,
       component: lazy(() => import('@/components/system/file-explorer')),
+      disableMobile: false,
 
       // Initial window state
       size: { width: 400, height: 400 },
@@ -56,9 +58,10 @@ const appOptions: AppOptions = new Map([
       hasWindow: true,
       disableDelete: true,
       component: lazy(() => import('@/apps/solitaire')),
+      disableMobile: true,
 
       // Initial window state
-      size: { width: 850, height: 600 },
+      size: { width: 850, height: 650 },
     },
   ],
   [
@@ -70,6 +73,7 @@ const appOptions: AppOptions = new Map([
       hasWindow: true,
       disableDelete: true,
       component: lazy(() => import('@/apps/excalidraw')),
+      disableMobile: false,
 
       // Initial window state
       size: { width: 800, height: 600 },
@@ -85,6 +89,7 @@ const appOptions: AppOptions = new Map([
       hasWindow: true,
       disableDelete: true,
       component: lazy(() => import('@/apps/readme')),
+      disableMobile: false,
 
       // Initial window state
       size: { width: 400, height: 500 },
