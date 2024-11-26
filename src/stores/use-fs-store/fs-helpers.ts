@@ -1,6 +1,4 @@
 /* eslint-disable no-use-before-define */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-param-reassign */
 import { startingDir } from '@/static';
 import useGridStore from '@/stores/use-grid-store';
 import useProcessesStore from '@/stores/use-processes-store';

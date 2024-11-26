@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { lazy } from 'react';
 
 import { Paths, AppOptions, InitialProcessConfig } from '@/types';
@@ -24,7 +23,7 @@ const FileOrFolder: AppOptions = new Map([
       fileExt: '',
       hasWindow: true,
       disableDelete: false,
-      component: lazy(() => import('@/components/apps/hello-world')),
+      component: lazy(() => import('@/apps/hello-world')),
 
       // Initial window state
       size: { width: 400, height: 400 },
@@ -56,7 +55,7 @@ const appOptions: AppOptions = new Map([
       fileExt: '.app',
       hasWindow: true,
       disableDelete: true,
-      component: lazy(() => import('@/components/apps/solitaire')),
+      component: lazy(() => import('@/apps/solitaire')),
 
       // Initial window state
       size: { width: 850, height: 600 },
@@ -70,7 +69,7 @@ const appOptions: AppOptions = new Map([
       fileExt: '.app',
       hasWindow: true,
       disableDelete: true,
-      component: lazy(() => import('@/components/apps/excalidraw')),
+      component: lazy(() => import('@/apps/excalidraw')),
 
       // Initial window state
       size: { width: 800, height: 600 },
@@ -85,7 +84,7 @@ const appOptions: AppOptions = new Map([
       fileExt: '.app',
       hasWindow: true,
       disableDelete: true,
-      component: lazy(() => import('@/components/apps/readme')),
+      component: lazy(() => import('@/apps/readme')),
 
       // Initial window state
       size: { width: 400, height: 500 },

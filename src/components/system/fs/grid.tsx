@@ -1,5 +1,3 @@
-/* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { type ReactElement, useState, ReactNode } from 'react';
 import { useEffect, useCallback } from 'react';
 

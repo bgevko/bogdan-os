@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware'; // Added this line
 import { immer } from 'zustand/middleware/immer';
 
-import * as game from '@/components/apps/solitaire/game';
+import * as game from '@/solitaire/game';
 
 const DEBUG = false;
 

@@ -5,3 +5,4 @@
 - Dragging an item across a non-drop target makes the drop guide fly off screen.
 - Drop guide isn't updated correctly when dragging from desktop to folder
 - Background stretches on resize
+- Deleting an opened nested folder messes up the focus stack. Makes the parent window unclickable.

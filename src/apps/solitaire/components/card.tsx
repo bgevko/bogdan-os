@@ -29,7 +29,7 @@ const CardIcon: React.FC<CardIconProps> = ({
     const icon = isFlipped ? 'back' : iconName;
     let isMounted = true;
     (
-      import(`@/components/apps/solitaire/assets/${icon}.svg?react`) as Promise<{
+      import(`@/apps/solitaire/assets/${icon}.svg?react`) as Promise<{
         default: React.ComponentType<React.SVGProps<SVGSVGElement>>;
       }>
     )

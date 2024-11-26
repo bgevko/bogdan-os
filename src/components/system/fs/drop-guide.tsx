@@ -42,7 +42,6 @@ const DropGuide = ({ path = '/Desktop' }: { path?: string }): ReactElement | nul
     <>
       {positions.map((position, index) => (
         <span
-          // eslint-disable-next-line react/no-array-index-key
           key={index}
           className="pointer-events-none absolute border-2 border-dashed border-accent-400 transition-all"
           style={{

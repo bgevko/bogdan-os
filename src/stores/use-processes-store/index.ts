@@ -1,6 +1,4 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable no-use-before-define */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';

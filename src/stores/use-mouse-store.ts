@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { create } from 'zustand';
 
 import { MouseContext } from '@/types';

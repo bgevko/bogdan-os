@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/prefer-for-of */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-use-before-define */
-/* eslint-disable no-param-reassign */
 
 // game.ts
 

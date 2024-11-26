@@ -44,7 +44,7 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        '@/solitaire': path.resolve(__dirname, './src/components/apps/solitaire'),
+        '@/solitaire': path.resolve(__dirname, './src/apps/solitaire'),
         '@': path.resolve(__dirname, './src'),
       },
     },

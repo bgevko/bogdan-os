@@ -21,7 +21,6 @@ const DynamicIcons: React.FC<DynamicIconProps> = ({
   const options = getProcessOptions(path, isDir(path));
   const { iconName, iconColor } = options;
 
-  // eslint-disable-next-line no-param-reassign
   color = iconColor ?? color;
 
   const [Icon, setIcon] = useState<React.ComponentType<React.SVGProps<SVGSVGElement>> | null>(null);

@@ -1,15 +1,10 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-console */
 /* eslint-disable no-relative-import-paths/no-relative-import-paths */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable unicorn/no-useless-undefined */
-/* eslint-disable no-plusplus */
 /* eslint-disable import/no-extraneous-dependencies */
 // game.test.ts
 import { describe, it, expect } from 'vitest';
 
-import { initGame, aStacksOnB } from '@/components/apps/solitaire/game';
+import { initGame, aStacksOnB } from '@/solitaire/game';
 
 import * as game from './game';
 

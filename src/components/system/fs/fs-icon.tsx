@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { ReactElement, useMemo, useEffect, useState, useCallback } from 'react';
 
 import DynamicIcons from '@/components/system/dynamic-icons';
@@ -383,7 +382,6 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
           }}
           onDragOver={(event: React.DragEvent) => {
             event.preventDefault();
-            // eslint-disable-next-line no-param-reassign
             event.dataTransfer.dropEffect = 'move';
             setDragoverPath(path);
           }}

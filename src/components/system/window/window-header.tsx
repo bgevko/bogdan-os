@@ -242,7 +242,6 @@ const WindowHeader = ({ path }: WindowHandlesProperties): ReactElement => {
         }}
         onDragOver={(event: React.DragEvent) => {
           event.preventDefault();
-          // eslint-disable-next-line no-param-reassign
           event.dataTransfer.dropEffect = 'move';
           setGuideIndex(0);
           setGuideOpacity(0);
