@@ -29,6 +29,5 @@
 
 ### Solitaire
 
-- Implement a timer
 - Implement hard mode (3 card draw)
 - Implement menu bar (system)

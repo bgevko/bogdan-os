@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 
-import Card from '@/solitaire/components/card';
+import Card, { CardIcon } from '@/solitaire/components/card';
 
 interface StockStackProps {
   cards: number[];
@@ -27,7 +27,18 @@ const StockStackBase = ({ cards, onClick }: StockStackProps): React.ReactElement
         onClick={() => onClick?.()}
       >
         {isEmpty ? (
-          <div className={`h-[145px] w-[100px] ${emptyStyle}`} />
+          <div className={`flex h-[145px] w-[100px] items-center justify-center ${emptyStyle}`}>
+            <CardIcon
+              iconName="flip"
+              isFlipped={false}
+              width={50}
+              color="white"
+              style={{
+                transform: 'scaleX(-1)',
+                opacity: 0.5,
+              }}
+            />
+          </div>
         ) : (
           <div className="relative w-[100px]">
             {cards.map((cardValue, index) => {

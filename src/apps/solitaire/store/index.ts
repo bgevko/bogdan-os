@@ -9,8 +9,6 @@ import * as game from '@/solitaire/game';
 
 const DEBUG = false;
 
-// TODO: Add checks to make sure no other moves can be performed if there's anything in the transfer stack
-
 type Move =
   | { type: 'popToWaste' }
   | { type: 'moveWasteToFirstAvailableFoundation'; foundationIdx: number }
@@ -37,6 +35,7 @@ export interface GameState {
   dragData: DragData;
   isWon: boolean;
   score: number;
+  secondsElapsed: number;
   isGameInProgress: boolean;
 }
 
@@ -53,12 +52,15 @@ interface Actions {
   getFromFoundationIdx: () => number | null;
   getIsWon: () => boolean;
   getScore: () => number;
+  getSecondsElapsed: () => number;
   setWinningConditionIfWon: () => void;
 
   // Setters
   setDragCards: (cards: number[]) => void;
   setFromTableauIdx: (tableauIdx: number | null) => void;
   setFromFoundationIdx: (foundationIdx: number | null) => void;
+  setSecondsElapsed: (seconds: number) => void;
+  adjustScore: (points: number) => void;
 
   // Actions
   popToWaste: () => void;
@@ -90,6 +92,7 @@ const useSolitaireStore = create<SolitaireState>()(
       moveStack: [],
       isWon: false,
       score: 0,
+      secondsElapsed: 0,
       isGameInProgress: false,
       getStock: () => get().stock,
       getWaste: () => get().waste,
@@ -101,6 +104,7 @@ const useSolitaireStore = create<SolitaireState>()(
       getDragCards: () => get().dragData.dragCards,
       getIsWon: () => get().isWon,
       getScore: () => get().score,
+      getSecondsElapsed: () => get().secondsElapsed,
       setWinningConditionIfWon: () => {
         if (get().foundations.every((foundation) => foundation.length === 13)) {
           set((state) => {
@@ -128,13 +132,26 @@ const useSolitaireStore = create<SolitaireState>()(
         });
       },
 
+      setSecondsElapsed: (seconds) => {
+        set((state) => {
+          state.secondsElapsed = seconds;
+        });
+      },
+
+      adjustScore: (points) => {
+        set((state) => {
+          state.score += points;
+        });
+      },
+
+      // Actions
       popToWaste: () => {
         set((state) => {
           // Transfer waste to stock if stock is empty
           if (state.stock.length === 0) {
             state.stock = state.waste.map((card) => -card).reverse();
             state.waste = [];
-            state.score -= 20;
+            state.score -= 200;
             if (DEBUG) {
               const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
               const debugShuffledStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
@@ -199,7 +216,7 @@ const useSolitaireStore = create<SolitaireState>()(
                 console.log(`${debugStr} \nTRUE\n`);
               }
               didFindFoundation = true;
-              state.score += 10;
+              state.score += 100;
               return;
             }
           }
@@ -253,7 +270,7 @@ const useSolitaireStore = create<SolitaireState>()(
             console.log(`${debugStr} \nTRUE\n`);
           }
           didMove = true;
-          state.score += 10;
+          state.score += 100;
 
           state.moveStack.push({
             type: 'tableauToFoundation',
@@ -304,7 +321,7 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           didMove = true;
-          state.score += 10;
+          state.score += 100;
 
           state.moveStack.push({
             type: 'wasteToFoundation',
@@ -354,7 +371,7 @@ const useSolitaireStore = create<SolitaireState>()(
             console.log(`${debugStr} \nTRUE\n`);
           }
           didMove = true;
-          state.score += 5;
+          state.score += 50;
 
           state.moveStack.push({
             type: 'wasteToTableau',
@@ -408,7 +425,7 @@ const useSolitaireStore = create<SolitaireState>()(
             console.log(`${debugStr} \nTRUE\n`);
           }
           didMove = true;
-          state.score -= 15;
+          state.score -= 150;
 
           state.moveStack.push({
             type: 'foundationToTableau',
@@ -521,7 +538,7 @@ const useSolitaireStore = create<SolitaireState>()(
                 console.log(`${debugStr} \nTRUE\n`);
               }
               didFindFoundation = true;
-              state.score += 10;
+              state.score += 100;
               return;
             }
           }
@@ -577,7 +594,7 @@ const useSolitaireStore = create<SolitaireState>()(
             console.log(`Flip Tableau Card: Flipped ${game.getCardStr(card)} \nTRUE\n`);
           }
           didFlipCard = true;
-          state.score += 5;
+          state.score += 50;
         });
         return didFlipCard;
       },
@@ -589,8 +606,8 @@ const useSolitaireStore = create<SolitaireState>()(
             return;
           }
 
-          // Apply a 5 point penalty for undoing a move
-          state.score -= 5;
+          // Apply a 10 point penalty for undoing a move
+          state.score -= 100;
 
           const move = state.moveStack.pop()!;
           switch (move.type) {
@@ -690,7 +707,6 @@ const useSolitaireStore = create<SolitaireState>()(
       },
       init: () => {
         if (!get().isGameInProgress) {
-          console.log('Initializing game');
           set((state) => {
             state.stock = Array.from({ length: 52 }, (_, i) => -(i + 1)); // -1 to -52 (face down)
             state.waste = [];
@@ -703,6 +719,7 @@ const useSolitaireStore = create<SolitaireState>()(
             state.moveStack = [];
             state.isWon = false;
             state.score = 0;
+            state.secondsElapsed = 0;
             state.isGameInProgress = true;
 
             for (let i = state.stock.length - 1; i > 0; i -= 1) {
@@ -724,13 +741,16 @@ const useSolitaireStore = create<SolitaireState>()(
             // DEBUG
             // state.stock = [];
             // state.waste = [];
-            // state.tableau = [[13], [], [], [], [], [], []];
-            // state.foundations = [
-            //   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-            //   [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26],
-            //   [27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
-            //   [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+            // state.tableau = [
+            //   [13, 25, 11, 23, 9, 21, 7, 19, 5, 17, 3, 15, 1],
+            //   [26, 12, 24, 10, 22, 8, 20, 6, 18, 4, 16, 2, 14],
+            //   [39, 51, 37, 49, 35, 47, 33, 45, 31, 43, 29, 41, 27],
+            //   [52, 38, 50, 36, 48, 34, 46, 32, 44, 30, 42, 28, 40],
+            //   [],
+            //   [],
+            //   [],
             // ];
+            // state.foundations = [[], [], [], []];
           });
         }
       },
