@@ -14,15 +14,17 @@ interface CardIconProps {
   shadow?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  width?: number;
 }
 
-const CardIcon: React.FC<CardIconProps> = ({
+export const CardIcon: React.FC<CardIconProps> = ({
   iconName,
   isFlipped,
   color = 'white',
   shadow = false,
   className,
   style,
+  width,
 }) => {
   const [Icon, setIcon] = useState<React.ComponentType<React.SVGProps<SVGSVGElement>> | null>(null);
   useEffect(() => {
@@ -51,7 +53,7 @@ const CardIcon: React.FC<CardIconProps> = ({
     <Icon
       className={cn(shadow && 'icon-shadow', className)}
       fill={color}
-      width={CARD_WIDTH}
+      width={width ?? CARD_WIDTH}
       height={CARD_HEIGHT}
       style={style}
     />

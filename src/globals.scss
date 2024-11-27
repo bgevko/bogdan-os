@@ -14,6 +14,18 @@ body {
   font-family: 'Sofia Sans Condensed', sans-serif;
 }
 
+input:focus {
+  outline: 2px solid orange; /* stylelint-disable-line color-named */
+}
+
+button:disabled {
+  color: gray; /* stylelint-disable-line color-named */
+}
+
+button:disabled:hover {
+  background: none;
+}
+
 .embossed {
   background: linear-gradient(112deg, #fc9898 -52.33%, #ffcaca 160.26%);
   box-shadow:

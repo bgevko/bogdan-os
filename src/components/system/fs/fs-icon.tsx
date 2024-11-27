@@ -409,7 +409,7 @@ const FileSystemIcon = ({ path }: { path: string }): ReactElement => {
           }}
         >
           <DynamicIcons path={path} />
-          <span className="text-base font-bold">{fileName}</span>
+          <span className="select-none text-base font-bold">{fileName}</span>
         </button>
       </li>
     </>
