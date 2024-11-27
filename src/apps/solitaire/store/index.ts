@@ -20,6 +20,13 @@ type Move =
   | { type: 'wasteToTableau'; tableauIdx: number }
   | { type: 'tableauToTableau'; fromTableauIdx: number; toTableauIdx: number; count: number };
 
+export interface LeaderboardEntry {
+  name: string;
+  time: number;
+  score: number;
+  highlight?: boolean;
+}
+
 interface DragData {
   dragCards: number[];
   fromTableauIdx?: number | null;
@@ -37,6 +44,8 @@ export interface GameState {
   score: number;
   secondsElapsed: number;
   isGameInProgress: boolean;
+  leaderboard: LeaderboardEntry[];
+  submitted: boolean;
 }
 
 interface Actions {
@@ -54,13 +63,17 @@ interface Actions {
   getScore: () => number;
   getSecondsElapsed: () => number;
   setWinningConditionIfWon: () => void;
+  getLeaderboard: () => LeaderboardEntry[];
+  getSubmitted: () => boolean;
 
   // Setters
   setDragCards: (cards: number[]) => void;
   setFromTableauIdx: (tableauIdx: number | null) => void;
   setFromFoundationIdx: (foundationIdx: number | null) => void;
   setSecondsElapsed: (seconds: number) => void;
-  adjustScore: (points: number) => void;
+  setScore: (score: number) => void;
+  setLeaderboard: (leaderboard: LeaderboardEntry[]) => void;
+  setSubmitted: (submitted: boolean) => void;
 
   // Actions
   popToWaste: () => void;
@@ -74,6 +87,8 @@ interface Actions {
   flipTableauCard: (tableauIdx: number) => boolean;
   reset: () => void;
   undo: () => void;
+  clearLeaderboard: () => void;
+  calcFinalScore: () => number;
 }
 
 interface SolitaireState extends GameState, Actions {}
@@ -94,6 +109,8 @@ const useSolitaireStore = create<SolitaireState>()(
       score: 0,
       secondsElapsed: 0,
       isGameInProgress: false,
+      leaderboard: [],
+      submitted: false,
       getStock: () => get().stock,
       getWaste: () => get().waste,
       getFoundations: () => get().foundations,
@@ -112,6 +129,8 @@ const useSolitaireStore = create<SolitaireState>()(
           });
         }
       },
+      getLeaderboard: () => get().leaderboard,
+      getSubmitted: () => get().submitted,
 
       // setters
       setFromTableauIdx: (tableauIdx) => {
@@ -138,9 +157,24 @@ const useSolitaireStore = create<SolitaireState>()(
         });
       },
 
-      adjustScore: (points) => {
+      setScore: (score) => {
         set((state) => {
-          state.score += points;
+          state.score = score;
+        });
+      },
+
+      setLeaderboard: (leaderboard) => {
+        set((state) => {
+          // if leaderboard is bigger than 100 entries, truncate
+          if (leaderboard.length > 100) {
+            leaderboard = leaderboard.slice(0, 100);
+          }
+          state.leaderboard = leaderboard;
+        });
+      },
+      setSubmitted: (submitted) => {
+        set((state) => {
+          state.submitted = submitted;
         });
       },
 
@@ -698,6 +732,21 @@ const useSolitaireStore = create<SolitaireState>()(
         });
       },
 
+      clearLeaderboard: () => {
+        set((state) => {
+          state.leaderboard = [];
+        });
+      },
+
+      calcFinalScore: () => {
+        // reward player with a flat 300 points if their time is under 2 minutes
+        // otherwise, taper it off by 1 point per second. Past 5 minutes, no bonus.
+        // If the player completes under 5 minutes, also take away the 2 point penalty for every 10 seconds.
+        const [score, time] = [get().score, get().secondsElapsed];
+        const bonus = time < 120 ? 3000 : Math.max(0, 300 - time) * 10;
+        return score + bonus;
+      },
+
       reset: () => {
         set((state) => {
           state.isGameInProgress = false;
@@ -721,6 +770,7 @@ const useSolitaireStore = create<SolitaireState>()(
             state.score = 0;
             state.secondsElapsed = 0;
             state.isGameInProgress = true;
+            state.submitted = false;
 
             for (let i = state.stock.length - 1; i > 0; i -= 1) {
               const j = Math.floor(Math.random() * (i + 1));
