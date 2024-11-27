@@ -45,7 +45,7 @@ const Solitaire = (): React.ReactElement => {
 
         // every 10 seconds, adjust the score by -2
         if (currentTime % 10 === 0 && currentTime !== 0) {
-          setScore(getScore() - 2);
+          setScore(getScore() - 20);
         }
 
         setTime(currentTime);
