@@ -97,7 +97,7 @@ export interface ProcessState {
 
 export interface InitialProcessConfig {
   iconName: string;
-  iconColor?: string; // wil be a hex string
+  iconColor?: string; // hex string
   fileName: string;
   fileExt: string;
   hasWindow: boolean;

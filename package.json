@@ -14,7 +14,7 @@
     "prepare": "husky",
     "test": "vitest --run",
     "test:w": "vitest --watch",
-    "test:current": "vitest solitaire.game.test",
+    "test:current": "vitest fs-utils.test",
     "cy:window": "cypress run --spec 'cypress/e2e/window.cy.ts'",
     "test:ui": "vitest --ui"
   },

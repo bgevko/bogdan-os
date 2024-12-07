@@ -44,6 +44,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'prefer-destructuring': 'off',
     'no-param-reassign': 'off',
     'lines-between-class-members': 'off',
     'arrow-body-style': 'off',
