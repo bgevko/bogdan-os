@@ -1,8 +1,8 @@
 import useMenuStore from '@/stores/use-menu-store';
 import useProcessesStore from '@/stores/use-processes-store';
-import { ContextMenuItem, ContextCallback } from '@/types';
+import { ContextMenuItem, ContextMenuCallback } from '@/types';
 
-const useWindowHeaderContext = (): ContextCallback => {
+const useWindowHeaderContext = (): ContextMenuCallback => {
   const closeProcess = useProcessesStore((state) => state.closeProcess);
   const targetPath = useMenuStore((state) => state.targetPath);
 

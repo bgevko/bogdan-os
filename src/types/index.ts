@@ -143,8 +143,8 @@ export interface MenuCallbackArgs {
 }
 export type ContextMenuItem = () => void;
 export type ContextMenuItems = Map<string, ContextMenuItem>;
-export type ContextCallback = () => ContextMenuItems;
-export type ContextCallbacks = Map<MenuContext, ContextCallback>;
+export type ContextMenuCallback = () => ContextMenuItems;
+export type ContextMenuCallbacks = Map<MenuContext, ContextMenuCallback>;
 
 // Other statics
 export type Paths = string[];
