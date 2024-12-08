@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 
-import { LeaderboardEntry } from '@/solitaire/store';
+import useSolitaireStore, { LeaderboardEntry } from '@/solitaire/store';
 import cn, { formatTime } from '@/utils/format';
 
 interface WinScreenProps {
@@ -30,6 +30,8 @@ const WinScreen: React.FC<WinScreenProps> = ({
   const [isHoverNewGame, setIsHoverNewGame] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const multipler = useSolitaireStore((state) => state.getDifficultyMultiplier());
 
   // Ghost entry represents the current user's score before submission
   const ghostEntry = useMemo(() => {
@@ -186,6 +188,7 @@ const WinScreen: React.FC<WinScreenProps> = ({
             <span>
               <p>Time: {formatTime(time)}</p>
               <p>Time Bonus: {timeBonus}</p>
+              <p>Difficulty Multiplier: {multipler} </p>
               <p>Final Score: {score}</p>
             </span>
 

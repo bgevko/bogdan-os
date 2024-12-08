@@ -44,6 +44,10 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'jsx-a11y/click-events-have-key-events': 'off',
+    'jsx-a11y/no-static-element-interactions': 'off',
+    'unicorn/prefer-top-level-await': 'off',
+    'prefer-destructuring': 'off',
     'no-param-reassign': 'off',
     'lines-between-class-members': 'off',
     'arrow-body-style': 'off',

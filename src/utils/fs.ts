@@ -13,37 +13,65 @@ export const selectionIntersectsElement = (selection: SizePos, element: Position
   return true;
 };
 
+interface FilePathTokens {
+  parent: string;
+  name: string;
+  ext: string;
+}
+
+function tokenizePath(path: string): FilePathTokens {
+  const regex = /([^/]\w+)\.*(\w+)*/g;
+  const matches: string[] = [];
+  let match = regex.exec(path);
+  const tokens: FilePathTokens = { parent: '', name: '', ext: '' };
+
+  while (match !== null) {
+    matches.push(match[1]);
+    if (match[2]) {
+      tokens.ext = match[2];
+    }
+    match = regex.exec(path);
+  }
+
+  if (matches.length === 0) {
+    return tokens;
+  }
+  if (matches.length === 1) {
+    tokens.parent = '/';
+    tokens.name = matches[0];
+    return tokens;
+  }
+
+  tokens.name = matches.pop() ?? '';
+  tokens.parent = `/${matches.join('/')}`;
+
+  return tokens;
+}
+
 export function parseFileName(filePath: string): string {
-  // Remove trailing slash
-  let path = filePath;
-  if (path.at(-1) === '/') {
-    path = path.slice(0, -1);
-  }
-
-  let fileName = path.split('/').at(-1) ?? '';
-  if (fileName === '') {
-    fileName = path;
-  }
-
-  // if has extension, remove it
-  fileName = fileName.split('.').length > 1 ? fileName.split('.').slice(0, -1).join('.') : fileName;
-  return fileName;
+  return tokenizePath(filePath).name;
 }
 
 export function parseParentPath(filePath: string): string {
-  let path = filePath;
-  if (path === '/') {
-    return '';
-  }
-  if (path.at(-1) === '/') {
-    path = path.slice(0, -1);
-  }
-
-  const parent = path.split('/').slice(0, -1).join('/') || '/';
-  return parent;
+  return tokenizePath(filePath).parent;
 }
 
+export function parseFileExt(filePath: string): string {
+  return tokenizePath(filePath).ext;
+}
+
+export function parseFullFileName(filePath: string): string {
+  const { name, ext } = tokenizePath(filePath);
+  return ext ? `${name}.${ext}` : name;
+}
+
+export const splitPath = (path: string): string[] => ['/', ...path.split('/').filter(Boolean)];
+
 export function normalizePath(filePath: string): string {
+  /* Normlize to ensure always a consistent path format
+   * All paths should start with a leading slash
+   * No path should end with a trailing slash
+   */
   let path: string = filePath;
   path = path.endsWith('/') ? path.slice(0, -1) : path;
   if (!path.startsWith('/')) {
@@ -51,15 +79,3 @@ export function normalizePath(filePath: string): string {
   }
   return path;
 }
-
-export function parseFileExt(filePath: string): string {
-  return filePath.search(/\.[\da-z]+$/i) === -1 ? '' : filePath.split('.').at(-1) ?? '';
-}
-
-export function parseFullFileName(filePath: string): string {
-  const fileName = parseFileName(filePath);
-  const fileExt = parseFileExt(filePath);
-  return fileExt ? `${fileName}.${fileExt}` : fileName;
-}
-
-export const splitPath = (path: string): string[] => ['/', ...path.split('/').filter(Boolean)];

@@ -8,8 +8,10 @@ import useSolitaireStore from '@/solitaire/store';
 
 export const StockBase = (): React.ReactElement => {
   const stock = useSolitaireStore((state) => state.getStock());
+  const isHard = useSolitaireStore((state) => state.getDifficulty()) === 'hard';
   const popToWaste = useSolitaireStore((state) => state.popToWaste);
-  return <StockStack cards={stock} onClick={popToWaste} />;
+  const popThreeToWaste = useSolitaireStore((state) => state.popThreeToWaste);
+  return <StockStack cards={stock} onClick={isHard ? popThreeToWaste : popToWaste} />;
 };
 export const Stock = memo(StockBase);
 

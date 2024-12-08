@@ -2,14 +2,14 @@ import useFileIconContext from '@/hooks/system/use-context-menu/use-file-icon-co
 import useFolderContext from '@/hooks/system/use-context-menu/use-folder-context';
 import useTaskbarEntryContext from '@/hooks/system/use-context-menu/use-taskbar-entry-context';
 import useWindowHeaderContext from '@/hooks/system/use-context-menu/use-window-header-context';
-import { ContextCallbacks } from '@/types';
+import { ContextMenuCallbacks } from '@/types';
 
 interface Returns {
-  contextOptions: ContextCallbacks;
+  contextOptions: ContextMenuCallbacks;
 }
 
 const UseMenuContext = (): Returns => {
-  const contextOptions: ContextCallbacks = new Map([
+  const contextOptions: ContextMenuCallbacks = new Map([
     ['desktop', useFolderContext()],
     ['folder', useFolderContext()],
     ['file-icon', useFileIconContext()],

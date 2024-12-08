@@ -2,9 +2,9 @@ import { getProcessOptions } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import useMenuStore from '@/stores/use-menu-store';
 import useProcessesStore from '@/stores/use-processes-store';
-import { ContextMenuItem, ContextCallback } from '@/types';
+import { ContextMenuItem, ContextMenuCallback } from '@/types';
 
-const useFileIconContext = (): ContextCallback => {
+const useFileIconContext = (): ContextMenuCallback => {
   const openProcess = useProcessesStore((state) => state.openProcess);
   const closeProcess = useProcessesStore((state) => state.closeProcess);
   const rm = useFsStore((state) => state.rm);

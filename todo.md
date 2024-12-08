@@ -29,5 +29,5 @@
 
 ### Solitaire
 
-- Implement hard mode (3 card draw)
-- Implement menu bar (system)
+- Animations and polish
+- Non-local high scores

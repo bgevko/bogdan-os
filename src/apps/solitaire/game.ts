@@ -527,10 +527,12 @@ export function aStacksOnB({
   a,
   b,
   isFoundation = false,
+  isEasyMode = false,
 }: {
   a: number;
   b?: number;
   isFoundation?: boolean;
+  isEasyMode?: boolean;
 }): boolean {
   /**
    * Determines if card 'a' can be stacked on card 'b'
@@ -540,6 +542,7 @@ export function aStacksOnB({
    *     a: The card to be moved.
    *     b: The target card to stack upon.
    *     isFoundation: True if the target is a isFoundation card, False if it's a tableau card.
+   *     isEasyMode: Allows any card to be stacked on an empty tableau pile.
    * Returns:
    *     True if card 'a' can be stacked on card 'b' according to the rules, False otherwise.
    */
@@ -557,7 +560,8 @@ export function aStacksOnB({
       return rankA === 0;
     }
     // For tableau, only Kings (rank 12) can start the stack
-    return rankA === 12;
+    // or any card if it's easy mode
+    return rankA === 12 || isEasyMode;
   }
 
   // Continue with b

@@ -1,9 +1,9 @@
 import useFsStore from '@/stores/use-fs-store';
 import useGridStore from '@/stores/use-grid-store';
 import useMenuStore from '@/stores/use-menu-store';
-import { ContextMenuItem, ContextCallback } from '@/types';
+import { ContextMenuItem, ContextMenuCallback } from '@/types';
 
-const useFolderContext = (): ContextCallback => {
+const useFolderContext = (): ContextMenuCallback => {
   const mkdir = useFsStore((state) => state.mkdir);
   const touch = useFsStore((state) => state.touch);
   const hasPath = useFsStore((state) => state.hasPath);

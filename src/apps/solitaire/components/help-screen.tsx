@@ -14,13 +14,13 @@ const HelpScreen: React.FC<HelpScreenProps> = ({ onClose }) => {
 
       {/* Help Screen */}
       <div
-        className="window-shadow absolute flex h-[340px] w-[500px] flex-col items-center gap-2 rounded-lg bg-white py-4"
+        className="window-shadow absolute flex h-[340px] w-[500px] flex-col items-center gap-2 rounded-lg bg-white p-4"
         style={{
           left: 'calc(50% - 250px)',
           top: 'calc(50% - 200px)',
         }}
       >
-        <p className="text-2xl font-bold">Welcome to Solitaire</p>
+        <p className="w-full border-b text-center text-2xl font-bold">Solitaire Rules</p>
         <ul className="list-disc px-4">
           <li>Move cards between columns in descending order and alternating colors.</li>
           <li>Build each foundation (top) by suit in ascending order from Ace to King.</li>
@@ -34,23 +34,14 @@ const HelpScreen: React.FC<HelpScreenProps> = ({ onClose }) => {
             <strong>Esc:</strong> Restart game
           </li>
         </ul>
-        <p
-          style={{
-            textWrap: 'balance',
-          }}
-          className="mt-4 px-4 text-center text-sm text-gray-600"
-        >
-          The game is playable, but I&apos;m adding polish and additional features. You may
-          experience an occasional bug.
-        </p>
 
         {/* OK Button */}
         <button
-          className="mt-4 rounded-md border px-4 py-1 text-gray-800 hover:bg-gray-100"
+          className="mt-auto rounded-md border px-4 py-1 text-gray-800 hover:bg-gray-100"
           type="button"
           onClick={onClose}
         >
-          OK
+          Close
         </button>
       </div>
     </>
