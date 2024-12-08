@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import { type ComponentType, LazyExoticComponent } from 'react';
 
 // Components
@@ -95,6 +96,16 @@ export interface ProcessState {
   window: WindowState;
 }
 
+export interface MenuAction {
+  callback?: (path?: string) => void;
+  disableCallback?: () => boolean;
+  bottomBorder?: boolean;
+  subMenu?: MenuBarItem; // Not implemented yet
+  isCheckedCallback?: () => boolean; // Not implemented yet
+}
+export type MenuBarItem = Map<string, MenuAction>;
+export type MenuBarItems = Map<string, MenuBarItem>;
+
 export interface InitialProcessConfig {
   iconName: string;
   iconColor?: string; // hex string
@@ -107,6 +118,8 @@ export interface InitialProcessConfig {
 
   // Initial Window State
   size: Size;
+
+  menuBarOptions?: Promise<MenuBarItems>;
 }
 
 export type AppOptions = Map<string, InitialProcessConfig>;
@@ -146,5 +159,5 @@ export type ContextMenuItems = Map<string, ContextMenuItem>;
 export type ContextMenuCallback = () => ContextMenuItems;
 export type ContextMenuCallbacks = Map<MenuContext, ContextMenuCallback>;
 
-// Other statics
+// Other
 export type Paths = string[];

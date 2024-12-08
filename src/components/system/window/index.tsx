@@ -1,6 +1,7 @@
 import { type ReactElement, ReactNode, useCallback } from 'react';
 
 import { DynamicIconsByName } from '@/components/system/dynamic-icons';
+import MenuBar from '@/components/system/menu-bar';
 import WindowResizeHandles from '@/components/system/window/resize-handles';
 import WindowHeader from '@/components/system/window/window-header';
 import { getProcessOptions } from '@/static';
@@ -95,7 +96,10 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
                   <p className="font-bold"> This app doesn&apos;t work on mobile.. yet!</p>
                 </div>
               ) : (
-                children
+                <div className="flex size-full flex-col">
+                  <MenuBar path={path} />
+                  {children}
+                </div>
               )}
             </div>
           </article>

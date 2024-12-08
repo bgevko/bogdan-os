@@ -48,7 +48,7 @@ const FileOrFolder: AppOptions = new Map([
 ]);
 
 // Options
-const appOptions: AppOptions = new Map([
+const appOptions: AppOptions = new Map<string, InitialProcessConfig>([
   [
     'Solitaire.app',
     {
@@ -62,6 +62,7 @@ const appOptions: AppOptions = new Map([
 
       // Initial window state
       size: { width: 850, height: 650 },
+      menuBarOptions: import('@/apps/solitaire/menu-bar').then((module) => module.default),
     },
   ],
   [
@@ -76,7 +77,7 @@ const appOptions: AppOptions = new Map([
       disableMobile: false,
 
       // Initial window state
-      size: { width: 800, height: 600 },
+      size: { width: 800, height: 640 },
     },
   ],
   [

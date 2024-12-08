@@ -26,6 +26,12 @@ button:disabled:hover {
   background: none;
 }
 
+/* stylelint-disable-next-line selector-no-qualifying-type */
+input[type='radio']:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .embossed {
   background: linear-gradient(112deg, #fc9898 -52.33%, #ffcaca 160.26%);
   box-shadow:
