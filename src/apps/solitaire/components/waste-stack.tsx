@@ -19,22 +19,24 @@ const WasteStackBase = ({ cards, onClick }: WasteStackProps): React.ReactElement
     (state) => state.moveTableauToFirstAvailableFoundation,
   );
   const setWinningConditionIfWon = useSolitaireStore((state) => state.setWinningConditionIfWon);
+  const isHard = useSolitaireStore((state) => state.getDifficulty()) === 'hard';
 
   const setDragCards = useSolitaireStore((state) => state.setDragCards);
   const isEmpty = cards.length === 0;
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [cardOffset, setCardOffset] = useState({ x: 0, y: 0 });
+  const [isOverTopCard, setIsOverTopCard] = useState(false);
 
   const handleDragStart = useCallback(
     (event: React.MouseEvent) => {
       event.preventDefault();
-      if (isEmpty) return;
+      if (isEmpty || !isOverTopCard) return;
       setDragStartPos({ x: event.clientX, y: event.clientY });
       setIsDragging(true);
       setDragCards([cards.at(-1)!]);
     },
-    [cards, setDragCards, isEmpty],
+    [cards, setDragCards, isEmpty, isOverTopCard],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -126,9 +128,14 @@ const WasteStackBase = ({ cards, onClick }: WasteStackProps): React.ReactElement
               // Apply stack effect offsets based on card's position
               if (stackPeakCount >= 1 && cardPositionFromTop === 1) {
                 // Second card from top
-                offsetY = -2;
-              } else if (stackPeakCount >= 2 && cardPositionFromTop === 2) {
-                // Third card from top
+                if (!isHard) {
+                  offsetY = -2;
+                }
+              } else if (
+                stackPeakCount >= 2 &&
+                cardPositionFromTop === 2 && // Third card from top
+                !isHard
+              ) {
                 offsetY = -4;
               }
 
@@ -138,8 +145,35 @@ const WasteStackBase = ({ cards, onClick }: WasteStackProps): React.ReactElement
                 offsetY += cardOffset.y;
               }
 
+              // In hard mode, player draws 3 cards at a time. We want to offset X to the right so that they can see the
+              // two cards below the top card
+              if (isHard) {
+                // One card, no offset
+
+                // Two cards, top card is offset to the right
+                if (cards.length === 2 && index === topCardIndex) {
+                  offsetX += 20;
+                }
+
+                // Three or more cards, top and second card are offset to the right
+                if (cards.length >= 3) {
+                  if (index === topCardIndex) {
+                    offsetX += 40;
+                  }
+                  if (index === topCardIndex - 1) {
+                    offsetX += 20;
+                  }
+                }
+              }
+
               return (
                 <Card
+                  onMouseEnter={() => {
+                    setIsOverTopCard(index === topCardIndex);
+                  }}
+                  onMouseLeave={() => {
+                    setIsOverTopCard(false);
+                  }}
                   key={index}
                   value={cardValue}
                   className="absolute"

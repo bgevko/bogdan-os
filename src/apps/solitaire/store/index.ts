@@ -11,6 +11,7 @@ const DEBUG = false;
 
 type Move =
   | { type: 'popToWaste' }
+  | { type: 'popThreeToWaste'; numPopped: number }
   | { type: 'moveWasteToFirstAvailableFoundation'; foundationIdx: number }
   | { type: 'moveTableauToFirstAvailableFoundation'; tableauIdx: number; foundationIdx: number }
   | { type: 'flipTableauCard'; tableauIdx: number }
@@ -46,6 +47,13 @@ export interface GameState {
   isGameInProgress: boolean;
   leaderboard: LeaderboardEntry[];
   submitted: boolean;
+  newGameFlag: boolean;
+  showHighScoresFlag: boolean;
+  showGameRulesFlag: boolean;
+  showGameSettingsFlag: boolean;
+  pauseGameFlag: boolean;
+  difficulty: 'easy' | 'normal' | 'hard';
+  difficultyMultiplier: 0.5 | 1 | 2;
 }
 
 interface Actions {
@@ -65,6 +73,13 @@ interface Actions {
   setWinningConditionIfWon: () => void;
   getLeaderboard: () => LeaderboardEntry[];
   getSubmitted: () => boolean;
+  getNewGameFlag: () => boolean;
+  getShowHighScoresFlag: () => boolean;
+  getShowGameRulesFlag: () => boolean;
+  getShowGameSettingsFlag: () => boolean;
+  getPauseGameFlag: () => boolean;
+  getDifficulty: () => 'easy' | 'normal' | 'hard';
+  getDifficultyMultiplier: () => 0.5 | 1 | 2;
 
   // Setters
   setDragCards: (cards: number[]) => void;
@@ -74,9 +89,16 @@ interface Actions {
   setScore: (score: number) => void;
   setLeaderboard: (leaderboard: LeaderboardEntry[]) => void;
   setSubmitted: (submitted: boolean) => void;
+  setNewGameFlag: (newGameFlag: boolean) => void;
+  setShowHighScoresFlag: (showHighScoresFlag: boolean) => void;
+  setShowGameRulesFlag: (showGameRulesFlag: boolean) => void;
+  setShowGameSettingsFlag: (showGameSettingsFlag: boolean) => void;
+  setPauseGameFlag: (pauseGameFlag: boolean) => void;
+  setDifficulty: (difficulty: 'easy' | 'normal' | 'hard') => void;
 
   // Actions
   popToWaste: () => void;
+  popThreeToWaste: () => void;
   moveTableauToFirstAvailableFoundation: (tableauIdx: number) => boolean;
   moveTableauToFoundation: (tableauIdx: number, foundationIdx: number) => boolean;
   moveWasteToFoundation: (foundationIdx: number) => boolean;
@@ -96,21 +118,29 @@ interface SolitaireState extends GameState, Actions {}
 const useSolitaireStore = create<SolitaireState>()(
   persist(
     immer((set, get) => ({
-      stock: [],
-      waste: [],
-      foundations: [[], [], [], []],
-      tableau: [[], [], [], [], [], [], []],
+      stock: [] as number[],
+      waste: [] as number[],
+      foundations: [[], [], [], []] as number[][],
+      tableau: [[], [], [], [], [], [], []] as number[][],
       dragData: {
-        dragCards: [],
+        dragCards: [] as number[],
         fromTableauIdx: null,
       },
-      moveStack: [],
+      moveStack: [] as Move[],
       isWon: false,
       score: 0,
       secondsElapsed: 0,
       isGameInProgress: false,
-      leaderboard: [],
+      leaderboard: [] as LeaderboardEntry[],
       submitted: false,
+      newGameFlag: false,
+      showHighScoresFlag: false,
+      showGameRulesFlag: false,
+      showGameSettingsFlag: false,
+      pauseGameFlag: false,
+      difficulty: 'normal',
+      difficultyMultiplier: 1,
+
       getStock: () => get().stock,
       getWaste: () => get().waste,
       getFoundations: () => get().foundations,
@@ -131,6 +161,13 @@ const useSolitaireStore = create<SolitaireState>()(
       },
       getLeaderboard: () => get().leaderboard,
       getSubmitted: () => get().submitted,
+      getNewGameFlag: () => get().newGameFlag,
+      getShowHighScoresFlag: () => get().showHighScoresFlag,
+      getShowGameRulesFlag: () => get().showGameRulesFlag,
+      getShowGameSettingsFlag: () => get().showGameSettingsFlag,
+      getPauseGameFlag: () => get().pauseGameFlag,
+      getDifficulty: () => get().difficulty,
+      getDifficultyMultiplier: () => get().difficultyMultiplier,
 
       // setters
       setFromTableauIdx: (tableauIdx) => {
@@ -138,31 +175,26 @@ const useSolitaireStore = create<SolitaireState>()(
           state.dragData.fromTableauIdx = tableauIdx;
         });
       },
-
       setFromFoundationIdx: (foundationIdx) => {
         set((state) => {
           state.dragData.fromFoundationIdx = foundationIdx;
         });
       },
-
       setDragCards: (cards) => {
         set((state) => {
           state.dragData.dragCards = cards;
         });
       },
-
       setSecondsElapsed: (seconds) => {
         set((state) => {
           state.secondsElapsed = seconds;
         });
       },
-
       setScore: (score) => {
         set((state) => {
           state.score = score;
         });
       },
-
       setLeaderboard: (leaderboard) => {
         set((state) => {
           // if leaderboard is bigger than 100 entries, truncate
@@ -175,6 +207,53 @@ const useSolitaireStore = create<SolitaireState>()(
       setSubmitted: (submitted) => {
         set((state) => {
           state.submitted = submitted;
+        });
+      },
+      setNewGameFlag: (newGameFlag) => {
+        set((state) => {
+          state.newGameFlag = newGameFlag;
+        });
+      },
+      setShowHighScoresFlag: (showHighScoresFlag) => {
+        set((state) => {
+          state.showHighScoresFlag = showHighScoresFlag;
+        });
+      },
+      setShowGameRulesFlag: (showGameRulesFlag) => {
+        set((state) => {
+          state.showGameRulesFlag = showGameRulesFlag;
+        });
+      },
+      setShowGameSettingsFlag: (showGameSettingsFlag) => {
+        set((state) => {
+          state.showGameSettingsFlag = showGameSettingsFlag;
+        });
+      },
+      setPauseGameFlag: (pauseGameFlag) => {
+        set((state) => {
+          state.pauseGameFlag = pauseGameFlag;
+        });
+      },
+      setDifficulty: (difficulty) => {
+        set((state) => {
+          state.difficulty = difficulty;
+          switch (difficulty) {
+            case 'easy': {
+              state.difficultyMultiplier = 0.5;
+              break;
+            }
+            case 'normal': {
+              state.difficultyMultiplier = 1;
+              break;
+            }
+            case 'hard': {
+              state.difficultyMultiplier = 2;
+              break;
+            }
+            default: {
+              state.difficultyMultiplier = 1;
+            }
+          }
         });
       },
 
@@ -218,6 +297,46 @@ const useSolitaireStore = create<SolitaireState>()(
           }
         });
       },
+
+      popThreeToWaste: () => {
+        set((state) => {
+          // Transfer waste to stock if stock is empty
+          if (state.stock.length === 0) {
+            state.stock = state.waste.map((card) => -card).reverse();
+            state.waste = [];
+            state.score -= 200;
+            if (DEBUG) {
+              const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+              const debugShuffledStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+              const debugStr = `Pop to waste:\n Stock: ${debugShuffledStock}\n Waste: ${debugWaste}`;
+              console.log(debugStr);
+              console.log('TRANSFERRED WASTE TO STOCK');
+            }
+            return;
+          }
+          // Grab the top 3 cards from stock, flip them, and push them to waste
+          const cards = state.stock.length >= 3 ? state.stock.splice(-3) : state.stock.splice(0);
+
+          state.waste.push(...cards.map((card) => -card));
+          state.moveStack.push({
+            type: 'popThreeToWaste',
+            numPopped: cards.length,
+          });
+          // Keep only the last 10 moves
+          if (state.moveStack.length > 10) {
+            state.moveStack.shift();
+          }
+          if (DEBUG) {
+            const debugStockTop = game.getCardStr(state.waste.at(-1));
+            const debugStock = `[${state.stock.map((cardVal) => game.getCardStr(-cardVal)).join(', ')}]`;
+            const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+            const debugStr = `Pop to waste: \nStock (Face-down): ${debugStock}, \nWaste: ${debugWaste}`;
+            console.log(debugStr);
+            console.log(`MOVED ${debugStockTop} TO WASTE`);
+          }
+        });
+      },
+
       moveTableauToFirstAvailableFoundation: (tableauIdx: number) => {
         if (tableauIdx < 0 || tableauIdx > 6 || get().tableau[tableauIdx].length === 0) {
           if (DEBUG) {
@@ -250,7 +369,7 @@ const useSolitaireStore = create<SolitaireState>()(
                 console.log(`${debugStr} \nTRUE\n`);
               }
               didFindFoundation = true;
-              state.score += 100;
+              state.score += 100 * get().difficultyMultiplier;
               return;
             }
           }
@@ -304,7 +423,7 @@ const useSolitaireStore = create<SolitaireState>()(
             console.log(`${debugStr} \nTRUE\n`);
           }
           didMove = true;
-          state.score += 100;
+          state.score += 100 * get().difficultyMultiplier;
 
           state.moveStack.push({
             type: 'tableauToFoundation',
@@ -355,7 +474,7 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           didMove = true;
-          state.score += 100;
+          state.score += 100 * get().difficultyMultiplier;
 
           state.moveStack.push({
             type: 'wasteToFoundation',
@@ -385,7 +504,13 @@ const useSolitaireStore = create<SolitaireState>()(
           const tableauCard = state.tableau[tableauIdx].at(-1);
 
           // Doesn't stack
-          if (!game.aStacksOnB({ a: wasteCard, b: tableauCard })) {
+          if (
+            !game.aStacksOnB({
+              a: wasteCard,
+              b: tableauCard,
+              isEasyMode: get().difficulty === 'easy',
+            })
+          ) {
             if (DEBUG) {
               const debugWasteCard = game.getCardStr(wasteCard);
               const debugTableauCard = game.getCardStr(tableauCard);
@@ -405,7 +530,7 @@ const useSolitaireStore = create<SolitaireState>()(
             console.log(`${debugStr} \nTRUE\n`);
           }
           didMove = true;
-          state.score += 50;
+          state.score += 50 * get().difficultyMultiplier;
 
           state.moveStack.push({
             type: 'wasteToTableau',
@@ -439,7 +564,13 @@ const useSolitaireStore = create<SolitaireState>()(
 
           const foundationCard = state.foundations[foundationIdx].at(-1)!;
           const tableauCard = state.tableau[tableauIdx].at(-1);
-          if (!game.aStacksOnB({ a: foundationCard, b: tableauCard })) {
+          if (
+            !game.aStacksOnB({
+              a: foundationCard,
+              b: tableauCard,
+              isEasyMode: get().difficulty === 'easy',
+            })
+          ) {
             if (DEBUG) {
               const debugFoundationCard = game.getCardStr(foundationCard);
               const debugTableauCard = game.getCardStr(tableauCard);
@@ -510,7 +641,13 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           // Bottom card of substack doesn't stack on target tableau stack
-          if (!game.aStacksOnB({ a: subStack.at(0)!, b: toTableau.at(-1) })) {
+          if (
+            !game.aStacksOnB({
+              a: subStack.at(0)!,
+              b: toTableau.at(-1),
+              isEasyMode: get().difficulty === 'easy',
+            })
+          ) {
             if (DEBUG) {
               const debugSubStack = `[${subStack.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
               const debugToTableau = `[${toTableau.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
@@ -572,7 +709,7 @@ const useSolitaireStore = create<SolitaireState>()(
                 console.log(`${debugStr} \nTRUE\n`);
               }
               didFindFoundation = true;
-              state.score += 100;
+              state.score += 100 * get().difficultyMultiplier;
               return;
             }
           }
@@ -628,15 +765,15 @@ const useSolitaireStore = create<SolitaireState>()(
             console.log(`Flip Tableau Card: Flipped ${game.getCardStr(card)} \nTRUE\n`);
           }
           didFlipCard = true;
-          state.score += 50;
+          state.score += 50 * get().difficultyMultiplier;
         });
         return didFlipCard;
       },
 
       undo: () => {
         set((state) => {
-          if (state.moveStack.length === 0 && DEBUG) {
-            console.log('Undo: No moves to undo');
+          if (state.moveStack.length === 0) {
+            if (DEBUG) console.log('Undo: No moves to undo');
             return;
           }
 
@@ -652,6 +789,24 @@ const useSolitaireStore = create<SolitaireState>()(
                 state.stock = [];
               } else {
                 state.stock.push(-state.waste.pop()!);
+              }
+              if (DEBUG) {
+                const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+                const debugStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+                const debugStr = `Undo Pop to waste: \nStock: ${debugStock}, \nWaste: ${debugWaste}`;
+                console.log(debugStr);
+              }
+              break;
+            }
+
+            case 'popThreeToWaste': {
+              // If waste is empty, transfer stock to waste
+              if (state.waste.length === 0) {
+                state.waste = state.stock.map((card) => -card);
+                state.stock = [];
+              } else {
+                const numPopped = move.numPopped;
+                state.stock.push(...state.waste.splice(-numPopped));
               }
               if (DEBUG) {
                 const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
@@ -755,22 +910,28 @@ const useSolitaireStore = create<SolitaireState>()(
         });
       },
       init: () => {
+        // Don't add things that should persist between resets, i.e. leaderboard, difficulty settings, etc.
         if (!get().isGameInProgress) {
           set((state) => {
             state.stock = Array.from({ length: 52 }, (_, i) => -(i + 1)); // -1 to -52 (face down)
-            state.waste = [];
-            state.foundations = [[], [], [], []];
-            state.tableau = [[], [], [], [], [], [], []];
+            state.waste = [] as number[];
+            state.foundations = [[], [], [], []] as number[][];
+            state.tableau = [[], [], [], [], [], [], []] as number[][];
             state.dragData = {
-              dragCards: [],
+              dragCards: [] as number[],
               fromTableauIdx: null,
             };
-            state.moveStack = [];
+            state.moveStack = [] as Move[];
             state.isWon = false;
             state.score = 0;
             state.secondsElapsed = 0;
             state.isGameInProgress = true;
             state.submitted = false;
+            state.newGameFlag = false;
+            state.showHighScoresFlag = false;
+            state.showGameRulesFlag = false;
+            state.showGameSettingsFlag = false;
+            state.pauseGameFlag = false;
 
             for (let i = state.stock.length - 1; i > 0; i -= 1) {
               const j = Math.floor(Math.random() * (i + 1));

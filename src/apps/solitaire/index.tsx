@@ -3,7 +3,9 @@
 import { useEffect, useState, useRef } from 'react';
 
 import { Stock, Waste, Foundations, Tableau } from '@/solitaire/components';
+import GameSettings from '@/solitaire/components/game-settings';
 import HelpScreen from '@/solitaire/components/help-screen';
+import HighScores from '@/solitaire/components/high-scores';
 import Timer, { TimerHandle } from '@/solitaire/components/timer';
 import WinScreen from '@/solitaire/components/win-screen';
 import useSolitaireStore from '@/solitaire/store';
@@ -23,8 +25,18 @@ const Solitaire = (): React.ReactElement => {
   const setLeaderboard = useSolitaireStore((state) => state.setLeaderboard);
   const submitted = useSolitaireStore((state) => state.getSubmitted());
   const setSubmitted = useSolitaireStore((state) => state.setSubmitted);
+  const newGameFlag = useSolitaireStore((state) => state.getNewGameFlag());
+  const setNewGameFlag = useSolitaireStore((state) => state.setNewGameFlag);
+  const helpVisible = useSolitaireStore((state) => state.getShowGameRulesFlag());
+  const setHelpVisible = useSolitaireStore((state) => state.setShowGameRulesFlag);
+  const showHighScores = useSolitaireStore((state) => state.getShowHighScoresFlag());
+  const setHighScoresVisible = useSolitaireStore((state) => state.setShowHighScoresFlag);
+  const showGameSettings = useSolitaireStore((state) => state.getShowGameSettingsFlag());
+  const setShowGameSettings = useSolitaireStore((state) => state.setShowGameSettingsFlag);
+  const difficulty = useSolitaireStore((state) => state.getDifficulty());
+  const pauseGameFlag = useSolitaireStore((state) => state.getPauseGameFlag());
+  const setPauseGameFlag = useSolitaireStore((state) => state.setPauseGameFlag);
 
-  const [helpVisible, setHelpVisible] = useState(false);
   const timerRef = useRef<TimerHandle>(null);
 
   const startingTime = getSecondsElapsed();
@@ -40,7 +52,7 @@ const Solitaire = (): React.ReactElement => {
   // Set the timer
   useEffect(() => {
     const timerInterval = setInterval(() => {
-      if (timerRef.current && !isGameWon) {
+      if (timerRef.current && !isGameWon && !pauseGameFlag) {
         const currentTime = timerRef.current.getTime();
 
         // every 10 seconds, adjust the score by -2
@@ -62,7 +74,7 @@ const Solitaire = (): React.ReactElement => {
         setSecondsElapsed(finalTime);
       }
     };
-  }, [setSecondsElapsed, setScore, getScore, isGameWon]);
+  }, [setSecondsElapsed, setScore, getScore, isGameWon, pauseGameFlag]);
 
   // Game is won
   useEffect(() => {
@@ -79,17 +91,23 @@ const Solitaire = (): React.ReactElement => {
     }
   }, [isGameWon, setSecondsElapsed, setScore]);
 
+  // Listen for new game trigger
+  useEffect(() => {
+    if (newGameFlag) {
+      reset();
+      init();
+      if (timerRef.current) {
+        timerRef.current.reset();
+      }
+      setTime(startingTime);
+    }
+  }, [newGameFlag, init, reset, startingTime]);
+
   // Escape to reset the game
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !helpVisible && !isGameWon) {
-        reset();
-        init();
-
-        if (timerRef.current) {
-          timerRef.current.reset();
-        }
-        setTime(startingTime);
+        setNewGameFlag(true);
       }
     };
 
@@ -104,7 +122,7 @@ const Solitaire = (): React.ReactElement => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keydown', handleUndo);
     };
-  }, [init, undo, reset, startingTime, isGameWon, helpVisible]);
+  }, [init, undo, reset, startingTime, isGameWon, helpVisible, setNewGameFlag]);
 
   return (
     <section
@@ -113,7 +131,7 @@ const Solitaire = (): React.ReactElement => {
       }}
       className="size-full rounded-b-lg"
     >
-      <div className="mx-auto flex h-full w-[800px] flex-col gap-2 rounded-b-lg pt-2">
+      <div className="mx-auto flex h-full w-[800px] flex-col gap-2 rounded-b-lg pt-8">
         <div className="flex">
           <div className="flex min-h-[148px] gap-4">
             <Stock />
@@ -137,12 +155,24 @@ const Solitaire = (): React.ReactElement => {
           submitted={submitted}
           setSubmitted={setSubmitted}
           onPlayAgain={() => {
-            reset();
-            init();
-            if (timerRef.current) {
-              timerRef.current.reset();
-            }
-            setTime(startingTime);
+            setNewGameFlag(true);
+          }}
+        />
+      )}
+
+      {showHighScores && (
+        <HighScores
+          onClose={() => {
+            setHighScoresVisible(false);
+          }}
+        />
+      )}
+
+      {showGameSettings && (
+        <GameSettings
+          difficulty={difficulty}
+          onClose={() => {
+            setShowGameSettings(false);
           }}
         />
       )}
@@ -154,23 +184,37 @@ const Solitaire = (): React.ReactElement => {
           }}
         />
       )}
+
+      {pauseGameFlag && (
+        <div className="absolute left-0 top-0 z-50 flex size-full items-center justify-center rounded-b-lg bg-white">
+          <div className="flex flex-col gap-2 rounded-lg bg-white p-4 text-center">
+            <p className="border-b">Game Paused</p>
+            <button
+              className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100"
+              type="button"
+              onClick={() => {
+                useSolitaireStore.getState().setPauseGameFlag(false);
+              }}
+            >
+              Resume
+            </button>
+          </div>
+        </div>
+      )}
       <div className="absolute bottom-0 flex w-full cursor-default select-none justify-between rounded-b-lg bg-white px-4 py-1">
+        <p>Score: {getScore()}</p>
         <span className="flex gap-4">
-          <p>Score: {getScore()}</p>
-          <p className="w-[90px]">Time: {formatTime(time)}</p>
+          <button
+            type="button"
+            className="w-[60px] rounded-md hover:bg-gray-100"
+            onClick={() => {
+              setPauseGameFlag(true);
+            }}
+          >
+            {formatTime(time)}
+          </button>
           <Timer ref={timerRef} initialSeconds={startingTime} />
         </span>
-        <p className="ml-[-70px]">Esc To Restart</p>
-        <button
-          className="size-6 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-200"
-          type="button"
-          disabled={isGameWon}
-          onClick={() => {
-            setHelpVisible(true);
-          }}
-        >
-          ?
-        </button>
       </div>
     </section>
   );

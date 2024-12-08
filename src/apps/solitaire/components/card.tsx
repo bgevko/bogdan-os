@@ -69,6 +69,8 @@ interface CardProps {
   onContextMenu?: (event: React.MouseEvent) => void;
   handleFlip?: () => void;
   onDragTableauStart?: (event: React.DragEvent) => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 const CardBase = ({
@@ -80,6 +82,8 @@ const CardBase = ({
   onContextMenu,
   handleFlip,
   onDragTableauStart,
+  onMouseEnter,
+  onMouseLeave,
 }: CardProps): React.ReactElement => {
   const isFlipped = value < 0;
 
@@ -90,6 +94,8 @@ const CardBase = ({
       onContextMenu={(event) => onContextMenu?.(event)}
       onClick={isFlipped ? () => handleFlip?.() : undefined}
       onDragStart={(event) => onDragTableauStart?.(event)}
+      onMouseEnter={() => onMouseEnter?.()}
+      onMouseLeave={() => onMouseLeave?.()}
     >
       <CardIcon
         style={{
