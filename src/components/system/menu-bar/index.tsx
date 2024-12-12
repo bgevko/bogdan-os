@@ -12,16 +12,25 @@ interface MenuBarProps {
   path: string;
 }
 
+// FYI, in case I forget, or if you're not familiar with this codebase
+// The menubar only gets called when MenuOptions are defined
+// in the app repository file. I do make an assumption that if this component
+// renders, then menu bar options have been defined. If they haven't, don't worry
+// it will throw an error and break the entire app. So, you know, no big deal.
 const MenuBar = ({ path }: MenuBarProps): ReactElement => {
-  const menuBarOptions: Promise<MenuBarItems> = getProcessOptions(path, false).menuBarOptions!;
+  const menuBarSource: Promise<MenuBarItems> = getProcessOptions(path, false).menuBarOptions!
+    .source;
 
-  // If menuBarOptions is a Promise, await it (convert to async component if needed)
+  const menuBarStyles = getProcessOptions(path, false).menuBarOptions!.styles;
+  const menuBarClassName = getProcessOptions(path, false).menuBarOptions!.className;
+
+  // If menuBarSource is a Promise, await it (convert to async component if needed)
   const [menuItems, setMenuItems] = useState<MenuBarItems | null>(null);
   const [visibleMenu, setVisibleMenu] = useState<string | null>(null);
 
   useEffect(() => {
-    if (menuBarOptions instanceof Promise) {
-      menuBarOptions
+    if (menuBarSource instanceof Promise) {
+      menuBarSource
         .then((actions) => {
           setMenuItems(actions);
         })
@@ -33,7 +42,7 @@ const MenuBar = ({ path }: MenuBarProps): ReactElement => {
     } else {
       setMenuItems(null);
     }
-  }, [menuBarOptions]);
+  }, [menuBarSource]);
 
   const handleOutsideClick = useCallback(() => {
     setVisibleMenu(null);
@@ -54,7 +63,13 @@ const MenuBar = ({ path }: MenuBarProps): ReactElement => {
   }
 
   return (
-    <ul className={`h-[${MENU_BAR_HEIGHT.toString()}px] flex w-full bg-stone-50 px-2`}>
+    <ul
+      className={cn(
+        `h-[${MENU_BAR_HEIGHT.toString()}px] flex w-full bg-stone-50 px-2`,
+        menuBarClassName,
+      )}
+      style={menuBarStyles ?? {}}
+    >
       {[...menuItems.entries()].map(([menuName, menuItem]) => (
         <li
           key={`${menuName}-list-item`}

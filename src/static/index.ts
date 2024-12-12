@@ -10,6 +10,7 @@ export const startingDir: Paths = [
   '/Desktop/MyFolder/',
   '/Desktop/Readme.app',
   '/Desktop/Solitaire.app',
+  '/Desktop/Headers.app',
 ];
 
 // Processes
@@ -62,7 +63,9 @@ const appOptions: AppOptions = new Map<string, InitialProcessConfig>([
 
       // Initial window state
       size: { width: 850, height: 650 },
-      menuBarOptions: import('@/apps/solitaire/menu-bar').then((module) => module.default),
+      menuBarOptions: {
+        source: import('@/apps/solitaire/menu-bar').then((module) => module.default),
+      },
     },
   ],
   [
@@ -96,7 +99,42 @@ const appOptions: AppOptions = new Map<string, InitialProcessConfig>([
       size: { width: 400, height: 500 },
     },
   ],
+  [
+    'Headers.app',
+    {
+      iconName: 'headers',
+      fileName: 'Headers.app',
+      fileExt: '.app',
+      hasWindow: true,
+      disableDelete: true,
+      component: lazy(() => import('@/apps/headers')),
+      disableMobile: true,
+
+      // Initial window state
+      size: { width: 520, height: 550 },
+      menuBarOptions: {
+        source: import('@/apps/headers/menu-bar').then((module) => module.default),
+        className: 'border-b',
+      },
+    },
+  ],
 ]);
+
+export function doesOptionExist(path: string, key: string): boolean {
+  // A quick way to check if a given key has been defined
+
+  const appKey = parseFullFileName(path);
+  if (!appOptions.has(appKey)) {
+    return false;
+  }
+
+  const appOptionsKey = appOptions.get(appKey);
+  if (!Object.keys(appOptionsKey!).includes(key)) {
+    return false;
+  }
+
+  return true;
+}
 
 export function getProcessOptions(path: string, isDir: boolean): InitialProcessConfig {
   // if the path isn't a key in one of the app options, we'll return either a file or folder,

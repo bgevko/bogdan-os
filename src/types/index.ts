@@ -1,4 +1,5 @@
 /* eslint-disable no-use-before-define */
+import { CSSProperties } from 'react';
 import { type ComponentType, LazyExoticComponent } from 'react';
 
 // Components
@@ -119,7 +120,11 @@ export interface InitialProcessConfig {
   // Initial Window State
   size: Size;
 
-  menuBarOptions?: Promise<MenuBarItems>;
+  menuBarOptions?: {
+    source: Promise<MenuBarItems>;
+    styles?: CSSProperties;
+    className?: string;
+  };
 }
 
 export type AppOptions = Map<string, InitialProcessConfig>;
