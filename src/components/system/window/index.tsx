@@ -4,7 +4,7 @@ import { DynamicIconsByName } from '@/components/system/dynamic-icons';
 import MenuBar from '@/components/system/menu-bar';
 import WindowResizeHandles from '@/components/system/window/resize-handles';
 import WindowHeader from '@/components/system/window/window-header';
-import { getProcessOptions } from '@/static';
+import { getProcessOptions, doesOptionExist } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
@@ -33,6 +33,8 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
   const { disableMobile } = getProcessOptions(path, isDir(path));
   const willRenderWarning =
     disableMobile && (window.innerWidth <= minSize.width || window.innerHeight <= minSize.height);
+
+  const menuBarExists = doesOptionExist(path, 'menuBarOptions');
 
   // Set background to background: 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)' if focused, otherwise to
   // background: linear-gradient(180deg, #FFE9C6 0%, rgba(91, 91, 91, 0.10) 100%);
@@ -97,7 +99,7 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
                 </div>
               ) : (
                 <div className="flex size-full flex-col">
-                  <MenuBar path={path} />
+                  {menuBarExists && <MenuBar path={path} />}
                   {children}
                 </div>
               )}

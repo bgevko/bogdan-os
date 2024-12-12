@@ -35,7 +35,9 @@ const Solitaire = (): React.ReactElement => (
       <li>- Use Excalidraw</li>
       <li>- Create files & folders (still limited)</li>
       <li>- Drag things around</li>
-      <li className="italic">- SOON: Play solitaire</li>
+      <li>- Play Solitaire</li>
+      <li>- Create code block headers</li>
+      <li className="italic">SOON: Play Tetris</li>
     </ul>
 
     <p>Thanks for visiting!</p>

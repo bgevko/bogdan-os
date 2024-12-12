@@ -14,7 +14,9 @@ body {
   font-family: 'Sofia Sans Condensed', sans-serif;
 }
 
-input:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: 2px solid orange; /* stylelint-disable-line color-named */
 }
 
