@@ -6,7 +6,11 @@ import useHeadersStore from '@/apps/headers/store';
 import cn from '@/utils/format';
 
 const Headers = (): React.ReactElement => {
-  // Loading these from the store, for persistence purposes
+  /*
+   ********************************
+   *             Store            *
+   ********************************
+   */
   const savedCenter = useHeadersStore((state) => state.getCenter());
   const savedSides = useHeadersStore((state) => state.getSides());
   const savedLength = useHeadersStore((state) => state.getLength());
@@ -17,12 +21,14 @@ const Headers = (): React.ReactElement => {
   const setSavedLength = useHeadersStore((state) => state.setLength);
   const setSavedPadding = useHeadersStore((state) => state.setPadding);
   const setSavedWrap = useHeadersStore((state) => state.setWrap);
-
-  // Other
   const showHelpFlag = useHeadersStore((state) => state.getShowHelpFlag());
   const setShowHelpFlag = useHeadersStore((state) => state.setShowHelpFlag);
 
-  // Local state
+  /*
+   ********************************
+   *          Local State         *
+   ********************************
+   */
   const [center, setCenter] = useState<string>(savedCenter);
   const [sides, setSides] = useState<string>(savedSides);
   const [lengthInput, setLengthInput] = useState<string>(savedLength);
@@ -42,6 +48,13 @@ const Headers = (): React.ReactElement => {
   const wrapRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
+  /*
+   ********************************
+   *                              *
+   *             Memos            *
+   *                              *
+   ********************************
+   */
   const length = useMemo(() => {
     const min = content.length + sides.length * 2 + 4;
     const max = 100;
@@ -93,6 +106,18 @@ const Headers = (): React.ReactElement => {
     return output;
   }, [center, sides, length, padding, content, wrapInput]);
 
+  /*
+   ********************************
+   *                              *
+   *           Callbacks          *
+   *                              *
+   ********************************
+   */
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(formattedOutput);
+    setDidCopy(true);
+  }, [formattedOutput]);
+
   const isHorizontalOverflow = useCallback(() => {
     if (outputRef.current) {
       return outputRef.current.scrollWidth > outputRef.current.clientWidth;
@@ -106,6 +131,14 @@ const Headers = (): React.ReactElement => {
     }
     return false;
   }, []);
+
+  /*
+   ********************************
+   *                              *
+   *          UseEffects          *
+   *                              *
+   ********************************
+   */
 
   // Save to store on unmount
   useEffect(() => {
@@ -132,6 +165,29 @@ const Headers = (): React.ReactElement => {
     setSavedWrap,
   ]);
 
+  // Enter key when content is focused should copy the output
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && document.activeElement === contentRef.current) {
+        e.preventDefault();
+        handleCopy();
+
+        contentRef.current?.blur();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleCopy]);
+
+  /*
+   ********************************
+   *                              *
+   *            Render            *
+   *                              *
+   ********************************
+   */
   return (
     <section className="relative flex size-full flex-col items-center gap-3 rounded-b-lg bg-white p-4">
       <h2 className="my-2 w-full border-b text-2xl font-bold">Options</h2>
@@ -279,10 +335,7 @@ const Headers = (): React.ReactElement => {
             'absolute right-2 top-[-2px] w-[120px] cursor-pointer select-none rounded-md border bg-white px-2 py-1 text-sm font-bold text-gray-800',
             isCopying && 'text-orange-800',
           )}
-          onClick={() => {
-            navigator.clipboard.writeText(formattedOutput);
-            setDidCopy(true);
-          }}
+          onClick={handleCopy}
           onMouseDown={() => {
             setIsCopying(true);
           }}
@@ -310,10 +363,7 @@ const Headers = (): React.ReactElement => {
           !isCopying && didCopy && 'bg-white',
           isHovering && !isCopying && !didCopy && 'bg-gray-200',
         )}
-        onClick={() => {
-          navigator.clipboard.writeText(formattedOutput);
-          setDidCopy(true);
-        }}
+        onClick={handleCopy}
         onMouseDown={() => {
           setIsCopying(true);
         }}
