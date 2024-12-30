@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';

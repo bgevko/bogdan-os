@@ -1,11 +1,11 @@
 import React from 'react';
 
-import DropGuide from '@/components/system/fs/drop-guide';
-import FileSystemIcon from '@/components/system/fs/fs-icon';
-import Grid from '@/components/system/fs/grid';
-import SelectRect from '@/components/system/fs/select-rect';
 import useFsStore from '@/stores/use-fs-store';
 import useProcessesStore from '@/stores/use-processes-store';
+import DropGuide from '@/system/fs/drop-guide';
+import FileSystemIcon from '@/system/fs/fs-icon';
+import Grid from '@/system/fs/grid';
+import SelectRect from '@/system/fs/select-rect';
 import cn from '@/utils/format';
 
 const FileExplorer = ({ rootPath }: { rootPath: string }): React.ReactElement => {

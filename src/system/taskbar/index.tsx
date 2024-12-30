@@ -1,6 +1,6 @@
-import Clock from '@/components/system/taskbar/clock';
-import TaskbarEntries from '@/components/system/taskbar/taskbar-entries';
 import useMouseStore from '@/stores/use-mouse-store';
+import Clock from '@/system/taskbar/clock';
+import TaskbarEntries from '@/system/taskbar/taskbar-entries';
 import { TASKBAR_HEIGHT } from '@/themes';
 
 const Taskbar = (): JSX.Element => {

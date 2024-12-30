@@ -1,6 +1,5 @@
 import React, { ReactElement, useMemo, useEffect, useState, useCallback } from 'react';
 
-import DynamicIcons from '@/components/system/dynamic-icons';
 import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import useDragStore from '@/stores/use-drag-store';
 import useFsStore from '@/stores/use-fs-store';
@@ -8,6 +7,7 @@ import useGridStore from '@/stores/use-grid-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import useSelectStore from '@/stores/use-select-store';
+import DynamicIcons from '@/system/dynamic-icons';
 import { ICON_SIZE } from '@/themes';
 import { FileSystemContext, type TransferData, MouseContext } from '@/types';
 import cn from '@/utils/format';

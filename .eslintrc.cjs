@@ -45,6 +45,7 @@ module.exports = {
   },
   rules: {
     'no-plusplus': 'off',
+    'no-use-before-define': 'off',
     'jsx-a11y/click-events-have-key-events': 'off',
     'jsx-a11y/no-static-element-interactions': 'off',
     'unicorn/prefer-top-level-await': 'off',
@@ -68,6 +69,7 @@ module.exports = {
     'react/jsx-props-no-spreading': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     'import/no-cycle': 'off',
+    'import/prefer-default-export': 'off',
     'import/consistent-type-specifier-style': ['error', 'prefer-inline'],
     'import/extensions': ['error', 'ignorePackages', { ts: 'never', tsx: 'never' }],
     'import/order': [

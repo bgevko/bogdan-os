@@ -11,10 +11,11 @@ export const startingDir: Paths = [
   '/Desktop/Readme.app',
   '/Desktop/Solitaire.app',
   '/Desktop/Headers.app',
+  '/Desktop/Hello.txt',
 ];
 
 // Processes
-const FileOrFolder: AppOptions = new Map([
+const SystemApps: AppOptions = new Map([
   // default placeholder for now
   [
     'file',
@@ -39,7 +40,22 @@ const FileOrFolder: AppOptions = new Map([
       fileExt: '',
       hasWindow: true,
       disableDelete: false,
-      component: lazy(() => import('@/components/system/file-explorer')),
+      component: lazy(() => import('@/system/file-system')),
+      disableMobile: false,
+
+      // Initial window state
+      size: { width: 400, height: 400 },
+    },
+  ],
+  [
+    'text',
+    {
+      iconName: 'file',
+      fileName: 'text',
+      fileExt: '.txt',
+      hasWindow: true,
+      disableDelete: false,
+      component: lazy(() => import('@/apps/text-editor')),
       disableMobile: false,
 
       // Initial window state
@@ -144,10 +160,10 @@ export function getProcessOptions(path: string, isDir: boolean): InitialProcessC
   if (!appOptions.has(key)) {
     // grab file explorer if isDir is set
     if (isDir) {
-      return FileOrFolder.get('folder')!;
+      return SystemApps.get('folder')!;
     }
     // Otherwise, we'll default to a file
-    return FileOrFolder.get('file')!;
+    return SystemApps.get('file')!;
   }
 
   // Otherwise, return the app options

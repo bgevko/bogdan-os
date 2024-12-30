@@ -1,7 +1,7 @@
-import Desktop from '@/components/system/desktop';
-import ProcessLoader from '@/components/system/process-loader';
-import Taskbar from '@/components/system/taskbar';
-import Wallpaper from '@/components/system/wallpaper';
+import Desktop from '@/system/file-system/desktop';
+import ProcessLoader from '@/system/process-loader';
+import Taskbar from '@/system/taskbar';
+import Wallpaper from '@/system/wallpaper';
 
 const App = (): React.ReactElement => {
   return (

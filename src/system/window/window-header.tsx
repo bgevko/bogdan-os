@@ -1,11 +1,11 @@
 import React, { useState, useEffect, type ReactElement } from 'react';
 
-import { DynamicIconsByName } from '@/components/system/dynamic-icons';
 import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import UseWindowState from '@/hooks/system/use-window';
 import useDragStore from '@/stores/use-drag-store';
 import useMenuStore from '@/stores/use-menu-store';
 import useProcessesStore from '@/stores/use-processes-store';
+import { DynamicIconsByName } from '@/system/dynamic-icons';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
 import cn from '@/utils/format';
 import { parseFileName } from '@/utils/fs';

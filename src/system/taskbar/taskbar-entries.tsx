@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
-import DynamicIcons from '@/components/system/dynamic-icons';
 import UseHandleContextMenu from '@/hooks/system/use-context-menu/use-handle-context-menu';
 import UseWindowState from '@/hooks/system/use-window';
 import useMenuStore from '@/stores/use-menu-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
+import DynamicIcons from '@/system/dynamic-icons';
 import cn from '@/utils/format';
 import { parseFileName } from '@/utils/fs';
 

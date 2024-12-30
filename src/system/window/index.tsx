@@ -1,13 +1,13 @@
 import { type ReactElement, ReactNode, useCallback } from 'react';
 
-import { DynamicIconsByName } from '@/components/system/dynamic-icons';
-import MenuBar from '@/components/system/menu-bar';
-import WindowResizeHandles from '@/components/system/window/resize-handles';
-import WindowHeader from '@/components/system/window/window-header';
 import { getProcessOptions, doesOptionExist } from '@/static';
 import useFsStore from '@/stores/use-fs-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
+import { DynamicIconsByName } from '@/system/dynamic-icons';
+import MenuBar from '@/system/menu-bar';
+import WindowResizeHandles from '@/system/window/resize-handles';
+import WindowHeader from '@/system/window/window-header';
 import cn from '@/utils/format';
 
 interface WindowProperties {

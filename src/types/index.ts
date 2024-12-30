@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import { CSSProperties } from 'react';
 import { type ComponentType, LazyExoticComponent } from 'react';
 

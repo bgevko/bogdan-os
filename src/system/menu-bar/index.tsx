@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { Fragment, ReactElement, useEffect, useState, useCallback } from 'react';
 

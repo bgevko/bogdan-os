@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
 import { useEffect, useState, useRef } from 'react';
 
 import { Stock, Waste, Foundations, Tableau } from '@/solitaire/components';

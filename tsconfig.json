@@ -21,6 +21,7 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/solitaire/*": ["./src/apps/solitaire/*"],
+      "@/system/*": ["./src/system/*"],
       "@/*": ["./src/*"],
       "/*": ["./public/*"]
     }

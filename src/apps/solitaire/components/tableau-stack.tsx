@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
 import React, { useState, useCallback, useEffect } from 'react';
 
 import Card from '@/solitaire/components/card';

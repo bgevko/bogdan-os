@@ -14,7 +14,7 @@
     "prepare": "husky",
     "test": "vitest --run",
     "test:w": "vitest --watch",
-    "test:current": "vitest fs-utils.test",
+    "test:current": "vitest new-file-system.test",
     "cy:window": "cypress run --spec 'cypress/e2e/window.cy.ts'",
     "test:ui": "vitest --ui"
   },
@@ -33,6 +33,7 @@
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.3.0",
     "three": "^0.169.0",
+    "uuid": "^11.0.3",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import Button from '@/components/system/button';
+import Button from '@/system/button';
 
 const StartButton = (): JSX.Element => {
   return (
