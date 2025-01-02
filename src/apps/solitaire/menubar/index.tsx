@@ -1,12 +1,11 @@
 // Solitaire menu bar items
 import useSolitaireStore from '@/solitaire/store';
-import useProcessesStore from '@/stores/use-processes-store';
-import { MenuBarItems, MenuAction } from '@/types';
+import useFilesystemStore, { type MenubarItems, MenubarAction } from '@/system/file-system/store';
 
-const actions: MenuBarItems = new Map([
+const actions: MenubarItems = new Map([
   [
-    'Game',
-    new Map<string, MenuAction>([
+    'Solitaire',
+    new Map<string, MenubarAction>([
       [
         'Reset',
         {
@@ -48,9 +47,9 @@ const actions: MenuBarItems = new Map([
       [
         'Quit',
         {
-          callback: (path?: string) => {
-            const close = useProcessesStore.getState().closeProcess;
-            close(path!);
+          callback: (entry) => {
+            const closeEntry = useFilesystemStore.getState().closeEntry;
+            closeEntry(entry?.id ?? '');
           },
         },
       ],
@@ -58,7 +57,7 @@ const actions: MenuBarItems = new Map([
   ],
   [
     'Edit',
-    new Map<string, MenuAction>([
+    new Map<string, MenubarAction>([
       [
         'Undo',
         {
@@ -78,7 +77,7 @@ const actions: MenuBarItems = new Map([
   ],
   [
     'About',
-    new Map<string, MenuAction>([
+    new Map<string, MenubarAction>([
       [
         'Game Rules',
         {

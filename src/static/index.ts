@@ -80,7 +80,7 @@ const appOptions: AppOptions = new Map<string, InitialProcessConfig>([
       // Initial window state
       size: { width: 850, height: 650 },
       menuBarOptions: {
-        source: import('@/apps/solitaire/menu-bar').then((module) => module.default),
+        source: import('@/apps/solitaire/menubar').then((module) => module.default),
       },
     },
   ],
@@ -129,7 +129,7 @@ const appOptions: AppOptions = new Map<string, InitialProcessConfig>([
       // Initial window state
       size: { width: 520, height: 550 },
       menuBarOptions: {
-        source: import('@/apps/headers/menu-bar').then((module) => module.default),
+        source: import('@/apps/headers/menubar').then((module) => module.default),
         className: 'border-b',
       },
     },

@@ -1,12 +1,11 @@
 import useHeadersStore from '@/apps/headers/store';
-import useProcessesStore from '@/stores/use-processes-store';
 // Headers menu bar items
-import { MenuBarItems, MenuAction } from '@/types';
+import useFilesystemStore, { MenubarItems, MenubarAction } from '@/system/file-system/store';
 
-const actions: MenuBarItems = new Map([
+const actions: MenubarItems = new Map([
   [
-    'About',
-    new Map<string, MenuAction>([
+    'Headers',
+    new Map<string, MenubarAction>([
       [
         'Help',
         {
@@ -29,9 +28,9 @@ const actions: MenuBarItems = new Map([
       [
         'Quit',
         {
-          callback: (path?: string) => {
-            const close = useProcessesStore.getState().closeProcess;
-            close(path!);
+          callback: (entry) => {
+            const closeEntry = useFilesystemStore.getState().closeEntry;
+            closeEntry(entry?.id ?? '');
           },
         },
       ],

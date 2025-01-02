@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import UseKeyPresses from '@/system/file-system/hooks/use-key-presses';
+import UseKeyPresses from '@/hooks/use-key-presses';
 import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store';
 
 interface ReturnTypes {

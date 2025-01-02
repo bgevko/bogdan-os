@@ -1,11 +1,12 @@
-import React, { lazy, Suspense, ReactElement, useMemo, useEffect } from 'react';
+import React, { Suspense, ReactElement, useMemo, useEffect } from 'react';
 
+import UseKeyPresses from '@/hooks/use-key-presses';
 import UseIconDrag from '@/system/file-system/hooks/use-icon-drag';
 import UseIconSelect from '@/system/file-system/hooks/use-icon-select';
-import UseKeyPresses from '@/system/file-system/hooks/use-key-presses';
 import { type FileSystemEntry } from '@/system/file-system/store';
 import useFileSystemStore from '@/system/file-system/store';
 import { roundPosition } from '@/system/file-system/utils';
+import { getLazyIcon } from '@/utils';
 import cn from '@/utils/format';
 
 interface IconProps {
@@ -23,7 +24,12 @@ const FileExplorerIcon: React.FC<IconProps> = ({
   const isIconSelected = useFileSystemStore((state) => state.getIsIconSelected(entry.id));
   const isIconDragging = useFileSystemStore((state) => state.getIsIconDragging(entry.id));
   const getWindowSize = useFileSystemStore((state) => state.getWindowSize);
+  const openEntry = useFileSystemStore((state) => state.openEntry);
+  const setContextState = useFileSystemStore((state) => state.setContextState);
+  const clearContextState = useFileSystemStore((state) => state.clearContextState);
+
   const { isShiftPressed } = UseKeyPresses();
+
   const { handleMouseDownSelect, handleMouseUpSelect, handleFocusSelect, handleToggleSelect } =
     UseIconSelect(entry, selectRectVisible);
   const { handleDragStart, handleMouseMove, handleMouseUp } = UseIconDrag(entry);
@@ -101,6 +107,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             }}
           />
         )}
+
         {/* File System Icon */}
         <button
           draggable
@@ -112,6 +119,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             'absolute px-2 rounded-md background-transparent cursor-default flex flex-col items-center focus:outline-none',
             isIconSelected && 'bg-black/20',
             isIconDragging && 'z-50',
+            !isIconSelected && !isIconDragging && 'hover:bg-black/10',
           )}
           style={{
             transform: `
@@ -126,6 +134,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             event.stopPropagation();
             handleToggleSelect();
             handleMouseDownSelect(event);
+            clearContextState();
           }}
           onMouseUp={() => {
             handleMouseUpSelect();
@@ -133,6 +142,18 @@ const FileExplorerIcon: React.FC<IconProps> = ({
           onFocus={(event: React.FocusEvent) => {
             event.stopPropagation();
             handleFocusSelect();
+          }}
+          onDoubleClick={() => {
+            openEntry(entry.id);
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            const clickPosition = { x: event.clientX, y: event.clientY };
+            setContextState({
+              id: entry.id,
+              category: 'icon',
+              clickPosition,
+            });
           }}
         >
           <LazyIcon
@@ -151,25 +172,5 @@ const FileExplorerIcon: React.FC<IconProps> = ({
     </Suspense>
   );
 };
-
-/*
- ********************************
- *                              *
- *            Helpers           *
- *                              *
- ********************************
- */
-function getLazyIcon(iconName: string) {
-  if (!iconName) {
-    return lazy(() => import('@/system/dynamic-icons/assets/file.svg?react'));
-  }
-  return lazy(
-    () =>
-      import(`@/system/dynamic-icons/assets/${iconName}.svg?react`).catch((error: unknown) => {
-        // eslint-disable-next-line no-console
-        console.error(`Icon "${iconName}" not found.`, error);
-      }) as Promise<{ default: React.FC<React.SVGProps<SVGSVGElement>> }>,
-  );
-}
 
 export default FileExplorerIcon;

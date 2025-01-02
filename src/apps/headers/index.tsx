@@ -189,7 +189,12 @@ const Headers = (): React.ReactElement => {
    ********************************
    */
   return (
-    <section className="relative flex size-full flex-col items-center gap-3 rounded-b-lg bg-white p-4">
+    <section
+      className="relative flex size-full flex-col items-center gap-3 rounded-b-lg bg-white p-4"
+      onContextMenu={(e) => {
+        e.preventDefault();
+      }}
+    >
       <h2 className="my-2 w-full border-b text-2xl font-bold">Options</h2>
       <form className="mb-2 flex flex-col gap-4">
         <div className="flex gap-2">

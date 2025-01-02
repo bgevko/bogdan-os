@@ -1,124 +1,85 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+import { Fragment, ReactElement } from 'react';
 
-import UseMenuContext from '@/hooks/system/use-context-menu';
-import useMenuStore from '@/stores/use-menu-store';
-import { TASKBAR_HEIGHT } from '@/themes';
-import { ContextMenuItems } from '@/types';
+import UseContextMenu from '@/system/context-menu/hooks';
+import useFileSystemStore, { FileSystemEntry, ContextMenuItem } from '@/system/file-system/store';
+import { CONTEXT_MENU_WIDTH } from '@/themes';
 import cn from '@/utils/format';
 
-interface MenuEntryProps {
-  label: string;
-  callback: () => void;
-}
+const ContextMenu = (): ReactElement => {
+  const contextState = useFileSystemStore((state) => state.getContextState());
+  const clearContextState = useFileSystemStore((state) => state.clearContextState);
+  const { contextEntry, contextMenuItem, clickPosition } = UseContextMenu(contextState);
 
-const MenuEntry = ({ label, callback }: MenuEntryProps): React.ReactElement => {
-  const resetMenuContext = useMenuStore((state) => state.reset);
-  const testId = label.toLowerCase().replace(' ', '-');
-  return (
-    <button
-      data-testid={testId}
-      className="w-full p-2 text-left hover:bg-[#ffafaf]"
-      type="button"
-      onClick={() => {
-        callback();
-        resetMenuContext();
-      }}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        callback();
-        resetMenuContext();
-      }}
-    >
-      {label}
-    </button>
-  );
-};
+  const isVisible = contextEntry && contextMenuItem;
 
-const ContextMenu = (): React.ReactElement | null => {
-  const menuContext = useMenuStore((state) => state.menuContext);
-  const menuPos = useMenuStore((state) => state.menuPos);
-  const setIsVisible = useMenuStore((state) => state.setIsVisible);
-
-  const [isMouseOver, setIsMouseOver] = useState(false);
-
-  const { contextOptions } = UseMenuContext();
-
-  const menuItems: ContextMenuItems = useMemo(() => {
-    const getter = contextOptions.get(menuContext);
-    if (!getter) return new Map<string, () => void>();
-    return getter();
-  }, [contextOptions, menuContext]);
-
-  const calculatedHeight = useMemo(() => {
-    return menuItems.size * 40;
-  }, [menuItems]);
-
-  const adjustedPos = useMemo(() => {
-    const { x, y } = menuPos;
-
-    const maxX = window.innerWidth - 200;
-    const maxY = window.innerHeight - calculatedHeight - TASKBAR_HEIGHT + 20;
-
-    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
-    return {
-      x: clamp(x, 0, maxX),
-      y: clamp(y, 0, maxY),
-    };
-  }, [calculatedHeight, menuPos]);
-
-  const handleHideMenu = useCallback(
-    (event: MouseEvent) => {
-      if (event.button !== 0) return;
-      if (isMouseOver) return;
-      setIsVisible(false);
-    },
-    [isMouseOver, setIsVisible],
-  );
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleHideMenu);
-    return () => {
-      document.removeEventListener('mousedown', handleHideMenu);
-    };
-  }, [handleHideMenu]);
-
-  // If there are no menu items, do not render the component
-  if (menuItems.size === 0) {
-    return null;
+  if (!isVisible) {
+    return <></>;
   }
 
   return (
-    // eslint-disable-next-line jsx-a11y/interactive-supports-focus
-    <span
-      role="menu"
-      className={cn(
-        `h-[${calculatedHeight.toString()}px] w-[200px]`,
-        'window-shadow flex-col fixed z-20 select-none flex bg-white',
-      )}
+    <>
+      <DropdownMenu
+        entry={contextEntry}
+        contextMenuItem={contextMenuItem}
+        position={clickPosition}
+        onClick={() => {
+          clearContextState();
+        }}
+      />
+    </>
+  );
+};
+
+const DropdownMenu = ({
+  entry,
+  contextMenuItem,
+  position,
+  onClick,
+}: {
+  entry: FileSystemEntry;
+  contextMenuItem: ContextMenuItem;
+  position: { x: number; y: number };
+  onClick: () => void;
+}): ReactElement => {
+  return (
+    <ul
       style={{
-        transform: `translate(${adjustedPos.x.toString()}px, ${adjustedPos.y.toString()}px)`,
+        width: CONTEXT_MENU_WIDTH,
+        transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
       }}
-      onMouseDown={(event: React.MouseEvent) => {
-        event.stopPropagation();
-      }}
-      onMouseLeave={(event: React.MouseEvent) => {
-        event.stopPropagation();
-        setIsMouseOver(false);
-      }}
-      onMouseEnter={(event: React.MouseEvent) => {
-        event.stopPropagation();
-        setIsMouseOver(true);
-      }}
-      onContextMenu={(event: React.MouseEvent) => {
-        event.preventDefault();
-        event.stopPropagation();
-      }}
+      className="window-shadow absolute left-0 z-50 flex flex-col gap-1 rounded border border-stone-200 bg-stone-50 p-1"
+      onClick={onClick}
     >
-      {[...menuItems.entries()].map(([key, value]) => (
-        <MenuEntry key={key} label={key} callback={value} />
-      ))}
-    </span>
+      {[...contextMenuItem.entries()].map(([label, item]) => {
+        let isDisabled = false;
+        if (item.disableCallback) {
+          isDisabled = item.disableCallback(entry);
+        }
+        return (
+          <Fragment key={`${label}-dropdown-fragment`}>
+            <li
+              key={`${label}-dropdown-list-item`}
+              className={cn(
+                'flex items-center',
+                'px-3 text-stone-900 hover:rounded-md font-normal',
+                !isDisabled && 'hover:bg-blue-400 hover:text-white cursor-pointer',
+                isDisabled && 'cursor-default text-stone-400',
+              )}
+              style={{
+                height: 30,
+              }}
+              onClick={() => {
+                if (!isDisabled) item.callback(entry);
+              }}
+            >
+              {label}
+            </li>
+            {item.bottomBorder && <hr key={`${label}-border`} className="border-stone-200" />}
+          </Fragment>
+        );
+      })}
+    </ul>
   );
 };
 

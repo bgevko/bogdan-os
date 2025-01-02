@@ -1,6 +1,11 @@
-const HelloWorld = ({ rootPath }: { rootPath: string }): React.ReactElement => (
-  <div className="flex size-full items-center justify-center">
-    <h1>Greetings from file {rootPath}!</h1>
+const HelloWorld = (): React.ReactElement => (
+  <div
+    className="flex size-full select-none items-center justify-center"
+    onContextMenu={(e) => {
+      e.preventDefault();
+    }}
+  >
+    <h1>Greetings from file!</h1>
   </div>
 );
 

@@ -1,9 +1,12 @@
-const Solitaire = (): React.ReactElement => (
+const Readme = (): React.ReactElement => (
   <div
+    className="flex size-full flex-col gap-2 rounded-b-lg p-4"
     style={{
       background: 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)',
     }}
-    className="flex size-full flex-col gap-2 rounded-b-lg p-4"
+    onContextMenu={(e) => {
+      e.preventDefault();
+    }}
   >
     <h1
       className="rainbow backgroundw-full py-2 text-center text-4xl font-bold"
@@ -56,4 +59,4 @@ const Solitaire = (): React.ReactElement => (
   </div>
 );
 
-export default Solitaire;
+export default Readme;

@@ -124,10 +124,13 @@ const Solitaire = (): React.ReactElement => {
 
   return (
     <section
+      className="size-full rounded-b-lg"
       style={{
         background: 'linear-gradient(180deg, #63AFE5 0%, #93E9B8 100%)',
       }}
-      className="size-full rounded-b-lg"
+      onContextMenu={(e) => {
+        e.preventDefault();
+      }}
     >
       <div className="mx-auto flex h-full w-[800px] flex-col gap-2 rounded-b-lg pt-8">
         <div className="flex">

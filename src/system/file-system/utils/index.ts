@@ -1,13 +1,3 @@
-export const getEventTargetDataId = (event: React.MouseEvent): string => {
-  let target = event.target as HTMLElement;
-  let dataId;
-  while (!dataId) {
-    dataId = target.dataset.id;
-    target = target.parentElement!;
-  }
-  return dataId;
-};
-
 interface Position {
   x: number;
   y: number;

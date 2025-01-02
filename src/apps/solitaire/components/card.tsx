@@ -54,6 +54,9 @@ export const CardIcon: React.FC<CardIconProps> = ({
       width={width ?? CARD_WIDTH}
       height={CARD_HEIGHT}
       style={style}
+      onContextMenu={(event) => {
+        event.preventDefault();
+      }}
     />
   );
 };

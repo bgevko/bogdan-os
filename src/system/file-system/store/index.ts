@@ -30,26 +30,63 @@ const DEBUG = true;
  *    Entry Id, App Component   *
  ********************************
  */
-type UUID = string;
-interface AppComponent {
-  rootPath: string;
+export interface AppComponent {
+  entry?: FileSystemEntry;
 }
-type LazyAppComponent = LazyExoticComponent<ComponentType<AppComponent>>;
+type UUID = string;
+export type LazyAppComponent = LazyExoticComponent<ComponentType<AppComponent>>;
 
 /*
  ********************************
  *            Menubar           *
  ********************************
  */
+export type MenubarActionCallback = (entry?: FileSystemEntry) => void;
 export interface MenubarAction {
-  callback?: (path?: string) => void;
-  disableCallback?: () => boolean;
+  callback: MenubarActionCallback;
+  disableCallback?: (entry?: FileSystemEntry) => boolean;
+  isCheckedCallback?: (entry?: FileSystemEntry) => boolean;
   bottomBorder?: boolean;
   subMenu?: MenubarItem; // Not implemented yet
-  isCheckedCallback?: () => boolean; // Not implemented yet
 }
 export type MenubarItem = Map<string, MenubarAction>;
 export type MenubarItems = Map<string, MenubarItem>;
+export interface MenubarOptions {
+  source: Promise<MenubarItems>;
+  styles?: CSSProperties;
+  className?: string;
+}
+
+/*
+ ***********************************
+ *           Context Menu          *
+ ***********************************
+ */
+export type ContextMenuActionCallback = MenubarActionCallback;
+export type ContextMenuAction = MenubarAction;
+export type ContextMenuItem = Map<string, ContextMenuAction>;
+
+export type ContextMenuCategory =
+  | 'icon'
+  | 'directory-icon'
+  | 'directory'
+  | 'taskbar'
+  | 'taskbar-entry';
+export type ContextMenuItems = Map<ContextMenuCategory, ContextMenuItem>;
+export interface ContextMenuOptions {
+  source: Promise<ContextMenuItems>;
+  styles?: CSSProperties;
+  className?: string;
+}
+
+// Context state may be associated with a given icon
+// or it can be generic, like the taskbar or other system
+// components that don't have a direct entry.
+export interface ContextState {
+  id?: UUID;
+  category: ContextMenuCategory;
+  clickPosition: { x: number; y: number };
+}
 
 /*
  ********************************
@@ -62,15 +99,6 @@ interface Metadata {
   createdAt: Date;
   updatedAt: Date;
   parentId: UUID | null;
-  disableMobile?: boolean;
-  component?: LazyAppComponent;
-  defaultWindowSize?: { width: number; height: number };
-  windowSize?: { width: number; height: number };
-  menubarOptions?: {
-    source: Promise<MenubarItems>;
-    styles?: CSSProperties;
-    className?: string;
-  };
 
   // Icon stuff
   icon?: string;
@@ -79,6 +107,22 @@ interface Metadata {
   iconPosition: { x: number; y: number };
   isIconSelected?: boolean;
   isIconDragging?: boolean;
+  disableDelete?: boolean;
+
+  // window stuff
+  disableMobile?: boolean;
+  isOpen?: boolean;
+  defaultWindowSize?: { width: number; height: number };
+  windowSize?: { width: number; height: number };
+  windowPosition?: { x: number; y: number };
+  windowState?: 'minimized' | 'maximized' | 'normal';
+  isWindowMoving?: boolean;
+  isWindowResizing?: boolean;
+  isDisabledResize?: boolean;
+  transformScale?: number;
+  willTransform?: boolean;
+  contentOpacity?: number;
+  windowCallback?: () => void;
 }
 
 /*
@@ -108,6 +152,15 @@ interface StoreState {
 
   // flags
   disableSelect: boolean;
+  windowBlur: boolean;
+  isMaximizedWindowHeaderVisible?: boolean;
+
+  // window state
+  opened: UUID[];
+  focused: UUID[];
+
+  // context menu
+  contextState?: ContextState;
 }
 interface StoreActions {
   /*
@@ -116,6 +169,7 @@ interface StoreActions {
    ********************************
    */
   getEntry: ({ id, name }: { id?: UUID; name?: string }) => FileSystemEntry | null;
+  getOpenedEntries: () => UUID[];
   getId: (name: string) => UUID | null;
   getParentId: (id: UUID) => UUID | null;
   getName: (id: UUID) => string;
@@ -134,7 +188,24 @@ interface StoreActions {
   getIsIconDragging: (id: UUID) => boolean;
   getIsAnyIconDragging: (id?: UUID) => boolean;
   getWindowSize: (id: UUID) => { width: number; height: number };
+  getDefaultWindowSize: (id: UUID) => { width: number; height: number };
   isCellEmpty: (id: UUID, position: { x: number; y: number }) => boolean;
+  getIsOpen: (id: UUID) => boolean;
+  getWindowPosition: (id: UUID) => { x: number; y: number };
+  getWindowState: (id: UUID) => 'minimized' | 'maximized' | 'normal' | null;
+  getIsWindowFocused: (id: UUID) => boolean;
+  getWindowZIndex: (id: UUID) => number;
+  getIsWindowMoving: (id: UUID) => boolean;
+  getIsWindowResizing: (id: UUID) => boolean;
+  getTransformScale: (id: UUID) => number;
+  getWillTransform: (id: UUID) => boolean;
+  getContentOpacity: (id: UUID) => number;
+  getIsDisabledResize: (id: UUID) => boolean;
+  getMaximizedEntry: () => FileSystemEntry | null;
+  getIsMaximizedWindowHeaderVisible: () => boolean;
+  getWindowCenterPosition: (id: UUID) => { x: number; y: number };
+  getContextState: () => ContextState | null;
+  getIsDisableDelete: (id: UUID) => boolean;
 
   /*
    ********************************
@@ -146,10 +217,25 @@ interface StoreActions {
   clearIconSelection: (parentId?: UUID) => void;
   setDisableSelect: (isDisabled: boolean) => void;
   setIsIconDragging: (id: UUID, isDragging: boolean) => void;
+  setIsOpen: (id: UUID, isOpen: boolean) => void;
+  setWindowState: (id: UUID, state: 'minimized' | 'maximized' | 'normal') => void;
+  setWindowPosition: (id: UUID, { x, y }: { x: number; y: number }) => void;
+  blurWindowFocus: (isBlurred: boolean) => void;
+  setIsWindowMoving: (id: UUID, isMoving: boolean) => void;
+  setIsWindowResizing: (id: UUID, isResizing: boolean) => void;
+  setTransformScale: (id: UUID, scale: number) => void;
+  setWillTransform: (id: UUID, willTransform: boolean) => void;
+  setContentOpacity: (id: UUID, opacity: number) => void;
+  setWindowSize: (id: UUID, { width, height }: { width: number; height: number }) => void;
+  setIsMaximizedWindowHeaderVisible: (isVisible: boolean) => void;
+  setWindowCallback: (id: UUID, callback: () => void) => void;
+  clearWindowCallback: (id: UUID) => void;
+  setContextState: (contextState: ContextState) => void;
+  clearContextState: () => void;
 
   /*
    ********************************
-   *            Actions           *
+   *      File System Actions     *
    ********************************
    */
   createEntry: ({
@@ -173,6 +259,23 @@ interface StoreActions {
   printDirectory: (id: UUID) => void;
   reset: () => void;
   resetForTest: () => void;
+
+  /*
+   ********************************
+   *        Window Actions        *
+   ********************************
+   */
+  openEntry: (id: UUID) => void;
+  closeEntry: (id: UUID) => void;
+  minimizeEntry: (id: UUID) => void;
+  maximizeEntry: (id: UUID) => void;
+  restoreEntry: (id: UUID) => void;
+  toggleMinimize: (id: UUID) => void;
+  toggleMaximize: (id: UUID) => void;
+  toggleSizeToViewport: (id: UUID) => void;
+  pushFocus: (id: UUID) => void;
+  popFocus: () => void;
+  executeWindowCallback: (id: UUID) => void;
 }
 interface FileSystemState extends StoreState, StoreActions {}
 
@@ -185,9 +288,17 @@ interface FileSystemState extends StoreState, StoreActions {}
  */
 const flags = {
   disableSelect: false,
+  windowBlur: false,
+};
+
+const windowState = {
+  opened: [],
+  focused: [],
 };
 
 const initialState: StoreState = {
+  ...flags,
+  ...windowState,
   root: {
     id: 'root',
     iconPosition: { x: 0, y: 0 },
@@ -219,7 +330,6 @@ const initialState: StoreState = {
     ...generateAppsFromDefaults(),
     ...generateDirectoriesFromDefaults(),
   ]),
-  ...flags,
 };
 
 const testState: StoreState = {
@@ -235,6 +345,7 @@ const testState: StoreState = {
   },
   lookup: new Map(),
   ...flags,
+  ...windowState,
 };
 
 /*
@@ -274,6 +385,9 @@ const useFileSystemStore = create<FileSystemState>()(
         return null;
       }
       return null;
+    },
+    getOpenedEntries: () => {
+      return get().opened;
     },
     getId: (name) => {
       if (name === '') {
@@ -460,6 +574,15 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return entry.windowSize ?? entry.defaultWindowSize ?? { width: 0, height: 0 };
     },
+    getDefaultWindowSize: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetDefaultWindowSize: Entry with id ${id} not found`);
+        return { width: 0, height: 0 };
+      }
+      return entry.defaultWindowSize ?? { width: 0, height: 0 };
+    },
     isCellEmpty: (id, position) => {
       const entry = get().getEntry({ id });
       // Not a directory, false by default
@@ -487,6 +610,156 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return true;
     },
+    getIsOpen: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:GetIsOpen: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.isOpen ?? false;
+    },
+    getWindowPosition: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:GetWindowPosition: Entry with id ${id} not found`);
+        return { x: 0, y: 0 };
+      }
+      return entry.windowPosition ?? { x: 0, y: 0 };
+    },
+    getWindowCenterPosition: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetWindowCenterPosition: Entry with id ${id} not found`);
+        return { x: 0, y: 0 };
+      }
+      const [viewportWidth, viewportHeight] = [
+        window.innerWidth,
+        window.innerHeight - TASKBAR_HEIGHT,
+      ];
+      const defaultWindowSize = get().getDefaultWindowSize(id);
+      return {
+        x: (viewportWidth - defaultWindowSize.width) / 2,
+        y: (viewportHeight - defaultWindowSize.height) / 2,
+      };
+    },
+    getWindowState: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:GetWindowState: Entry with id ${id} not found`);
+        return null;
+      }
+      return entry.windowState ?? 'normal';
+    },
+    getIsWindowFocused: (id) => {
+      if (get().windowBlur) {
+        return false;
+      }
+      if (get().focused.length === 0) {
+        return false;
+      }
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetIsWindowFocused: Entry with id ${id} not found`);
+        return false;
+      }
+      return get().focused.at(-1) === id;
+    },
+    getWindowZIndex: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry?.isOpen) {
+        return 0;
+      }
+
+      // Maximized return a high z-index
+      if (entry.windowState === 'maximized') {
+        return 100;
+      }
+
+      const index = get().focused.indexOf(id) ?? 0;
+      return index + 1;
+    },
+    getIsWindowMoving: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:GetIsWindowMoving: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.isWindowMoving ?? false;
+    },
+    getIsWindowResizing: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetIsWindowResizing: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.isWindowResizing ?? false;
+    },
+    getTransformScale: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:GetTransformScale: Entry with id ${id} not found`);
+        return 1;
+      }
+      return entry.transformScale ?? 0;
+    },
+    getWillTransform: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:GetWillTransform: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.willTransform ?? false;
+    },
+    getContentOpacity: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:getContentOpacity: Entry with id ${id} not found`);
+        return 1;
+      }
+      return entry.contentOpacity ?? 0;
+    },
+    getIsDisabledResize: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetIsDisabledResize: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.isDisabledResize ?? false;
+    },
+    getMaximizedEntry: () => {
+      // There should really only be one maximized window at a time,
+      // since the maximized entry takes up the entire viewport and prevents
+      // interaction with other windows.
+      const opened = get().getOpenedEntries();
+      for (const id of opened) {
+        const entry = get().getEntry({ id });
+        if (entry?.windowState === 'maximized') {
+          return entry;
+        }
+      }
+      return null;
+    },
+    getIsMaximizedWindowHeaderVisible: () => {
+      return get().isMaximizedWindowHeaderVisible ?? false;
+    },
+    getContextState: () => {
+      const contextState = get().contextState;
+      return contextState ?? null;
+    },
+    getIsDisableDelete: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetIsDisableDelete: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.disableDelete ?? true;
+    },
+    // getters end
 
     /*
      ********************************
@@ -614,6 +887,151 @@ const useFileSystemStore = create<FileSystemState>()(
         entry.isIconDragging = isDragging;
       });
     },
+    setIsOpen: (id, isOpen) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:SetIsOpen: Entry with id ${id} not found`);
+          return;
+        }
+        entry.isOpen = isOpen;
+      });
+    },
+    setWindowState: (id, newState) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:SetWindowState: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowState = newState;
+      });
+    },
+    setWindowPosition: (id, position) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetWindowPosition: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowPosition = position;
+      });
+    },
+    blurWindowFocus: (isBlurred) => {
+      set((state) => {
+        state.windowBlur = isBlurred;
+      });
+    },
+    setIsWindowMoving: (id, isMoving) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetIsWindowMoving: Entry with id ${id} not found`);
+          return;
+        }
+        entry.isWindowMoving = isMoving;
+      });
+    },
+    setIsWindowResizing: (id, isResizing) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetIsWindowResizing: Entry with id ${id} not found`);
+          return;
+        }
+        entry.isWindowResizing = isResizing;
+      });
+    },
+    setTransformScale: (id, scale) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetTransformScale: Entry with id ${id} not found`);
+          return;
+        }
+        entry.transformScale = scale;
+      });
+    },
+    setWillTransform: (id, willTransform) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetWillTransform: Entry with id ${id} not found`);
+          return;
+        }
+        entry.willTransform = willTransform;
+      });
+    },
+    setContentOpacity: (id, opacity) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetWindowOpacity: Entry with id ${id} not found`);
+          return;
+        }
+        entry.contentOpacity = opacity;
+      });
+    },
+    setWindowSize: (id, size) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:SetWindowSize: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowSize = size;
+      });
+    },
+    setIsMaximizedWindowHeaderVisible: (isVisible) => {
+      set((state) => {
+        state.isMaximizedWindowHeaderVisible = isVisible;
+      });
+    },
+    setWindowCallback: (id, callback) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetWindowUpdateCallback: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowCallback = callback;
+      });
+    },
+    clearWindowCallback: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(
+              `FileSystemStore:ClearWindowUpdateCallback: Entry with id ${id} not found`,
+            );
+          return;
+        }
+        entry.windowCallback = undefined;
+      });
+    },
+    setContextState: (contextState) => {
+      const { id } = contextState;
+      const entry = get().getEntry({ id });
+      set((state) => {
+        if (entry) {
+          state.contextState = contextState;
+        }
+      });
+    },
+    clearContextState: () => {
+      set((state) => {
+        state.contextState = undefined;
+      });
+    },
+    // setters end
 
     /*
      ********************************
@@ -883,6 +1301,239 @@ const useFileSystemStore = create<FileSystemState>()(
         entry.parentId = targetParentId;
       });
     },
+
+    /*
+     ********************************
+     *          Open Entry          *
+     ********************************
+     */
+    openEntry: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:OpenEntry: Entry with id ${id} not found`);
+          return;
+        }
+        entry.isOpen = true;
+        state.opened.push(id);
+        state.focused.push(id);
+
+        // Center the window position
+        // with slight offsets each time
+        const offset = Math.floor(Math.random() * 50);
+        const addOrSubtract = Math.random() < 0.5 ? -1 : 1;
+        const [winWidth, winHeight] = [window.innerWidth, window.innerHeight - TASKBAR_HEIGHT];
+        const pos = {
+          x: winWidth / 2 - entry.defaultWindowSize!.width / 2 + offset * addOrSubtract,
+          y: winHeight / 2 - entry.defaultWindowSize!.height / 2 + offset * addOrSubtract,
+        };
+        state.lookup.get(id)!.windowPosition = pos;
+
+        // Turn off global blur
+        state.windowBlur = false;
+      });
+    },
+    /*
+     ********************************
+     *          Close Entry         *
+     ********************************
+     */
+    closeEntry: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:CloseEntry: Entry with id ${id} not found`);
+          return;
+        }
+        entry.isOpen = false;
+        state.opened = state.opened.filter((openedId) => openedId !== id);
+        state.focused = state.focused.filter((focusedId) => focusedId !== id);
+        entry.windowState = 'normal';
+
+        // Set window back to default window size
+        const defaultWindowSize = get().getDefaultWindowSize(id);
+        entry.windowSize = defaultWindowSize;
+      });
+    },
+
+    /*
+     ********************************
+     *         Window State         *
+     ********************************
+     */
+    minimizeEntry: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:MinimizeEntry: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowState = 'minimized';
+
+        // Remove focus
+        state.focused = state.focused.filter((focusedId) => focusedId !== id);
+
+        // Set the transform scale
+        entry.transformScale = 0;
+      });
+    },
+    maximizeEntry: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:MaximizeEntry: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowState = 'maximized';
+
+        // Push the focus
+        const focused = state.focused.filter((openedId) => openedId !== id);
+        focused.push(id);
+        state.focused = focused;
+
+        // Set the transform scale
+        entry.transformScale = 1;
+      });
+    },
+    restoreEntry: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:RestoreEntry: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowState = 'normal';
+
+        // Push the focus
+        const focused = state.focused.filter((openedId) => openedId !== id);
+        focused.push(id);
+        state.focused = focused;
+
+        // Set the transform scale
+        entry.transformScale = 1;
+      });
+    },
+    toggleMinimize: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:ToggleMinimizeEntry: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowState = entry.windowState === 'minimized' ? 'normal' : 'minimized';
+
+        // handle focus
+        if (entry.windowState === 'minimized') {
+          state.focused = state.focused.filter((focusedId) => focusedId !== id);
+        } else {
+          const focused = state.focused.filter((openedId) => openedId !== id);
+          focused.push(id);
+          state.focused = focused;
+        }
+
+        // Set the transform scale
+        entry.transformScale = entry.windowState === 'minimized' ? 0 : 1;
+      });
+    },
+    toggleMaximize: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:ToggleMaximizeEntry: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowState = entry.windowState === 'maximized' ? 'normal' : 'maximized';
+
+        // handle focus
+        state.focused = state.focused.filter((focusedId) => focusedId !== id);
+        state.focused.push(id);
+
+        // Set position and scale
+        // Maximized windows will take up the entire viewport. Restored windows
+        // can be positioned in the center, reverting to their default size
+        const [winWidth, winHeight] = [window.innerWidth, window.innerHeight];
+
+        // Normal to max
+        if (entry.windowState === 'maximized') {
+          entry.windowPosition = { x: 0, y: 0 };
+          entry.windowSize = { width: winWidth, height: winHeight };
+
+          // Start with maximized header not visible
+          state.isMaximizedWindowHeaderVisible = false;
+        }
+        // Max back to normal
+        else if (entry.windowState === 'normal') {
+          const defaultSize = get().getDefaultWindowSize(id);
+          const center = {
+            x: winWidth / 2 - defaultSize.width / 2,
+            y: winHeight / 2 - defaultSize.height / 2,
+          };
+          entry.windowPosition = center;
+          entry.windowSize = defaultSize;
+        }
+      });
+    },
+    toggleSizeToViewport(id) {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:ToggleSizeToViewport: Entry with id ${id} not found`);
+          return;
+        }
+        const [viewportWidth, viewportHeight] = [
+          window.innerWidth,
+          window.innerHeight - TASKBAR_HEIGHT + 10,
+        ];
+        const windowSize = get().getWindowSize(id);
+        const defaultSize = get().getDefaultWindowSize(id);
+        const centerPosition = get().getWindowCenterPosition(id);
+
+        // Toggle between viewport size and default size
+        if (windowSize.width === viewportWidth && windowSize.height === viewportHeight) {
+          entry.windowSize = defaultSize;
+          entry.windowPosition = centerPosition;
+        } else {
+          entry.windowSize = { width: viewportWidth, height: viewportHeight };
+          entry.windowPosition = { x: 0, y: 0 };
+        }
+      });
+    },
+    pushFocus: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry?.isOpen) {
+        return;
+      }
+      set((state) => {
+        const focused = state.focused.filter((openedId) => openedId !== id);
+        focused.push(id);
+        state.focused = focused;
+        state.windowBlur = false;
+      });
+    },
+    popFocus: () => {
+      set((state) => {
+        const focused = state.focused;
+        focused.pop();
+        state.focused = focused;
+        state.windowBlur = focused.length === 0;
+      });
+    },
+    executeWindowCallback: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:SyncAfterWindowChange: Entry with id ${id} not found`);
+        return;
+      }
+      const callback = entry.windowCallback;
+      if (callback) {
+        callback();
+      }
+    },
+
     /*
      ********************************
      *             Reset            *
@@ -912,7 +1563,11 @@ const useFileSystemStore = create<FileSystemState>()(
 function generateAppsFromDefaults(): Map<string, FileSystemEntry> {
   const apps = new Map<string, File>();
   for (const [key, value] of applications) {
-    apps.set(key, value as File);
+    // Remove things that may mess up immer state, like lazy loaded components,
+    // but otherwise fit with the state.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { component, menubarOptions, contextMenuOptions, ...app } = value;
+    apps.set(key, app as File);
   }
   return apps;
 }
@@ -920,7 +1575,10 @@ function generateAppsFromDefaults(): Map<string, FileSystemEntry> {
 function generateDirectoriesFromDefaults(): Map<string, FileSystemEntry> {
   const dirs = new Map<string, Directory>();
   for (const [key, value] of directories) {
-    dirs.set(key, value as Directory);
+    // Remove the component from state, as it does not mixes well with immer / zustand
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { component, contextMenuOptions, ...dir } = value;
+    dirs.set(key, dir as Directory);
   }
   return dirs;
 }

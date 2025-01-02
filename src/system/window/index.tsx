@@ -5,7 +5,7 @@ import useFsStore from '@/stores/use-fs-store';
 import useMouseStore from '@/stores/use-mouse-store';
 import useProcessesStore from '@/stores/use-processes-store';
 import { DynamicIconsByName } from '@/system/dynamic-icons';
-import MenuBar from '@/system/menu-bar';
+import MenuBar from '@/system/menubar';
 import WindowResizeHandles from '@/system/window/resize-handles';
 import WindowHeader from '@/system/window/window-header';
 import cn from '@/utils/format';
@@ -87,8 +87,8 @@ const Window = ({ path, children }: WindowProperties): ReactElement => {
     >
       {!isMinimized && (
         <>
-          <WindowResizeHandles path={path} />
           <WindowHeader path={path} />
+          <WindowResizeHandles path={path} />
           <article className={cn('relative flex flex-1 rounded-b-lg')}>
             <div className="absolute inset-y-0 w-full rounded-b-lg">
               {willRenderWarning ? (

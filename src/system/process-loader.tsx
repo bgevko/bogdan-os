@@ -9,7 +9,7 @@ const ProcessLoader = (): React.ReactElement => {
   const processes = useProcessesStore((state) => state.openedProcesses);
   const isDir = useFsStore((state) => state.isDir);
 
-  const loading = <div>Loading...</div>;
+  const loading = <div className="flex w-full items-center justify-center">Loading...</div>;
   const components = [...processes].map(([key, { hasWindow, path }]) => {
     const Component = getProcessOptions(path, isDir(path)).component;
 

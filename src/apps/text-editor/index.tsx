@@ -1,6 +1,6 @@
-const TextEditor = ({ rootPath }: { rootPath: string }): React.ReactElement => (
+const TextEditor = (): React.ReactElement => (
   <div className="flex size-full items-center justify-center">
-    <h1>Greetings from file {rootPath}!</h1>
+    <h1>Greetings from the text editor!</h1>
   </div>
 );
 
