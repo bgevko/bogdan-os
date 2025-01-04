@@ -5,7 +5,7 @@ import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store'
 
 interface ReturnTypes {
   handleMouseDownSelect: (event: React.MouseEvent) => void;
-  handleMouseUpSelect: () => void;
+  handleMouseUpSelect: (event: React.MouseEvent) => void;
   handleToggleSelect: () => void;
   handleFocusSelect: () => void;
 }
@@ -20,50 +20,46 @@ const UseIconSelect = (entry: FileSystemEntry, isUsingSelectRect: boolean): Retu
 
   const handleMouseDownSelect = useCallback(
     (event: React.MouseEvent) => {
-      if (event.button !== 0 || isShiftPressed || getAllSelectedIds(entry.parentId!).length <= 1) {
+      if (event.button !== 0 || isShiftPressed || getAllSelectedIds().length <= 1) {
         return;
       }
       setIsIconSelected(entry.id, true);
     },
-    [entry, isShiftPressed, getAllSelectedIds, setIsIconSelected],
+    [entry.id, isShiftPressed, getAllSelectedIds, setIsIconSelected],
   );
 
-  const handleMouseUpSelect = useCallback(() => {
-    if (
-      isShiftPressed ||
-      getAllSelectedIds(entry.parentId!).length <= 1 ||
-      isUsingSelectRect ||
-      isSelectDisabled()
-    ) {
-      return;
-    }
-    clearIconSelection();
-    setIsIconSelected(entry.id, true);
-  }, [
-    entry.parentId,
-    entry.id,
-    isShiftPressed,
-    getAllSelectedIds,
-    clearIconSelection,
-    setIsIconSelected,
-    isUsingSelectRect,
-    isSelectDisabled,
-  ]);
+  const handleMouseUpSelect = useCallback(
+    (event: React.MouseEvent) => {
+      if (
+        event.button !== 0 ||
+        isShiftPressed ||
+        getAllSelectedIds().length <= 1 ||
+        isUsingSelectRect ||
+        isSelectDisabled()
+      ) {
+        return;
+      }
+      clearIconSelection();
+      setIsIconSelected(entry.id, true);
+    },
+    [
+      entry.id,
+      isShiftPressed,
+      getAllSelectedIds,
+      clearIconSelection,
+      setIsIconSelected,
+      isUsingSelectRect,
+      isSelectDisabled,
+    ],
+  );
 
   const handleFocusSelect = useCallback(() => {
-    if (isShiftPressed || getAllSelectedIds(entry.parentId!).length > 1) {
+    if (isShiftPressed || getAllSelectedIds().length > 1) {
       return;
     }
     clearIconSelection();
     setIsIconSelected(entry.id, true);
-  }, [
-    isShiftPressed,
-    getAllSelectedIds,
-    clearIconSelection,
-    setIsIconSelected,
-    entry.id,
-    entry.parentId,
-  ]);
+  }, [isShiftPressed, getAllSelectedIds, clearIconSelection, setIsIconSelected, entry.id]);
 
   const handleToggleSelect = useCallback(() => {
     if (!isShiftPressed) {

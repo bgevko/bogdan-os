@@ -1,28 +1,25 @@
 import { useCallback, useState } from 'react';
 
-import { type FileSystemEntry } from '@/system/file-system/store';
-import useFileSystemStore from '@/system/file-system/store';
-import { roundPosition } from '@/system/file-system/utils';
+import useFileSystemStore, { FileSystemEntry, Position } from '@/system/file-system/store';
+import { snapPosition } from '@/system/file-system/utils';
 
 interface ReturnTypes {
   handleDragStart: (event: React.MouseEvent) => void;
   handleMouseMove: (event: MouseEvent) => void;
-  handleMouseUp: () => void;
+  handleMouseUp: (event: MouseEvent) => void;
 }
 
-const UseIconDrag = (entry: FileSystemEntry): ReturnTypes => {
+const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes => {
   const setIconPosition = useFileSystemStore((state) => state.setIconPosition);
   const getIconPosition = useFileSystemStore((state) => state.getIconPosition);
   const getAllSelectedIds = useFileSystemStore((state) => state.getAllSelectedIds);
   const setDisableSelect = useFileSystemStore((state) => state.setDisableSelect);
   const isIconDragging = useFileSystemStore((state) => state.getIsIconDragging);
   const setIsIconDragging = useFileSystemStore((state) => state.setIsIconDragging);
-  const getWindowSize = useFileSystemStore((state) => state.getWindowSize);
+  const getWindowPosition = useFileSystemStore((state) => state.getWindowPosition);
+  const clearContextState = useFileSystemStore((state) => state.clearContextState);
+  const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
 
-  interface Position {
-    x: number;
-    y: number;
-  }
   // Drag initiates on a single icon, however, we need to move all selected
   // icons. We'll do this by storing the starting position of each selected
   // icon in id: position key-value pairs.
@@ -36,7 +33,7 @@ const UseIconDrag = (entry: FileSystemEntry): ReturnTypes => {
   const handleDragStart = useCallback(
     (event: React.MouseEvent) => {
       event.preventDefault();
-      const selected = getAllSelectedIds(entry.parentId!);
+      const selected = getAllSelectedIds();
       const positions: Record<string, Position> = {};
       for (const id of selected) {
         const pos = getIconPosition(id)!;
@@ -49,8 +46,16 @@ const UseIconDrag = (entry: FileSystemEntry): ReturnTypes => {
       }
       setDisableSelect(true);
       setStartingPositions(positions);
+      setDropTargetId(entry.parentId ?? 'desktop');
     },
-    [entry.parentId, getIconPosition, getAllSelectedIds, setDisableSelect, setIsIconDragging],
+    [
+      getIconPosition,
+      getAllSelectedIds,
+      setDisableSelect,
+      setIsIconDragging,
+      entry.parentId,
+      setDropTargetId,
+    ],
   );
 
   /*
@@ -58,26 +63,38 @@ const UseIconDrag = (entry: FileSystemEntry): ReturnTypes => {
    *           Drag End           *
    ********************************
    */
-  const handleMouseUp = useCallback(() => {
-    setIsIconDragging(entry.id, false);
-    for (const id of Object.keys(startingPositions)) {
-      setIsIconDragging(id, false);
-      const pos = getIconPosition(id)!;
-      const newPosition = roundPosition(pos, getWindowSize(entry.parentId!));
-      setIconPosition(id, newPosition);
-    }
-    setStartingPositions({});
-    setDisableSelect(false);
-  }, [
-    entry.id,
-    entry.parentId,
-    getWindowSize,
-    setIsIconDragging,
-    setDisableSelect,
-    startingPositions,
-    getIconPosition,
-    setIconPosition,
-  ]);
+  const handleMouseUp = useCallback(
+    (event: MouseEvent) => {
+      if (event.button !== 0) return;
+      setIsIconDragging(entry.id, false);
+      for (const id of Object.keys(startingPositions)) {
+        setIsIconDragging(id, false);
+        const pos = getIconPosition(id)!;
+        const newPosition = snapPosition({
+          parentId: entry.parentId!,
+          targetId: dropTargetId,
+          iconPosition: pos,
+          parentPosition: getWindowPosition(entry.parentId!),
+        });
+        setIconPosition(id, newPosition);
+      }
+      setStartingPositions({});
+      setDisableSelect(false);
+      clearContextState();
+    },
+    [
+      entry.id,
+      entry.parentId,
+      getWindowPosition,
+      setIsIconDragging,
+      setDisableSelect,
+      getIconPosition,
+      setIconPosition,
+      startingPositions,
+      dropTargetId,
+      clearContextState,
+    ],
+  );
 
   /*
    ********************************

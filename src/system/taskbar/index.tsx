@@ -39,8 +39,11 @@ const Taskbar = (): JSX.Element => {
       >
         <ul className="flex size-full items-center justify-start gap-1">
           {entries.map((entryId) => {
-            const entry = getEntry({ id: entryId })!;
-            return <TaskbarEntry key={entry.id} entry={entry} />;
+            const entry = getEntry({ id: entryId });
+            if (entry) {
+              return <TaskbarEntry key={entry.id} entry={entry} />;
+            }
+            return null;
           })}
         </ul>
         <Clock />

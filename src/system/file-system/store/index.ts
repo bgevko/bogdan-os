@@ -8,12 +8,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import { applications, directories } from '@/defaults';
+import { applications } from '@/defaults';
 import { TASKBAR_HEIGHT, GRID_CELL_SIZE } from '@/themes';
 
 enableMapSet();
 
-const DEBUG = true;
+const DEBUG = false;
 
 /*
  ********************************
@@ -33,7 +33,7 @@ const DEBUG = true;
 export interface AppComponent {
   entry?: FileSystemEntry;
 }
-type UUID = string;
+export type EntryId = string;
 export type LazyAppComponent = LazyExoticComponent<ComponentType<AppComponent>>;
 
 /*
@@ -83,9 +83,23 @@ export interface ContextMenuOptions {
 // or it can be generic, like the taskbar or other system
 // components that don't have a direct entry.
 export interface ContextState {
-  id?: UUID;
+  id?: EntryId;
   category: ContextMenuCategory;
-  clickPosition: { x: number; y: number };
+  clickPosition: Position;
+}
+
+/*
+ ***********************************
+ *            Misc Types           *
+ ***********************************
+ */
+export interface Position {
+  x: number;
+  y: number;
+}
+export interface Size {
+  width: number;
+  height: number;
 }
 
 /*
@@ -94,17 +108,17 @@ export interface ContextState {
  ********************************
  */
 interface Metadata {
-  id: UUID;
+  id: EntryId;
   name: string;
   createdAt: Date;
   updatedAt: Date;
-  parentId: UUID | null;
+  parentId: EntryId | null;
 
   // Icon stuff
   icon?: string;
   iconSize?: number;
   iconColor?: string;
-  iconPosition: { x: number; y: number };
+  iconPosition: Position;
   isIconSelected?: boolean;
   isIconDragging?: boolean;
   disableDelete?: boolean;
@@ -114,7 +128,7 @@ interface Metadata {
   isOpen?: boolean;
   defaultWindowSize?: { width: number; height: number };
   windowSize?: { width: number; height: number };
-  windowPosition?: { x: number; y: number };
+  windowPosition?: Position;
   windowState?: 'minimized' | 'maximized' | 'normal';
   isWindowMoving?: boolean;
   isWindowResizing?: boolean;
@@ -137,7 +151,7 @@ export interface File extends Metadata {
 }
 export interface Directory extends Metadata {
   type: 'directory';
-  children: UUID[];
+  children: EntryId[];
 }
 export type FileSystemEntry = File | Directory;
 
@@ -148,16 +162,22 @@ export type FileSystemEntry = File | Directory;
  */
 interface StoreState {
   root: Directory;
-  lookup: Map<UUID, FileSystemEntry>;
+  lookup: Map<EntryId, FileSystemEntry>;
 
   // flags
   disableSelect: boolean;
   windowBlur: boolean;
   isMaximizedWindowHeaderVisible?: boolean;
+  isUsingSelectRect?: boolean;
 
   // window state
-  opened: UUID[];
-  focused: UUID[];
+  opened: EntryId[];
+  focused: EntryId[];
+
+  // icon global info
+  selected: EntryId[];
+  dragging: EntryId[];
+  dropTarget?: EntryId;
 
   // context menu
   contextState?: ContextState;
@@ -168,70 +188,80 @@ interface StoreActions {
    *            Getters           *
    ********************************
    */
-  getEntry: ({ id, name }: { id?: UUID; name?: string }) => FileSystemEntry | null;
-  getOpenedEntries: () => UUID[];
-  getId: (name: string) => UUID | null;
-  getParentId: (id: UUID) => UUID | null;
-  getName: (id: UUID) => string;
-  getChildren: (id: UUID) => UUID[];
-  getDirectory: (id: UUID) => FileSystemEntry[] | null;
-  getAllIds: () => UUID[];
-  isAncestor: (ancestorId: UUID, childId: UUID) => boolean;
-  getContent: (id: UUID) => string | null;
-  getPath: (id: UUID) => string;
+  getEntry: ({ id, name }: { id?: EntryId; name?: string }) => FileSystemEntry | null;
+  getOpenedEntries: () => EntryId[];
+  getId: (name: string) => EntryId | null;
+  getParentId: (id: EntryId) => EntryId | null;
+  getName: (id: EntryId) => string;
+  getChildren: (id: EntryId) => EntryId[];
+  getDirectory: (id: EntryId) => FileSystemEntry[] | null;
+  getAllIds: () => EntryId[];
+  getIsAncestor: (ancestorId: EntryId, childId: EntryId) => boolean;
+  getContent: (id: EntryId) => string | null;
+  getPath: (id: EntryId) => string;
   getRoot: () => Directory;
-  getLookup: () => Map<UUID, FileSystemEntry>;
-  getIsIconSelected: (id: UUID) => boolean;
-  getAllSelectedIds: (id?: UUID) => UUID[];
-  getIconPosition: (id: UUID) => { x: number; y: number } | null;
+  getLookup: () => Map<EntryId, FileSystemEntry>;
+  getIsIconSelected: (id: EntryId) => boolean;
+  getAllSelectedIds: () => EntryId[];
+  getIconPosition: (id: EntryId) => Position | null;
+  getIconPositions: (parentId: EntryId) => { id: EntryId; position: Position }[];
+  getIsIconPositionEmpty: (parentId: EntryId, position: Position) => boolean;
+  getEmptyIconPosition: (parentId: EntryId, rowOrColumn?: 'row' | 'column') => Position | null;
   getDisableSelect: () => boolean;
-  getIsIconDragging: (id: UUID) => boolean;
-  getIsAnyIconDragging: (id?: UUID) => boolean;
-  getWindowSize: (id: UUID) => { width: number; height: number };
-  getDefaultWindowSize: (id: UUID) => { width: number; height: number };
-  isCellEmpty: (id: UUID, position: { x: number; y: number }) => boolean;
-  getIsOpen: (id: UUID) => boolean;
-  getWindowPosition: (id: UUID) => { x: number; y: number };
-  getWindowState: (id: UUID) => 'minimized' | 'maximized' | 'normal' | null;
-  getIsWindowFocused: (id: UUID) => boolean;
-  getWindowZIndex: (id: UUID) => number;
-  getIsWindowMoving: (id: UUID) => boolean;
-  getIsWindowResizing: (id: UUID) => boolean;
-  getTransformScale: (id: UUID) => number;
-  getWillTransform: (id: UUID) => boolean;
-  getContentOpacity: (id: UUID) => number;
-  getIsDisabledResize: (id: UUID) => boolean;
+  getIsIconDragging: (id: EntryId) => boolean;
+  getIsAnyIconDragging: () => boolean;
+  getWindowSize: (id: EntryId) => { width: number; height: number };
+  getDefaultWindowSize: (id: EntryId) => { width: number; height: number };
+  getIsOpen: (id: EntryId) => boolean;
+  getWindowPosition: (id: EntryId) => Position;
+  getOpenedWindowSizesAndPositions: () => { id: EntryId; size: Size; position: Position }[];
+  getWindowState: (id: EntryId) => 'minimized' | 'maximized' | 'normal' | null;
+  getIsWindowFocused: (id: EntryId) => boolean;
+  getFocusedWindowId: () => EntryId;
+  getFocusStack: () => EntryId[];
+  getWindowZIndex: (id: EntryId) => number;
+  getIsWindowMoving: (id: EntryId) => boolean;
+  getIsWindowResizing: (id: EntryId) => boolean;
+  getTransformScale: (id: EntryId) => number;
+  getWillTransform: (id: EntryId) => boolean;
+  getContentOpacity: (id: EntryId) => number;
+  getIsDisabledResize: (id: EntryId) => boolean;
   getMaximizedEntry: () => FileSystemEntry | null;
   getIsMaximizedWindowHeaderVisible: () => boolean;
-  getWindowCenterPosition: (id: UUID) => { x: number; y: number };
+  getWindowCenterPosition: (id: EntryId) => Position;
   getContextState: () => ContextState | null;
-  getIsDisableDelete: (id: UUID) => boolean;
+  getIsDisableDelete: (id: EntryId) => boolean;
+  getCanDeleteSelection: (parentId: EntryId) => boolean;
+  getIsUsingSelectRect: () => boolean;
+  getDropTargetId: () => EntryId;
 
   /*
    ********************************
    *            Setters           *
    ********************************
    */
-  setIconPosition: (id: UUID, { x, y }: { x: number; y: number }) => void;
-  setIsIconSelected: (id: UUID, isSelected: boolean) => void;
-  clearIconSelection: (parentId?: UUID) => void;
+  setIconPosition: (id: EntryId, position: Position) => void;
+  setIsIconSelected: (id: EntryId, isSelected: boolean) => void;
+  clearIconSelection: () => void;
   setDisableSelect: (isDisabled: boolean) => void;
-  setIsIconDragging: (id: UUID, isDragging: boolean) => void;
-  setIsOpen: (id: UUID, isOpen: boolean) => void;
-  setWindowState: (id: UUID, state: 'minimized' | 'maximized' | 'normal') => void;
-  setWindowPosition: (id: UUID, { x, y }: { x: number; y: number }) => void;
+  setIsIconDragging: (id: EntryId, isDragging: boolean) => void;
+  setIsOpen: (id: EntryId, isOpen: boolean) => void;
+  setWindowState: (id: EntryId, state: 'minimized' | 'maximized' | 'normal') => void;
+  setWindowPosition: (id: EntryId, position: Position) => void;
   blurWindowFocus: (isBlurred: boolean) => void;
-  setIsWindowMoving: (id: UUID, isMoving: boolean) => void;
-  setIsWindowResizing: (id: UUID, isResizing: boolean) => void;
-  setTransformScale: (id: UUID, scale: number) => void;
-  setWillTransform: (id: UUID, willTransform: boolean) => void;
-  setContentOpacity: (id: UUID, opacity: number) => void;
-  setWindowSize: (id: UUID, { width, height }: { width: number; height: number }) => void;
+  setIsWindowMoving: (id: EntryId, isMoving: boolean) => void;
+  setIsWindowResizing: (id: EntryId, isResizing: boolean) => void;
+  setTransformScale: (id: EntryId, scale: number) => void;
+  setWillTransform: (id: EntryId, willTransform: boolean) => void;
+  setContentOpacity: (id: EntryId, opacity: number) => void;
+  setWindowSize: (id: EntryId, { width, height }: { width: number; height: number }) => void;
   setIsMaximizedWindowHeaderVisible: (isVisible: boolean) => void;
-  setWindowCallback: (id: UUID, callback: () => void) => void;
-  clearWindowCallback: (id: UUID) => void;
+  setWindowCallback: (id: EntryId, callback: () => void) => void;
+  clearWindowCallback: (id: EntryId) => void;
   setContextState: (contextState: ContextState) => void;
   clearContextState: () => void;
+  setIsUsingSelectRect: (isUsing: boolean) => void;
+  setDropTargetId: (id: EntryId) => void;
 
   /*
    ********************************
@@ -245,18 +275,18 @@ interface StoreActions {
     content,
     type,
   }: {
-    parentId: UUID;
+    parentId: EntryId;
     name: string;
     extension?: string;
     content?: string;
     type: 'file' | 'directory';
-  }) => UUID | null;
-  deleteEntry: (id: UUID) => boolean;
-  renameEntry: (id: UUID, name: string) => void;
-  updateFileContent: (id: UUID, content: string) => void;
-  moveEntry: (id: UUID, targetParentId: UUID) => void;
-  printTree: (id: UUID) => void;
-  printDirectory: (id: UUID) => void;
+  }) => EntryId | null;
+  deleteEntry: (id: EntryId) => boolean;
+  renameEntry: (id: EntryId, name: string) => void;
+  updateFileContent: (id: EntryId, content: string) => void;
+  moveEntry: (id: EntryId, targetParentId: EntryId) => void;
+  printTree: (id: EntryId) => void;
+  printDirectory: (id: EntryId) => void;
   reset: () => void;
   resetForTest: () => void;
 
@@ -265,26 +295,26 @@ interface StoreActions {
    *        Window Actions        *
    ********************************
    */
-  openEntry: (id: UUID) => void;
-  closeEntry: (id: UUID) => void;
-  minimizeEntry: (id: UUID) => void;
-  maximizeEntry: (id: UUID) => void;
-  restoreEntry: (id: UUID) => void;
-  toggleMinimize: (id: UUID) => void;
-  toggleMaximize: (id: UUID) => void;
-  toggleSizeToViewport: (id: UUID) => void;
-  pushFocus: (id: UUID) => void;
+  openEntry: (id: EntryId) => void;
+  closeEntry: (id: EntryId) => void;
+  minimizeEntry: (id: EntryId) => void;
+  maximizeEntry: (id: EntryId) => void;
+  restoreEntry: (id: EntryId) => void;
+  toggleMinimize: (id: EntryId) => void;
+  toggleMaximize: (id: EntryId) => void;
+  toggleSizeToViewport: (id: EntryId) => void;
+  pushFocus: (id: EntryId) => void;
   popFocus: () => void;
-  executeWindowCallback: (id: UUID) => void;
+  executeWindowCallback: (id: EntryId) => void;
 }
 interface FileSystemState extends StoreState, StoreActions {}
 
 /*
- ********************************
- *                              *
- *      Initial Store State     *
- *                              *
- ********************************
+ ***********************************
+ *                                 *
+ *          Initial State          *
+ *                                 *
+ ***********************************
  */
 const flags = {
   disableSelect: false,
@@ -294,6 +324,8 @@ const flags = {
 const windowState = {
   opened: [],
   focused: [],
+  selected: [],
+  dragging: [],
 };
 
 const initialState: StoreState = {
@@ -324,11 +356,61 @@ const initialState: StoreState = {
           width: window.innerWidth,
           height: window.innerHeight - TASKBAR_HEIGHT,
         },
-        children: [...applications.keys(), ...directories.keys()],
+        children: [...applications.keys(), 'test-folder'],
+      },
+    ],
+    [
+      'test-folder',
+      {
+        id: 'test-folder',
+        iconPosition: { x: 0, y: 0 },
+        iconColor: '#fff',
+        defaultWindowSize: { width: 500, height: 500 },
+        icon: 'folder',
+        name: 'TestFolder',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        parentId: 'desktop',
+        type: 'directory',
+        children: ['test-folder2', 'test-folder3'],
+        disableDelete: false,
+      },
+    ],
+    [
+      'test-folder2',
+      {
+        id: 'test-folder2',
+        iconPosition: { x: 0, y: 0 },
+        iconColor: '#fff',
+        defaultWindowSize: { width: 500, height: 500 },
+        icon: 'folder',
+        name: 'TestFolder2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        parentId: 'test-folder',
+        type: 'directory',
+        children: [],
+        disableDelete: false,
+      },
+    ],
+    [
+      'test-folder3',
+      {
+        id: 'test-folder3',
+        iconPosition: { x: 0, y: 0 },
+        iconColor: '#fff',
+        defaultWindowSize: { width: 500, height: 500 },
+        icon: 'folder',
+        name: 'TestFolder3',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        parentId: 'test-folder',
+        type: 'directory',
+        children: [],
+        disableDelete: false,
       },
     ],
     ...generateAppsFromDefaults(),
-    ...generateDirectoriesFromDefaults(),
   ]),
 };
 
@@ -405,8 +487,8 @@ const useFileSystemStore = create<FileSystemState>()(
       return [...get().lookup.keys()];
     },
 
-    isAncestor: (ancestorId, childId) => {
-      function _isAncestor(_ancestorId: UUID, _childId: UUID): boolean {
+    getIsAncestor: (ancestorId, childId) => {
+      function _isAncestor(_ancestorId: EntryId, _childId: EntryId): boolean {
         const entry = get().getEntry({ id: _childId });
         if (!entry?.parentId) {
           return false;
@@ -434,7 +516,7 @@ const useFileSystemStore = create<FileSystemState>()(
 
     getPath: (id) => {
       let path = '';
-      function getPathHelper(currentId: UUID) {
+      function getPathHelper(currentId: EntryId) {
         if (currentId === 'root') {
           path = `/${path}`;
           return;
@@ -467,32 +549,8 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return entry.isIconSelected ?? false;
     },
-    getAllSelectedIds: (id) => {
-      const selectedIds: UUID[] = [];
-      if (id === undefined) {
-        for (const entry of get().lookup.values()) {
-          if (entry.isIconSelected) {
-            selectedIds.push(entry.id);
-          }
-        }
-      } else {
-        const entry = get().getEntry({ id });
-        if (!entry || entry.type !== 'directory') {
-          if (DEBUG)
-            console.warn(
-              `FileSystemStore:GetAllSelectedIds: Entry with id ${id} not found or not a directory`,
-            );
-          return [];
-        }
-        const dir = entry;
-        for (const childId of dir.children) {
-          const child = get().getEntry({ id: childId })!;
-          if (child.isIconSelected) {
-            selectedIds.push(child.id);
-          }
-        }
-      }
-      return selectedIds;
+    getAllSelectedIds: () => {
+      return get().selected;
     },
 
     getIconPosition: (id) => {
@@ -502,6 +560,23 @@ const useFileSystemStore = create<FileSystemState>()(
         return null;
       }
       return entry.iconPosition ?? null;
+    },
+
+    getIconPositions(parentId) {
+      const entry = get().getEntry({ id: parentId });
+      if (!entry || entry.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:GetIconPositions: Entry with id ${parentId} not found or not a directory`,
+          );
+        return [];
+      }
+      const items = [];
+      for (const childId of entry.children) {
+        const position = get().getIconPosition(childId);
+        if (position) items.push({ id: childId, position });
+      }
+      return items;
     },
 
     getDisableSelect: () => get().disableSelect,
@@ -540,31 +615,8 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return entry.isIconDragging ?? false;
     },
-    getIsAnyIconDragging: (id) => {
-      if (id === undefined) {
-        for (const entry of get().lookup.values()) {
-          if (entry.isIconDragging) {
-            return true;
-          }
-        }
-        return false;
-      }
-      const entry = get().getEntry({ id });
-      if (!entry) {
-        if (DEBUG)
-          console.warn(`FileSystemStore:GetIsAnyIconDragging: Entry with id ${id} not found`);
-        return false;
-      }
-      if (entry.type !== 'directory') {
-        return false;
-      }
-      for (const childId of entry.children) {
-        const child = get().getEntry({ id: childId })!;
-        if (child.isIconDragging) {
-          return true;
-        }
-      }
-      return false;
+    getIsAnyIconDragging: () => {
+      return get().dragging.length > 0;
     },
     getWindowSize: (id) => {
       const entry = get().getEntry({ id });
@@ -583,15 +635,14 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return entry.defaultWindowSize ?? { width: 0, height: 0 };
     },
-    isCellEmpty: (id, position) => {
-      const entry = get().getEntry({ id });
-      // Not a directory, false by default
+    getIsIconPositionEmpty: (parentId, position) => {
+      const entry = get().getEntry({ id: parentId });
       if (!entry || entry.type !== 'directory') {
-        if (DEBUG) console.warn(`FileSystemStore:IsCellEmpty: Entry with id ${id} not found`);
+        if (DEBUG) console.warn(`FileSystemStore:IsCellEmpty: Entry with id ${parentId} not found`);
         return false;
       }
       // If out of bounds, return false
-      const windowSize = get().getWindowSize(id);
+      const windowSize = get().getWindowSize(parentId);
       if (
         position.x < 0 ||
         position.x > windowSize.width ||
@@ -601,14 +652,61 @@ const useFileSystemStore = create<FileSystemState>()(
         return false;
       }
       // Check if there's another icon in the same position
-      const dir = entry;
-      for (const childId of dir.children) {
-        const child = get().getEntry({ id: childId })!;
-        if (child.iconPosition?.x === position.x && child.iconPosition?.y === position.y) {
+      const adjacentPositions = get().getIconPositions(parentId);
+      for (const { id, position: adjacentPosition } of adjacentPositions) {
+        if (
+          adjacentPosition.x === position.x &&
+          adjacentPosition.y === position.y &&
+          id !== parentId
+        ) {
           return false;
         }
       }
       return true;
+    },
+    getEmptyIconPosition: (parentId, rowOrColumn = 'column') => {
+      const entry = get().getEntry({ id: parentId });
+      if (!entry || entry.type !== 'directory') {
+        if (DEBUG)
+          console.warn(`FileSystemStore:getEmptyIconPosition: Entry with id ${parentId} not found`);
+        return null;
+      }
+      const adjacentPositions = get().getIconPositions(parentId);
+      const parentWindowSize = get().getWindowSize(parentId);
+      const cellSize = GRID_CELL_SIZE;
+      const [parentWidth, parentHeight] = [parentWindowSize.width, parentWindowSize.height];
+      const maxCols = Math.floor(parentWidth / cellSize);
+      let maxRows = Math.floor(parentHeight / cellSize);
+      const occupied = new Set(
+        adjacentPositions.map(
+          ({ position }) => `${position.x.toString()},${position.y.toString()}`,
+        ),
+      );
+
+      // Dynamically expand rows if the grid is full
+      while (adjacentPositions.length >= maxCols * maxRows) {
+        maxRows++;
+      }
+
+      const searchOrder = rowOrColumn === 'column' ? [maxCols, maxRows] : [maxRows, maxCols];
+      for (let i = 0; i < searchOrder[0]; i++) {
+        for (let j = 0; j < searchOrder[1]; j++) {
+          const x = rowOrColumn === 'column' ? i * cellSize : j * cellSize;
+          const y = rowOrColumn === 'column' ? j * cellSize : i * cellSize;
+          if (!occupied.has(`${x.toString()},${y.toString()}`)) {
+            return { x, y };
+          }
+        }
+      }
+
+      // We're garaunteed to find an empty position since we expanded the grid
+      // If we find ourselves here, we done fucked up.
+      if (DEBUG) {
+        console.warn(
+          `FileSystemStore:getEmptyIconPosition: No empty position found for parentId: ${parentId}`,
+        );
+      }
+      return null;
     },
     getIsOpen: (id) => {
       const entry = get().getEntry({ id });
@@ -625,6 +723,16 @@ const useFileSystemStore = create<FileSystemState>()(
         return { x: 0, y: 0 };
       }
       return entry.windowPosition ?? { x: 0, y: 0 };
+    },
+    getOpenedWindowSizesAndPositions: () => {
+      const focused = get().focused;
+      const items = [];
+      for (const id of focused) {
+        const size = get().getWindowSize(id);
+        const position = get().getWindowPosition(id);
+        if (position) items.push({ id, size, position });
+      }
+      return items;
     },
     getWindowCenterPosition: (id) => {
       const entry = get().getEntry({ id });
@@ -652,11 +760,10 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.windowState ?? 'normal';
     },
     getIsWindowFocused: (id) => {
-      if (get().windowBlur) {
-        return false;
-      }
-      if (get().focused.length === 0) {
-        return false;
+      const isBlurred = get().windowBlur;
+      const focused = get().focused;
+      if (isBlurred || focused.length === 0) {
+        return id === 'desktop';
       }
       const entry = get().getEntry({ id });
       if (!entry) {
@@ -665,6 +772,17 @@ const useFileSystemStore = create<FileSystemState>()(
         return false;
       }
       return get().focused.at(-1) === id;
+    },
+    getFocusedWindowId: () => {
+      const isBlurred = get().windowBlur;
+      const focused = get().focused;
+      if (isBlurred || !focused || focused.length === 0) {
+        return 'desktop';
+      }
+      return focused.at(-1)!;
+    },
+    getFocusStack: () => {
+      return get().focused;
     },
     getWindowZIndex: (id) => {
       const entry = get().getEntry({ id });
@@ -759,6 +877,23 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return entry.disableDelete ?? true;
     },
+    getCanDeleteSelection: (parentId) => {
+      const parent = get().getEntry({ id: parentId });
+      if (!parent) {
+        return false;
+      }
+      const selectedIds = get().getAllSelectedIds();
+      if (selectedIds.length === 0) {
+        return false;
+      }
+      return selectedIds.every((selectedId) => !get().getIsDisableDelete(selectedId));
+    },
+    getIsUsingSelectRect: () => {
+      return get().isUsingSelectRect ?? false;
+    },
+    getDropTargetId: () => {
+      return get().dropTarget ?? 'desktop';
+    },
     // getters end
 
     /*
@@ -778,56 +913,27 @@ const useFileSystemStore = create<FileSystemState>()(
           entry.iconPosition = position;
           return;
         }
-        // Not dragging, and there's an empty cell at the position
-        if (get().isCellEmpty(entry.parentId!, position)) {
+        // Not dragging, and there's an empty position
+        if (get().getIsIconPositionEmpty(entry.parentId!, position)) {
           entry.iconPosition = position;
           return;
         }
 
-        // Otherwise, we'll nudge the position to the first valid nearby cell
-        const visited = new Set<string>();
-        const exploreLimit = get().getChildren(entry.parentId!).length;
-        interface Position {
-          x: number;
-          y: number;
+        // Otherwise, find an empty position
+        const emptyPosition =
+          entry.parentId === 'desktop'
+            ? get().getEmptyIconPosition(entry.parentId, 'column')
+            : get().getEmptyIconPosition(entry.parentId!, 'row');
+
+        if (!emptyPosition) {
+          if (DEBUG)
+            console.warn(
+              'FileSystemStore:SetPosition: No empty position found for parentId:',
+              entry.parentId,
+            );
+          return;
         }
-        type ExploreCount = number;
-        function findEmptyCell(
-          currentPosition: Position,
-          exploreCount: ExploreCount,
-        ): Position | false {
-          if (exploreCount === exploreLimit) {
-            return false;
-          }
-          const posString = `${currentPosition.x.toString()},${currentPosition.y.toString()}`;
-          if (visited.has(posString)) {
-            return false;
-          }
-
-          if (get().isCellEmpty(entry!.parentId!, currentPosition)) {
-            return currentPosition;
-          }
-
-          visited.add(posString);
-
-          const right = { x: currentPosition.x + GRID_CELL_SIZE, y: currentPosition.y };
-          const down = { x: currentPosition.x, y: currentPosition.y + GRID_CELL_SIZE };
-          const left = { x: currentPosition.x - GRID_CELL_SIZE, y: currentPosition.y };
-          const up = { x: currentPosition.x, y: currentPosition.y - GRID_CELL_SIZE };
-
-          return (
-            findEmptyCell(right, exploreCount + 1) ||
-            findEmptyCell(down, exploreCount + 1) ||
-            findEmptyCell(left, exploreCount + 1) ||
-            findEmptyCell(up, exploreCount + 1)
-          );
-        }
-
-        const nudgedPosition = findEmptyCell(position, 0);
-        if (nudgedPosition) {
-          entry.iconPosition = nudgedPosition;
-        } else if (DEBUG)
-          console.warn(`FileSystemStore:SetPosition: No empty cell found for entry with id ${id}`);
+        entry.iconPosition = emptyPosition;
       });
     },
     setIsIconSelected: (id, isSelected) => {
@@ -839,36 +945,23 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
         entry.isIconSelected = isSelected;
+        if (isSelected) {
+          state.selected.push(id);
+        } else {
+          state.selected = state.selected.filter((selectedId) => selectedId !== id);
+        }
       });
     },
-    clearIconSelection: (parentId) => {
+    clearIconSelection: () => {
       set((state) => {
-        // Clear all if parentId is not provided
-        if (parentId === undefined) {
-          for (const entry of state.lookup.values()) {
-            if (entry.isIconSelected) {
-              entry.isIconSelected = false;
-            }
-          }
-          return;
-        }
-
-        // Clear only children of parent otherwise
-        const parent = state.lookup.get(parentId);
-        if (!parent || parent.type !== 'directory') {
-          if (DEBUG)
-            console.warn(
-              `FileSystemStore:ClearIconSelection: Parent with id ${parentId} not found or not a directory`,
-            );
-          return;
-        }
-        const dir = parent;
-        for (const childId of dir.children) {
-          const child = state.lookup.get(childId);
-          if (child?.isIconSelected) {
-            child.isIconSelected = false;
+        const selected = state.selected;
+        for (const id of selected) {
+          const entry = state.lookup.get(id);
+          if (entry) {
+            entry.isIconSelected = false;
           }
         }
+        state.selected = [];
       });
     },
     setDisableSelect: (isDisabled) => {
@@ -885,6 +978,11 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
         entry.isIconDragging = isDragging;
+        if (isDragging) {
+          state.dragging.push(id);
+        } else {
+          state.dragging = state.dragging.filter((draggingId) => draggingId !== id);
+        }
       });
     },
     setIsOpen: (id, isOpen) => {
@@ -1031,6 +1129,16 @@ const useFileSystemStore = create<FileSystemState>()(
         state.contextState = undefined;
       });
     },
+    setIsUsingSelectRect: (isUsing) => {
+      set((state) => {
+        state.isUsingSelectRect = isUsing;
+      });
+    },
+    setDropTargetId: (id) => {
+      set((state) => {
+        state.dropTarget = id;
+      });
+    },
     // setters end
 
     /*
@@ -1040,7 +1148,7 @@ const useFileSystemStore = create<FileSystemState>()(
      */
     printTree: (id) => {
       const visited = new Set();
-      function printTreeHelper(entryId: UUID, indent = '') {
+      function printTreeHelper(entryId: EntryId, indent = '') {
         if (visited.has(entryId)) {
           return;
         }
@@ -1097,28 +1205,47 @@ const useFileSystemStore = create<FileSystemState>()(
           `FileSystemStore:CreateEntry: Don't include the extension in name: '${name}'. Use the 'extension' parameter instead`,
         );
 
+      const emptyPosition =
+        parentId === 'desktop'
+          ? get().getEmptyIconPosition(parentId, 'column')
+          : get().getEmptyIconPosition(parentId, 'row');
+
+      if (!emptyPosition) {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:CreateEntry: No empty position found for parentId: ${parentId}`,
+          );
+        return null;
+      }
       const id = uuidv4();
+      const common = {
+        name,
+        id,
+        iconPosition: emptyPosition,
+        iconColor: '#fff',
+        disableDelete: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        iconSize: 64,
+        parentId,
+        content: content ?? '',
+        defaultWindowSize: { width: 400, height: 500 },
+      };
       const entry: FileSystemEntry =
         type === 'file'
           ? {
-              id,
-              iconPosition: { x: 0, y: 0 },
-              name,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              parentId,
+              ...common,
               type: 'file',
+              icon: 'file',
               extension: extension ?? '',
-              content: content ?? '',
             }
           : {
-              id,
-              iconPosition: { x: 0, y: 0 },
-              name,
+              ...common,
+              type: 'directory',
+              icon: 'folder',
               createdAt: new Date(),
               updatedAt: new Date(),
               parentId,
-              type: 'directory',
               children: [],
             };
 
@@ -1158,12 +1285,16 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       let didDelete = false;
       set((state) => {
-        function deleteEntryHelper(entryId: UUID): boolean {
+        function deleteEntryHelper(entryId: EntryId): boolean {
           const entry = state.lookup.get(entryId);
           if (!entry) {
             if (DEBUG)
               console.warn(`FileSystemStore:DeleteEntry: Entry with id ${entryId} not found`);
             return false;
+          }
+          // Close the entry if it's open
+          if (get().getIsOpen(entry.id)) {
+            get().closeEntry(entry.id);
           }
           if (entry.type === 'directory') {
             const dir = entry as Directory;
@@ -1260,7 +1391,7 @@ const useFileSystemStore = create<FileSystemState>()(
         return;
       }
 
-      if (get().isAncestor(id, targetParentId)) {
+      if (get().getIsAncestor(id, targetParentId)) {
         if (DEBUG)
           console.warn(
             `FileSystemStore:MoveEntry: Cannot move entry with id ${id} into its descendant with id ${targetParentId}`,
@@ -1506,7 +1637,15 @@ const useFileSystemStore = create<FileSystemState>()(
       if (!entry?.isOpen) {
         return;
       }
+
       set((state) => {
+        // If the window is already focused, do nothing
+        if (state.focused.at(-1) === id) {
+          state.windowBlur = false;
+          return;
+        }
+
+        // Push push id focus to the back
         const focused = state.focused.filter((openedId) => openedId !== id);
         focused.push(id);
         state.focused = focused;
@@ -1572,44 +1711,39 @@ function generateAppsFromDefaults(): Map<string, FileSystemEntry> {
   return apps;
 }
 
-function generateDirectoriesFromDefaults(): Map<string, FileSystemEntry> {
-  const dirs = new Map<string, Directory>();
-  for (const [key, value] of directories) {
-    // Remove the component from state, as it does not mixes well with immer / zustand
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { component, contextMenuOptions, ...dir } = value;
-    dirs.set(key, dir as Directory);
-  }
-  return dirs;
-}
-
 function initiateState(state: StoreState): StoreState {
   /*
    ********************************
    *        Icon Positions        *
    ********************************
    */
-  for (const entry of state.lookup.values()) {
-    if (entry.type !== 'directory' || !entry.defaultWindowSize) {
+  for (const dir of state.lookup.values()) {
+    if (dir.type !== 'directory' || !dir.defaultWindowSize) {
       continue;
     }
 
     let column = 0;
     let row = 0;
-    for (const childId of entry.children) {
-      const child = state.lookup.get(childId)!;
+    for (const childId of dir.children) {
+      const child = state.lookup.get(childId);
+      if (!child) {
+        // default config is probably messed up if this happens
+        // let's throw an error for now
+        console.warn(`FileSystemStore:InitiateState: Child with id ${childId} not found`);
+        continue;
+      }
       const cell = GRID_CELL_SIZE;
       let x = cell * column;
       let y = cell * row;
 
-      if (y > entry.defaultWindowSize.height) {
+      if (y > dir.defaultWindowSize.height) {
         y = 0;
         x += cell;
         column += 1;
         row = 0;
       }
 
-      child.iconPosition = child.iconPosition ?? { x, y };
+      child.iconPosition = { x, y };
       row += 1;
     }
   }

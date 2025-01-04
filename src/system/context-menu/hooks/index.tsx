@@ -10,7 +10,6 @@ import useFileSystemStore, {
   ContextMenuItem,
   ContextMenuItems,
 } from '@/system/file-system/store';
-import taskbarContextmenuItems from '@/system/taskbar/context-menu';
 import { CONTEXT_MENU_WIDTH, CONTEXT_MENU_ITEM_HEIGHT, TASKBAR_HEIGHT } from '@/themes';
 
 interface ReturnTypes {
@@ -59,7 +58,7 @@ const UseContextMenu = (contextState: ContextState | null): ReturnTypes => {
     // If specified system category, return those items by themselves
     switch (contextState.category) {
       case 'taskbar': {
-        return taskbarContextmenuItems;
+        return null;
       }
       default: {
         // Otherwise, just return common entry items (open, etc.)

@@ -10,8 +10,9 @@ const ContextMenu = (): ReactElement => {
   const contextState = useFileSystemStore((state) => state.getContextState());
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
   const { contextEntry, contextMenuItem, clickPosition } = UseContextMenu(contextState);
+  const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
 
-  const isVisible = contextEntry && contextMenuItem;
+  const isVisible = contextEntry && contextMenuItem && !isAnyIconDragging;
 
   if (!isVisible) {
     return <></>;
@@ -49,7 +50,10 @@ const DropdownMenu = ({
         transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
       }}
       className="window-shadow absolute left-0 z-50 flex flex-col gap-1 rounded border border-stone-200 bg-stone-50 p-1"
-      onClick={onClick}
+      onClick={() => {
+        console.log('clicked');
+        onClick();
+      }}
     >
       {[...contextMenuItem.entries()].map(([label, item]) => {
         let isDisabled = false;
@@ -61,7 +65,7 @@ const DropdownMenu = ({
             <li
               key={`${label}-dropdown-list-item`}
               className={cn(
-                'flex items-center',
+                'flex select-none items-center',
                 'px-3 text-stone-900 hover:rounded-md font-normal',
                 !isDisabled && 'hover:bg-blue-400 hover:text-white cursor-pointer',
                 isDisabled && 'cursor-default text-stone-400',

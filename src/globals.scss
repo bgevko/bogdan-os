@@ -9,8 +9,6 @@
 }
 
 body {
-  // @apply bg-background;
-  // @apply text-onBackground;
   font-family: 'Sofia Sans Condensed', sans-serif;
 }
 
@@ -50,12 +48,6 @@ input[type='radio']:focus {
     0 0 0.7px 1px rgba(0 0 0 / 30%);
 }
 
-// Used for solitaire cards
-.fly-back {
-  z-index: 100;
-  transition: transform 0.3s ease-out;
-}
-
 .window-shadow {
   box-shadow: 0 4px 4px 0 rgba(0 0 0 / 25%);
 }
@@ -63,63 +55,4 @@ input[type='radio']:focus {
 .icon-shadow {
   filter: drop-shadow(2px 3px 0 #0d0d0d);
   overflow: visible;
-}
-
-.border-shadow {
-  filter: drop-shadow(0 0 1px rgba(0 0 0));
-  overflow: visible;
-}
-
-.wave {
-  color: 'black';
-  overflow: visible;
-  display: inline-block;
-  animation: wave-animation 1.5s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.1s);
-}
-
-.wave:nth-child(1) {
-  --i: 0;
-}
-
-.wave:nth-child(2) {
-  --i: 1;
-}
-
-.wave:nth-child(3) {
-  --i: 2;
-}
-
-.wave:nth-child(4) {
-  --i: 3;
-}
-
-.wave:nth-child(5) {
-  --i: 4;
-}
-
-.wave:nth-child(6) {
-  --i: 5;
-}
-
-.wave:nth-child(7) {
-  --i: 6;
-}
-
-@keyframes wave-animation {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-15px);
-  }
-}
-
-/* Subtle link hover effect */
-.link-hover:hover {
-  text-decoration: underline;
-  transform: scale(1.1);
-  transition: transform 0.2s;
 }

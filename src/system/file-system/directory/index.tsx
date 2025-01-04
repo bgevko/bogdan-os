@@ -4,17 +4,18 @@ import UseKeyPresses from '@/hooks/use-key-presses';
 import FileExplorerIcon from '@/system/file-system/components/icon';
 import SelectRect from '@/system/file-system/components/select-rect';
 import UseDragSelect from '@/system/file-system/hooks/use-drag-select';
-import useFileSystemStore from '@/system/file-system/store';
+import useFileSystemStore, { AppComponent } from '@/system/file-system/store';
+import { WINDOW_HEADER_HEIGHT } from '@/themes';
 import { getEventTargetDataId } from '@/utils';
 
-const Desktop = (): React.ReactElement => {
+const Directory = ({ entry }: AppComponent): React.ReactElement => {
+  const directory = useFileSystemStore((state) => state.getDirectory(entry?.id ?? ''));
   const clearIconSelection = useFileSystemStore((state) => state.clearIconSelection);
-  const blurWindowFocus = useFileSystemStore((state) => state.blurWindowFocus);
+  const pushFocus = useFileSystemStore((state) => state.pushFocus);
   const setContextState = useFileSystemStore((state) => state.setContextState);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
-  const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
-  const desktopChildren = useFileSystemStore((state) => state.getDirectory('desktop'));
-  const desktopEntry = useFileSystemStore((state) => state.getEntry({ id: 'desktop' }));
+  const getWindowState = useFileSystemStore((state) => state.getWindowState);
+  const getWindowPosition = useFileSystemStore((state) => state.getWindowPosition);
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
 
@@ -24,31 +25,30 @@ const Desktop = (): React.ReactElement => {
     selectRectPosition,
     selectRectSize,
     handleMouseDown,
-    isSelecting: isSelectingOnDesktop,
-  } = UseDragSelect(desktopEntry!);
+    isSelecting: isSelectingInDirectory,
+  } = UseDragSelect(entry);
 
   const { isShiftPressed } = UseKeyPresses();
 
-  if (!desktopChildren) {
+  if (!directory || !entry) {
     return <></>;
   }
-
   return (
     <>
       <SelectRect
-        isVisible={isSelectingOnDesktop}
+        isVisible={isSelectingInDirectory}
         position={selectRectPosition}
         size={selectRectSize}
       />
       <div
-        className="relative flex size-full overflow-hidden p-4"
-        data-id="desktop"
+        className="relative flex size-full p-4"
+        data-id="directory"
         onContextMenu={(event) => {
           event.preventDefault();
-          if (getEventTargetDataId(event) === 'desktop') {
+          if (getEventTargetDataId(event) === 'directory') {
             const clickPosition = { x: event.clientX, y: event.clientY };
             setContextState({
-              id: 'desktop',
+              id: entry.id,
               category: 'directory',
               clickPosition,
             });
@@ -56,31 +56,33 @@ const Desktop = (): React.ReactElement => {
         }}
         onMouseDown={(event) => {
           event.stopPropagation();
-          if (getEventTargetDataId(event) === 'desktop') {
-            handleMouseDown(event);
+          if (getEventTargetDataId(event) === 'directory') {
+            if (getWindowState(entry.id) === 'maximized') {
+              handleMouseDown(event);
+            } else {
+              const windowPosition = getWindowPosition(entry.id);
+              handleMouseDown(event, {
+                x: windowPosition.x,
+                y: windowPosition.y + WINDOW_HEADER_HEIGHT,
+              });
+            }
             if (!isShiftPressed && event.button === 0) {
               clearIconSelection();
             }
-            blurWindowFocus(true);
+            pushFocus(entry.id);
             clearContextState();
           }
         }}
         onClick={(event) => {
           event.stopPropagation();
         }}
-        onMouseEnter={() => {
-          if (isAnyIconDragging) {
-            setDropTargetId('desktop');
-            blurWindowFocus(true);
-          }
-        }}
       >
-        {desktopChildren.map((item) => {
+        {directory.map((item) => {
           return (
             <FileExplorerIcon
               key={item.id}
               entry={item}
-              selectRectVisible={isSelectingOnDesktop}
+              selectRectVisible={isSelectingInDirectory}
               selectRect={{ position: selectRectPosition, size: selectRectSize }}
               dropTargetId={dropTargetId}
               isAnyIconDragging={isAnyIconDragging}
@@ -92,4 +94,4 @@ const Desktop = (): React.ReactElement => {
   );
 };
 
-export default Desktop;
+export default Directory;

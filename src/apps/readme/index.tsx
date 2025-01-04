@@ -1,3 +1,5 @@
+import '@/apps/readme/styles.scss';
+
 const Readme = (): React.ReactElement => (
   <div
     className="flex size-full flex-col gap-2 rounded-b-lg p-4"
@@ -9,7 +11,7 @@ const Readme = (): React.ReactElement => (
     }}
   >
     <h1
-      className="rainbow backgroundw-full py-2 text-center text-4xl font-bold"
+      className="rainbow background w-full py-2 text-center text-4xl font-bold"
       style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}
     >
       <span className="wave">W</span>

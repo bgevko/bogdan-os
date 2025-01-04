@@ -11,6 +11,7 @@ interface taskbarEntryProperties {
 
 const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
   const isFocused = useFileSystemsStore((state) => state.getIsWindowFocused(entry.id));
+  const isOpen = useFileSystemsStore((state) => state.getIsOpen(entry.id));
   const pushFocus = useFileSystemsStore((state) => state.pushFocus);
   const setContextState = useFileSystemsStore((state) => state.setContextState);
   const clearContextState = useFileSystemsStore((state) => state.clearContextState);
@@ -38,6 +39,9 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
     };
   }, [mouseDown]);
 
+  if (!isOpen) {
+    return <></>;
+  }
   return (
     <button
       type="button"
@@ -51,7 +55,10 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
         buttonDown ? 'debossed' : 'embossed',
       )}
       onClick={(event) => {
-        event.stopPropagation();
+        const eventTargetDataId = getEventTargetDataId(event);
+        if (eventTargetDataId === 'taskbar-entry') {
+          event.stopPropagation();
+        }
         // Tab focus
         if (isFocused || isMinimized) {
           handleToggleMinimize();

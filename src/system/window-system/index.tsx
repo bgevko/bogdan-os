@@ -7,12 +7,12 @@ import Window from '@/system/window-system/components/window';
 const WindowSystem = (): React.ReactElement => {
   const entries = useFileSystemStore((state) => state.getOpenedEntries());
   const getEntry = useFileSystemStore((state) => state.getEntry);
-  const loading = <div>Loading...</div>;
+  const loading = <div className="flex size-full items-center justify-center">Loading...</div>;
 
   const components = entries.map((entryId) => {
-    const entry = getEntry({ id: entryId })!;
-    const Component = getComponent(entry.id);
-    if (!Component) {
+    const entry = getEntry({ id: entryId });
+    const Component = getComponent(entry?.id ?? '', entry?.type ?? '');
+    if (!Component || !entry) {
       return null;
     }
     return (

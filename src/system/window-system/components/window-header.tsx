@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, type ReactElement } from 'react';
+import React, { useState, useEffect, type ReactElement } from 'react';
 
 import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store';
 import WindowHeaderButton from '@/system/window-system/components/window-header-button';
@@ -12,6 +12,7 @@ interface WindowHeaderProperties {
 }
 const WindowHeader: React.FC<WindowHeaderProperties> = ({ entry }): ReactElement => {
   const isFocused = useFileSystemStore((state) => state.getIsWindowFocused(entry.id));
+  const isOpen = useFileSystemStore((state) => state.getIsOpen(entry.id));
   const pushFocus = useFileSystemStore((state) => state.pushFocus);
   const toggleSizeToViewport = useFileSystemStore((state) => state.toggleSizeToViewport);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
@@ -22,8 +23,10 @@ const WindowHeader: React.FC<WindowHeaderProperties> = ({ entry }): ReactElement
    *       Window Focus Colors       *
    ***********************************
    */
-  const headerColor = isFocused ? 'bg-[#4A4947]' : 'bg-gray-800/20';
-  const headerTextColor = isFocused ? 'text-white' : 'text-gray-800';
+  // const headerColor = isFocused ? 'bg-[#4A4947]' : 'bg-gray-800/20';
+  const headerColor = isFocused ? 'bg-[#4A4947]' : 'bg-[#4A4947]/80';
+  // const headerTextColor = isFocused ? 'text-white' : 'text-gray-800';
+  const headerTextColor = 'text-white';
 
   /*
    ********************************
@@ -38,6 +41,10 @@ const WindowHeader: React.FC<WindowHeaderProperties> = ({ entry }): ReactElement
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [handleMouseMove, handleMouseUp]);
+
+  if (!isOpen) {
+    return <></>;
+  }
 
   return (
     <>
@@ -61,6 +68,7 @@ const WindowHeader: React.FC<WindowHeaderProperties> = ({ entry }): ReactElement
         }}
         onMouseDown={(event: React.MouseEvent) => {
           event.stopPropagation();
+          pushFocus(entry.id);
         }}
         onDoubleClick={(event) => {
           event.stopPropagation();
@@ -79,13 +87,11 @@ const WindowHeader: React.FC<WindowHeaderProperties> = ({ entry }): ReactElement
 };
 
 const HeaderButtons = ({ entry }: { entry: FileSystemEntry }): ReactElement => {
-  const closeEntry = useFileSystemStore((state) => state.closeEntry);
   const getWindowState = useFileSystemStore((state) => state.getWindowState);
-  const setTransformScale = useFileSystemStore((state) => state.setTransformScale);
   const isFocused = useFileSystemStore((state) => state.getIsWindowFocused(entry.id));
   const isDisabledResize = useFileSystemStore((state) => state.getIsDisabledResize(entry.id));
 
-  const { handleToggleMaximize } = UseWindowResize(entry);
+  const { handleToggleMaximize, handleClose } = UseWindowResize(entry);
 
   const { handleMinimize } = UseWindowMove(entry);
 
@@ -97,19 +103,6 @@ const HeaderButtons = ({ entry }: { entry: FileSystemEntry }): ReactElement => {
   const maximizeButtonColor = isFocused || isHovered ? 'bg-green-500' : 'bg-gray-400';
 
   const showIcons = isHovered;
-
-  /*
-   ***********************************
-   *      Closing Down Animation     *
-   ***********************************
-   */
-  // Gotta give it enough time to animate out
-  const handleClose = useCallback(() => {
-    setTransformScale(entry.id, 0);
-    setTimeout(() => {
-      closeEntry(entry.id);
-    }, 200);
-  }, [closeEntry, entry.id, setTransformScale]);
 
   return (
     <span

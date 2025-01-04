@@ -5,6 +5,7 @@ import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store'
 import Menubar from '@/system/menubar';
 import ResizeHandles from '@/system/window-system/components/resize-handles';
 import WindowHeader from '@/system/window-system/components/window-header';
+import { WINDOW_HEADER_HEIGHT } from '@/themes';
 import cn from '@/utils/format';
 
 interface WindowProperties {
@@ -27,9 +28,16 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
   const pushFocus = useFileSystemStore((state) => state.pushFocus);
   const setTransformScale = useFileSystemStore((state) => state.setTransformScale);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
+  const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
+  const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging);
 
   const [isReady, setIsReady] = useState(false);
 
+  /*
+   **************************************
+   *  Smooth Window content transition  *
+   **************************************
+   */
   // Set transform scale to 1 after a short delay after mount
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -50,7 +58,7 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
     };
   }, [entry.id, setTransformScale, setContentOpacity]);
 
-  const posY = windowState === 'minimized' ? window.innerHeight - 40 : pos.y;
+  const posY = windowState === 'minimized' ? window.innerHeight - WINDOW_HEADER_HEIGHT : pos.y;
   const posX = windowState === 'minimized' ? 0 : pos.x;
 
   const background = isFocused
@@ -74,6 +82,12 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
         height: size.height,
         zIndex: 10 + zIndex,
       }}
+      onMouseEnter={() => {
+        if (isAnyIconDragging()) {
+          setDropTargetId(entry.id);
+          pushFocus(entry.id);
+        }
+      }}
       onMouseDown={() => {
         pushFocus(entry.id);
       }}
@@ -96,6 +110,9 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
             onMouseDown={() => {
               pushFocus(entry.id);
               clearContextState();
+            }}
+            style={{
+              filter: isFocused ? 'none' : 'opacity(80%)',
             }}
           >
             {windowState !== 'maximized' && <Menubar entry={entry} />}

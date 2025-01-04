@@ -9,7 +9,7 @@ interface SelectRectProps {
 const SelectRect: React.FC<SelectRectProps> = ({ isVisible, position, size }) => {
   return (
     <span
-      className="fixed z-50 border border-dashed border-accent bg-accent/10"
+      className="fixed z-50 border border-dashed border-black bg-green-700/10"
       style={{
         display: isVisible ? 'block' : 'none',
         width: size.width,

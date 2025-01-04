@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store';
+import { CLOSE_ANIMATION_DURATION } from '@/themes';
 
 type Direction =
   | 'left'
@@ -17,6 +18,7 @@ interface ReturnTypes {
   handleMouseMove: (event: MouseEvent) => void;
   handleMouseUp: () => void;
   handleToggleMaximize: () => void;
+  handleClose: () => void;
 }
 
 const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
@@ -28,6 +30,8 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
   const setIsWindowResizing = useFileSystemStore((state) => state.setIsWindowResizing);
   const toggleMaximize = useFileSystemStore((state) => state.toggleMaximize);
   const executeWindowCallback = useFileSystemStore((state) => state.executeWindowCallback);
+  const closeEntry = useFileSystemStore((state) => state.closeEntry);
+  const setTransformScale = useFileSystemStore((state) => state.setTransformScale);
 
   const [resizeDirection, setResizeDirection] = useState<Direction>(null);
 
@@ -164,14 +168,28 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
     // this lets transformations finish before updating
     setTimeout(() => {
       executeWindowCallback(entry.id);
-    }, 200);
+    }, CLOSE_ANIMATION_DURATION);
   }, [entry.id, toggleMaximize, executeWindowCallback]);
+
+  /*
+   ***********************************
+   *           Close Window          *
+   ***********************************
+   */
+  // Gotta give it enough time to animate out
+  const handleClose = useCallback(() => {
+    setTransformScale(entry.id, 0);
+    setTimeout(() => {
+      closeEntry(entry.id);
+    }, CLOSE_ANIMATION_DURATION);
+  }, [closeEntry, entry.id, setTransformScale]);
 
   return {
     handleResizeStart,
     handleMouseMove,
     handleMouseUp,
     handleToggleMaximize,
+    handleClose,
   };
 };
 

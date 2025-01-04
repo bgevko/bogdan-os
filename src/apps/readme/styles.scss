@@ -1,0 +1,53 @@
+.wave {
+  color: 'black';
+  overflow: visible;
+  display: inline-block;
+  animation: wave-animation 1.5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.1s);
+}
+
+.wave:nth-child(1) {
+  --i: 0;
+}
+
+.wave:nth-child(2) {
+  --i: 1;
+}
+
+.wave:nth-child(3) {
+  --i: 2;
+}
+
+.wave:nth-child(4) {
+  --i: 3;
+}
+
+.wave:nth-child(5) {
+  --i: 4;
+}
+
+.wave:nth-child(6) {
+  --i: 5;
+}
+
+.wave:nth-child(7) {
+  --i: 6;
+}
+
+@keyframes wave-animation {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+/* Subtle link hover effect */
+.link-hover:hover {
+  text-decoration: underline;
+  transform: scale(1.1);
+  transition: transform 0.2s;
+}

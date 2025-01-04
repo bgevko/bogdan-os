@@ -31,3 +31,13 @@
 
 - Animations and polish
 - Non-local high scores
+
+### Refactor
+
+- Create files
+- Delete files
+- Sort
+- Directory system
+- Drop on icon
+- Drop on folder
+- Drop from folder

@@ -13,11 +13,13 @@ const MaximizedWindowHeader = (): React.ReactElement => {
   const isVisible = useFileSystemStore((state) => state.getIsMaximizedWindowHeaderVisible());
   const setIsVisible = useFileSystemStore((state) => state.setIsMaximizedWindowHeaderVisible);
   const maximizedEntry = useFileSystemStore((state) => state.getMaximizedEntry());
+  const isUsingSelectRect = useFileSystemStore((state) => state.getIsUsingSelectRect());
   const { menubarItems } = UseMenubar(maximizedEntry ?? undefined);
 
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
   const [visibleMenu, setVisibleMenu] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
+  const [didMouseEnterTrigger, setDidMouseEnterTrigger] = useState(false);
 
   /*
    ***********************************
@@ -38,11 +40,14 @@ const MaximizedWindowHeader = (): React.ReactElement => {
   }, [setIsVisible]);
 
   const handleMouseEnter = useCallback(() => {
+    if (isUsingSelectRect) return;
     setIsVisible(true);
+    setDidMouseEnterTrigger(true);
     resetHoverTimeout();
-  }, [setIsVisible, resetHoverTimeout]);
+  }, [setIsVisible, resetHoverTimeout, isUsingSelectRect]);
 
   const handleMouseLeave = useCallback(() => {
+    setDidMouseEnterTrigger(false);
     if (visibleMenu) return;
     resetHoverTimeout();
     closeAfterTimeout();
@@ -62,11 +67,16 @@ const MaximizedWindowHeader = (): React.ReactElement => {
         if (isHovering) {
           setIsHovering(false);
         }
-      } else if (!isHovering) {
-        setIsHovering(true);
+      } else {
+        if (!isHovering) {
+          setIsHovering(true);
+        }
+        if (!didMouseEnterTrigger) {
+          handleMouseEnter();
+        }
       }
     },
-    [isHovering],
+    [isHovering, didMouseEnterTrigger, handleMouseEnter],
   );
 
   useEffect(() => {
@@ -155,31 +165,16 @@ const MaximizedWindowHeader = (): React.ReactElement => {
 };
 
 const HeaderButtons = ({ entry }: { entry: FileSystemEntry }): ReactElement => {
-  const closeEntry = useFileSystemStore((state) => state.closeEntry);
   const getWindowState = useFileSystemStore((state) => state.getWindowState);
-  const setTransformScale = useFileSystemStore((state) => state.setTransformScale);
   const setIsMaximizedWindowHeaderVisible = useFileSystemStore(
     (state) => state.setIsMaximizedWindowHeaderVisible,
   );
-  const { handleToggleMaximize } = UseWindowResize(entry);
+  const { handleToggleMaximize, handleClose } = UseWindowResize(entry);
 
   // Button colors
   const closeButtonColor = 'bg-red-400';
   const minimizeButtonColor = 'bg-gray-400';
   const maximizeButtonColor = 'bg-green-500';
-
-  /*
-   ***********************************
-   *      Closing Down Animation     *
-   ***********************************
-   */
-  const handleClose = useCallback(() => {
-    setTransformScale(entry.id, 0);
-    setIsMaximizedWindowHeaderVisible(false);
-    setTimeout(() => {
-      closeEntry(entry.id);
-    }, 200);
-  }, [closeEntry, entry.id, setTransformScale, setIsMaximizedWindowHeaderVisible]);
 
   return (
     <span className="flex h-6 select-none items-center">
@@ -187,7 +182,10 @@ const HeaderButtons = ({ entry }: { entry: FileSystemEntry }): ReactElement => {
         <WindowHeaderButton
           iconName="close"
           iconSize={6}
-          onClick={handleClose}
+          onClick={() => {
+            handleClose();
+            setIsMaximizedWindowHeaderVisible(false);
+          }}
           onContextMenu={(event) => {
             event.preventDefault();
             event.stopPropagation();

@@ -2,7 +2,6 @@ import { lazy } from 'react';
 
 import {
   type File,
-  Directory,
   LazyAppComponent,
   MenubarOptions,
   ContextMenuOptions,
@@ -108,61 +107,23 @@ export const applications = new Map<string, Omit<AppWithExtras, 'iconPosition'>>
 ]);
 
 /*
- ****************************************************************
- *                                                              *
- *                          Directories                         *
- *                                                              *
- ****************************************************************
- */
-const directoryMeta: Omit<Directory, 'id' | 'name' | 'children' | 'iconPosition'> = {
-  type: 'directory',
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  iconSize: 64,
-  defaultWindowSize: { width: 400, height: 500 },
-  parentId: 'desktop',
-  iconColor: '#fff',
-  isIconSelected: false,
-  isIconDragging: false,
-};
-
-interface directoryWithExtras extends Omit<Directory, 'iconPosition'> {
-  component: LazyAppComponent;
-  menubarOptions?: MenubarOptions;
-  contextMenuOptions?: ContextMenuOptions;
-}
-export const directories = new Map<string, directoryWithExtras>([
-  [
-    'my-folder',
-    {
-      ...directoryMeta,
-      id: 'my-folder',
-      name: 'MyFolder',
-      icon: 'folder',
-      children: [],
-      component: lazy(() => import('@/system/file-system')),
-    },
-  ],
-]);
-
-/*
  ********************************
  *                              *
  *            Helpers           *
  *                              *
  ********************************
  */
-export function getComponent(id: string): LazyAppComponent | null {
+export function getComponent(id: string, type: string): LazyAppComponent | null {
   // I have to use this because I can't pull the component directly from the store, apparently.
   // It's something to do with immer, lazy loading, and immutability. Frankly, it's too complicated
   // so I'm hacking it like the hack I am. It's not a big deal, since I only use the component in one place.
+  if (type === 'directory') {
+    return lazy(() => import('@/system/file-system/directory'));
+  }
+
   const app = applications.get(id);
   if (app) {
     return app.component;
-  }
-  const dir = directories.get(id);
-  if (dir) {
-    return dir.component;
   }
   return null;
 }
@@ -179,10 +140,6 @@ export function getContextMenuOptions(id: string): ContextMenuOptions | null {
   const app = applications.get(id);
   if (app) {
     return app.contextMenuOptions ?? null;
-  }
-  const dir = directories.get(id);
-  if (dir) {
-    return dir.contextMenuOptions ?? null;
   }
   return null;
 }

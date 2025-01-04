@@ -3,6 +3,7 @@ import useFilesystemStore, {
   ContextMenuItems,
   ContextMenuAction,
 } from '@/system/file-system/store';
+import { CLOSE_ANIMATION_DURATION } from '@/themes';
 
 const commonEntryContextMenuItems: ContextMenuItems = new Map([
   [
@@ -26,8 +27,13 @@ const commonEntryContextMenuItems: ContextMenuItems = new Map([
         'Close',
         {
           callback: (entry) => {
+            if (!entry) return;
             const closeEntry = useFilesystemStore.getState().closeEntry;
-            closeEntry(entry?.id ?? '');
+            const setTransformScale = useFilesystemStore.getState().setTransformScale;
+            setTransformScale(entry.id, 0);
+            setTimeout(() => {
+              closeEntry(entry.id);
+            }, CLOSE_ANIMATION_DURATION);
           },
         },
       ],
