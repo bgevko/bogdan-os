@@ -51,7 +51,6 @@ const DropdownMenu = ({
       }}
       className="window-shadow absolute left-0 z-50 flex flex-col gap-1 rounded border border-stone-200 bg-stone-50 p-1"
       onClick={() => {
-        console.log('clicked');
         onClick();
       }}
     >

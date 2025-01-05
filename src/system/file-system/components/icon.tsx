@@ -5,7 +5,7 @@ import UseIconDrag from '@/system/file-system/hooks/use-icon-drag';
 import UseIconSelect from '@/system/file-system/hooks/use-icon-select';
 import { type FileSystemEntry } from '@/system/file-system/store';
 import useFileSystemStore from '@/system/file-system/store';
-import { areBoundingBoxesIntersecting, snapPosition } from '@/system/file-system/utils';
+import { areBoundingBoxesIntersecting, snapToTargetGrid } from '@/system/file-system/utils';
 import { GRID_CELL_SIZE } from '@/themes';
 import { getLazyIcon, getEventTargetDataId } from '@/utils';
 import cn from '@/utils/format';
@@ -31,6 +31,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
   const openEntry = useFileSystemStore((state) => state.openEntry);
   const setContextState = useFileSystemStore((state) => state.setContextState);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
+  const getWindowSize = useFileSystemStore((state) => state.getWindowSize);
   const getWindowPosition = useFileSystemStore((state) => state.getWindowPosition);
   const blurWindowFocus = useFileSystemStore((state) => state.blurWindowFocus);
   const pushFocus = useFileSystemStore((state) => state.pushFocus);
@@ -92,14 +93,24 @@ const FileExplorerIcon: React.FC<IconProps> = ({
    ***********************************
    */
   const dropGuidePos = useMemo(() => {
-    const pos = snapPosition({
-      parentId: entry.parentId!,
+    const parentPosition = getWindowPosition(entry.parentId!);
+    const parentSize = getWindowSize(entry.parentId!);
+    let targetPosition = parentPosition;
+    let targetSize = parentSize;
+    if (dropTargetId !== entry.parentId) {
+      targetPosition = getWindowPosition(dropTargetId);
+      targetSize = getWindowSize(dropTargetId);
+    }
+    const pos = snapToTargetGrid({
+      sourceId: entry.parentId!,
       targetId: dropTargetId,
-      iconPosition: entry.iconPosition,
-      parentPosition: getWindowPosition(entry.parentId!),
+      position: entry.iconPosition,
+      sourceOrigin: parentPosition,
+      targetOrigin: targetPosition,
+      targetSize,
     });
     return pos;
-  }, [entry.iconPosition, entry.parentId, getWindowPosition, dropTargetId]);
+  }, [entry.iconPosition, entry.parentId, getWindowSize, getWindowPosition, dropTargetId]);
 
   return (
     <Suspense

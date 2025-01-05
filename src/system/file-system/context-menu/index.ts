@@ -47,8 +47,8 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
       [
         'Delete',
         {
-          callback: (entry) => {
-            const selected = useFileSystemStore.getState().getAllSelectedIds(entry?.parentId ?? '');
+          callback: () => {
+            const selected = useFileSystemStore.getState().getAllSelectedIds();
             for (const id of selected) {
               useFileSystemStore.getState().deleteEntry(id);
             }

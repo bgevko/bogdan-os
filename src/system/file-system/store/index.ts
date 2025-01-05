@@ -356,7 +356,24 @@ const initialState: StoreState = {
           width: window.innerWidth,
           height: window.innerHeight - TASKBAR_HEIGHT,
         },
-        children: [...applications.keys(), 'test-folder'],
+        children: [...applications.keys(), 'test-folder', 'trash'],
+      },
+    ],
+    [
+      'trash',
+      {
+        id: 'trash',
+        iconPosition: { x: 0, y: 0 },
+        iconColor: '#fff',
+        defaultWindowSize: { width: 500, height: 500 },
+        icon: 'folder',
+        name: 'Trash',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        parentId: 'desktop',
+        type: 'directory',
+        children: [],
+        disableDelete: false,
       },
     ],
     [
@@ -1445,6 +1462,9 @@ const useFileSystemStore = create<FileSystemState>()(
           if (DEBUG) console.warn(`FileSystemStore:OpenEntry: Entry with id ${id} not found`);
           return;
         }
+        if (get().getIsOpen(id)) {
+          return;
+        }
         entry.isOpen = true;
         state.opened.push(id);
         state.focused.push(id);
@@ -1561,6 +1581,7 @@ const useFileSystemStore = create<FileSystemState>()(
           const focused = state.focused.filter((openedId) => openedId !== id);
           focused.push(id);
           state.focused = focused;
+          state.windowBlur = false;
         }
 
         // Set the transform scale

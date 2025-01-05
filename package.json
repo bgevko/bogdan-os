@@ -14,14 +14,13 @@
     "prepare": "husky",
     "test": "vitest --run",
     "test:w": "vitest --watch",
-    "test:current": "vitest file-system.test",
-    "cy:window": "cypress run --spec 'cypress/e2e/window.cy.ts'",
+    "test:current": "vitest snapping.test",
     "test:ui": "vitest --ui"
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write",
     "*.{ts,tsx}": "stylelint --fix --allow-empty-input",
-    "*.{js,ts,tsx}": "eslint --ignore-pattern 'cypress/**' --fix"
+    "*.{js,ts,tsx}": "eslint --fix"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.17.6",
@@ -59,7 +58,7 @@
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-no-relative-import-paths": "^1.5.4",
     "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-compiler": "^0.0.0-experimental-51a85ea-20240601",
+    "eslint-plugin-react-compiler": "^19.0.0-beta-55955c9-20241229",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.7",
     "eslint-plugin-tailwindcss": "^3.15.2",

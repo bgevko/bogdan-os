@@ -118,7 +118,9 @@ const HeaderButtons = ({ entry }: { entry: FileSystemEntry }): ReactElement => {
         <WindowHeaderButton
           iconName="close"
           iconSize={6}
-          onClick={handleClose}
+          onClick={() => {
+            handleClose();
+          }}
           onContextMenu={(event) => {
             event.preventDefault();
             event.stopPropagation();

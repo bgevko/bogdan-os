@@ -80,7 +80,7 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
         `,
         width: size.width,
         height: size.height,
-        zIndex: 10 + zIndex,
+        zIndex,
       }}
       onMouseEnter={() => {
         if (isAnyIconDragging()) {

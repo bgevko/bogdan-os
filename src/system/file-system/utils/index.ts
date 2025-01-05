@@ -1,53 +1,6 @@
 import { Position, Size } from '@/system/file-system/store';
-import { TASKBAR_HEIGHT, GRID_CELL_SIZE } from '@/themes';
+import { GRID_CELL_SIZE, WINDOW_HEADER_HEIGHT } from '@/themes';
 
-interface SnapPositionProps {
-  parentId: string;
-  targetId: string;
-  iconPosition: Position;
-  parentPosition: Position;
-}
-export const snapPosition = (snapPositionProps: SnapPositionProps): Position => {
-  const { parentId, targetId, iconPosition } = snapPositionProps;
-  const snappedPosition = snapPositionWithOffset(iconPosition, { x: 0, y: 0 });
-  return clampPositionToBounds(snappedPosition, { width: 0, height: TASKBAR_HEIGHT });
-  if (parentId === targetId) {
-    return snapPositionWithOffset(iconPosition, { x: 0, y: 0 });
-  }
-
-  // const gridCellSize = GRID_CELL_SIZE;
-  //
-  // // Convert to local coordinates (relative to parentPosition)
-  // const localX = iconPosition.x - parentPosition.x;
-  // let localY = iconPosition.y - parentPosition.y;
-  //
-  // if (targetId !== 'desktop') {
-  //   localY += WINDOW_HEADER_HEIGHT + WINDOW_PADDING;
-  // }
-  //
-  // // Snap to the nearest grid cell in the local coordinates
-  // const snappedLocalX = Math.round(localX / gridCellSize) * gridCellSize;
-  // const snappedLocalY = Math.round(localY / gridCellSize) * gridCellSize;
-  //
-  // // Convert back to global coordinates
-  // const yPadding = WINDOW_PADDING;
-  // const snappedGlobalX = snappedLocalX + parentPosition.x;
-  // const snappedGlobalY =
-  //   parentId === 'desktop' && targetId === 'desktop'
-  //     ? snappedLocalY + parentPosition.y
-  //     : snappedLocalY + parentPosition.y - (WINDOW_HEADER_HEIGHT + yPadding);
-  //
-  // // Clamp to viewport bounds
-  // const winWidth = window.innerWidth;
-  // let winHeight = window.innerHeight - TASKBAR_HEIGHT;
-  // if (targetId !== 'desktop') {
-  //   winHeight -= WINDOW_HEADER_HEIGHT;
-  // }
-  // const finalX = Math.min(Math.max(snappedGlobalX, 0), winWidth - gridCellSize);
-  // const finalY = Math.min(Math.max(snappedGlobalY, 0), winHeight - gridCellSize);
-  //
-  // return { x: finalX, y: finalY };
-};
 export interface BoundingBox {
   x: number;
   y: number;
@@ -55,34 +8,107 @@ export interface BoundingBox {
   height: number;
 }
 
-function snapPositionWithOffset(mousePos: Position, offsetPos?: Position): Position {
-  const gridCellSize = GRID_CELL_SIZE;
-  const offsetPosX = offsetPos?.x ?? 0;
-  const offsetPosY = offsetPos?.y ?? 0;
-  const localX = mousePos.x - offsetPosX;
-  const localY = mousePos.y - offsetPosY;
-  const snappedX = Math.round(localX / gridCellSize) * gridCellSize;
-  const snappedY = Math.round(localY / gridCellSize) * gridCellSize;
+interface TransformProps {
+  position: Position;
+  sourceOrigin: Position;
+  targetOrigin: Position;
+}
 
+export function transformPosition(transformProps: TransformProps): Position {
+  const { position, sourceOrigin, targetOrigin } = transformProps;
+  const x = position.x + (sourceOrigin.x - targetOrigin.x);
+  const y = position.y + (sourceOrigin.y - targetOrigin.y);
   return {
-    x: snappedX + offsetPosX,
-    y: snappedY + offsetPosY,
+    x,
+    y,
   };
 }
 
-function clampPositionToBounds(snappedPosition: Position, offsetSize?: Size): Position {
-  const gridCellSize = GRID_CELL_SIZE;
-  const offsetWidth = offsetSize?.width ?? 0;
-  const offsetHeight = offsetSize?.height ?? 0;
-  const viewportWidth = window.innerWidth - offsetWidth;
-  const viewportHeight = window.innerHeight - offsetHeight;
-  const maxViewportWidth = Math.floor(viewportWidth / gridCellSize) * gridCellSize - gridCellSize;
-  const maxViewportHeight = Math.floor(viewportHeight / gridCellSize) * gridCellSize - gridCellSize;
-  const clampedX = Math.min(Math.max(snappedPosition.x, 0), maxViewportWidth);
-  const clampedY = Math.min(Math.max(snappedPosition.y, 0), maxViewportHeight);
+interface SnapProps extends TransformProps {
+  sourceId: string;
+  targetId: string;
+  targetSize: Size;
+}
+export function snapToTargetGrid(snapProps: SnapProps): Position {
+  const { position, sourceOrigin, targetOrigin, sourceId, targetId, targetSize } = snapProps;
+
+  // Apply offsets for taskbar, header, etc.
+  const targetOffset = getOffsetsForContext(sourceId, targetId);
+
+  // Convert coordinate system to target grid origin
+  const transformedPosition = transformPosition({
+    position,
+    sourceOrigin,
+    targetOrigin: {
+      x: targetOrigin.x + targetOffset.x,
+      y: targetOrigin.y + targetOffset.y,
+    },
+  });
+
+  // Snap to target grid
+  const snappedPosition = {
+    x: roundPosition(transformedPosition.x),
+    y: roundPosition(transformedPosition.y),
+  };
+
+  // Clamp to target bounds
+  const clampedPosition = clampToGridBoundary(snappedPosition, {
+    width: targetSize.width,
+    height: targetId === 'desktop' ? targetSize.height : targetSize.height - WINDOW_HEADER_HEIGHT,
+  });
+
+  // Convert coordinate system back to source grid
+  const finalPosition = transformPosition({
+    position: clampedPosition,
+    sourceOrigin: {
+      x: targetOrigin.x + targetOffset.x,
+      y: targetOrigin.y + targetOffset.y,
+    },
+    targetOrigin: {
+      x: sourceOrigin.x,
+      y: sourceOrigin.y,
+    },
+  });
+  return finalPosition;
+}
+
+function getOffsetsForContext(sourceId: string, targetId: string): Position {
+  const sourceIsDesktop = sourceId === 'desktop';
+  const targetIsDesktop = targetId === 'desktop';
+
+  // No offset when source is the same
+  if (sourceId === targetId) {
+    return { x: 0, y: 0 };
+  }
+  // Desktop -> Directory,
+  if (sourceIsDesktop && !targetIsDesktop) {
+    return { x: 0, y: WINDOW_HEADER_HEIGHT };
+  }
+
+  // Directory -> Desktop,
+  if (!sourceIsDesktop && targetIsDesktop) {
+    return { x: 0, y: -WINDOW_HEADER_HEIGHT };
+  }
+
+  return { x: 0, y: 0 };
+}
+
+/**
+ * Clamps a snapped grid position to the target grid boundary.
+ * @param position - Snapped position
+ * @param bounds - Target grid bounds
+ * @returns Clamped position, aligned with the grid
+ */
+function clampToGridBoundary(position: Position, bounds: Size): Position {
+  // Get bounds width and height as multiples of grid cell size
+  // We subtract one grid cell to account for the icon size
+  const boundsWidth = floorPosition(bounds.width) - GRID_CELL_SIZE;
+  const boundsHeight = floorPosition(bounds.height) - GRID_CELL_SIZE;
+  const [minX, minY] = [0, 0];
+  const [maxX, maxY] = [boundsWidth, boundsHeight];
   return {
-    x: clampedX,
-    y: clampedY,
+    x: Math.max(minX, Math.min(maxX, position.x)),
+    y: Math.max(minY, Math.min(maxY, position.y)),
   };
 }
 
@@ -125,3 +151,10 @@ export const areBoundingBoxesIntersectingAboveThreshold = (
 
   return overlapPercentage > threshold;
 };
+
+function floorPosition(n: number): number {
+  return Math.floor(n / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+}
+function roundPosition(n: number): number {
+  return Math.round(n / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+}

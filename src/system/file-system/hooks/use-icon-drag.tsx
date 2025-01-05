@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import useFileSystemStore, { FileSystemEntry, Position } from '@/system/file-system/store';
-import { snapPosition } from '@/system/file-system/utils';
+import { snapToTargetGrid } from '@/system/file-system/utils';
 
 interface ReturnTypes {
   handleDragStart: (event: React.MouseEvent) => void;
@@ -17,7 +17,7 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
   const isIconDragging = useFileSystemStore((state) => state.getIsIconDragging);
   const setIsIconDragging = useFileSystemStore((state) => state.setIsIconDragging);
   const getWindowPosition = useFileSystemStore((state) => state.getWindowPosition);
-  const clearContextState = useFileSystemStore((state) => state.clearContextState);
+  const getWindowSize = useFileSystemStore((state) => state.getWindowSize);
   const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
 
   // Drag initiates on a single icon, however, we need to move all selected
@@ -70,21 +70,31 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
       for (const id of Object.keys(startingPositions)) {
         setIsIconDragging(id, false);
         const pos = getIconPosition(id)!;
-        const newPosition = snapPosition({
-          parentId: entry.parentId!,
+        const parentPosition = getWindowPosition(entry.parentId!);
+        const parentSize = getWindowSize(entry.parentId!);
+        let targetPosition = parentPosition;
+        let targetSize = parentSize;
+        if (dropTargetId !== entry.parentId) {
+          targetPosition = getWindowPosition(dropTargetId);
+          targetSize = getWindowSize(dropTargetId);
+        }
+        const newPosition = snapToTargetGrid({
+          sourceId: entry.parentId!,
           targetId: dropTargetId,
-          iconPosition: pos,
-          parentPosition: getWindowPosition(entry.parentId!),
+          position: pos,
+          sourceOrigin: parentPosition,
+          targetOrigin: targetPosition,
+          targetSize,
         });
         setIconPosition(id, newPosition);
       }
       setStartingPositions({});
       setDisableSelect(false);
-      clearContextState();
     },
     [
       entry.id,
       entry.parentId,
+      getWindowSize,
       getWindowPosition,
       setIsIconDragging,
       setDisableSelect,
@@ -92,7 +102,6 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
       setIconPosition,
       startingPositions,
       dropTargetId,
-      clearContextState,
     ],
   );
 
