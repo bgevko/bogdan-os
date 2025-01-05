@@ -17,6 +17,8 @@ const Desktop = (): React.ReactElement => {
   const desktopEntry = useFileSystemStore((state) => state.getEntry({ id: 'desktop' }));
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
+  const windowPosition = useFileSystemStore((state) => state.getWindowPosition('desktop'));
+  const windowSize = useFileSystemStore((state) => state.getWindowSize('desktop'));
 
   const {
     selectRectPosition,
@@ -82,6 +84,8 @@ const Desktop = (): React.ReactElement => {
               selectRect={{ position: selectRectPosition, size: selectRectSize }}
               dropTargetId={dropTargetId}
               isAnyIconDragging={isAnyIconDragging}
+              parentPosition={windowPosition}
+              parentSize={windowSize}
             />
           );
         })}

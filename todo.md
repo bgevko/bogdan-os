@@ -32,12 +32,16 @@
 - Animations and polish
 - Non-local high scores
 
-### Refactor
+### TODO
 
-- Create files
-- Delete files
-- Sort
-- Directory system
-- Drop on icon
-- Drop on folder
-- Drop from folder
+- Full screen mode and folders / other apps. It is assumed that only app will be in full screen mode at a time. I have to rethink this, as users can open
+  other apps or directories while in full screen mode.
+- Full screen mode has unnecessary grid offset on the bottom
+- Full screen mode context menu is slightly too low.
+- Renaming files and folders
+- Update Readme
+- Create a changelog
+- Create sfx for droping into a folder
+- Make folder being dropped into animate slightly on drop
+- Make icons animate in/out when deleting/creating
+- Make taskbar entry close before closing animation is complete

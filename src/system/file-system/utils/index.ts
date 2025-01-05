@@ -79,7 +79,7 @@ export function snapToTargetGrid({
   return finalPositionRelativeTo === 'target' ? snappedTargetPosition : snappedSourcePosition;
 }
 
-function getOffsetsForContext(sourceId: string, targetId: string): Position {
+export function getOffsetsForContext(sourceId: string, targetId: string): Position {
   const sourceIsDesktop = sourceId === 'desktop';
   const targetIsDesktop = targetId === 'desktop';
 

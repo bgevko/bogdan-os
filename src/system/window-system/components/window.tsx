@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-import { type ReactElement, ReactNode, useState, useEffect } from 'react';
+import { type ReactElement, ReactNode, useState, useMemo, useEffect } from 'react';
 
 import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store';
 import Menubar from '@/system/menubar';
 import ResizeHandles from '@/system/window-system/components/resize-handles';
 import WindowHeader from '@/system/window-system/components/window-header';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
+import { getLazyIcon } from '@/utils';
 import cn from '@/utils/format';
 
 interface WindowProperties {
@@ -32,6 +33,17 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging);
 
   const [isReady, setIsReady] = useState(false);
+  const LazyIcon = useMemo(() => getLazyIcon('secret'), [entry.id]);
+
+  /*
+   ***********************************
+   *  Not Ready For Smaller Screens  *
+   ***********************************
+   */
+  const shouldWarnUser =
+    entry.disableMobile &&
+    (window.innerWidth < entry.defaultWindowSize.width ||
+      window.innerHeight < entry.defaultWindowSize.height);
 
   /*
    **************************************
@@ -114,9 +126,19 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
               clearContextState();
             }}
           >
-            {windowState !== 'maximized' && <Menubar entry={entry} />}
-            {/* Content */}
-            {children}
+            {shouldWarnUser ? (
+              <div className="flex size-full flex-col items-center justify-center gap-1">
+                <p className="font-bold">Psst!</p>
+                <LazyIcon width={150} height={150} fill="#FBF0C7" className="select-none" />
+                <p className="font-bold"> This app doesn&apos;t work on mobile.. yet!</p>
+              </div>
+            ) : (
+              <>
+                {windowState !== 'maximized' && <Menubar entry={entry} />}
+                {/* Content */}
+                {children}
+              </>
+            )}
           </div>
         </article>
       )}

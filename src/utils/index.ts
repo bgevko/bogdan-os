@@ -26,3 +26,12 @@ export const getEventTargetDataId = (event: React.MouseEvent): string => {
   }
   return dataId;
 };
+
+export const playSound = (soundTitle: string, volume = 0.5): void => {
+  const audio = new Audio(`/sounds/${soundTitle}.wav`);
+  audio.volume = volume;
+  audio.play().catch((error: unknown) => {
+    // eslint-disable-next-line no-console
+    console.warn('Error playing sound:', error);
+  });
+};

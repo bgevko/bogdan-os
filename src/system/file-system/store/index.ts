@@ -177,7 +177,10 @@ interface StoreState {
   // icon global info
   selected: EntryId[];
   dragging: EntryId[];
+  dragInitiatorId?: EntryId | null;
   dropTarget?: EntryId;
+  dropTargetIcon?: EntryId | null;
+  isDragOverFolder?: boolean;
 
   // context menu
   contextState?: ContextState;
@@ -235,12 +238,19 @@ interface StoreActions {
   getCanDeleteSelection: (parentId: EntryId) => boolean;
   getIsUsingSelectRect: () => boolean;
   getDropTargetId: () => EntryId;
+  getDropTargetIconId: () => EntryId | null;
+  getIsDirectory: (id: EntryId) => boolean;
+  getIconAtPosition: (parentId: EntryId, position: Position) => FileSystemEntry | null;
+  getDragInitiatorId: () => EntryId | null;
+  getIsDragOverFolder: () => boolean;
 
   /*
    ********************************
    *            Setters           *
    ********************************
    */
+  reset: () => void;
+  resetForTest: () => void;
   setIconPosition: (id: EntryId, position: Position) => void;
   setIsIconSelected: (id: EntryId, isSelected: boolean) => void;
   clearIconSelection: () => void;
@@ -264,6 +274,8 @@ interface StoreActions {
   clearContextState: () => void;
   setIsUsingSelectRect: (isUsing: boolean) => void;
   setDropTargetId: (id: EntryId) => void;
+  setDropTargetIconId: (id: EntryId | null) => void;
+  setDragInitiatorId: (id: EntryId | null) => void;
 
   /*
    ********************************
@@ -289,8 +301,7 @@ interface StoreActions {
   moveEntry: (id: EntryId, targetParentId: EntryId) => void;
   printTree: (id: EntryId) => void;
   printDirectory: (id: EntryId) => void;
-  reset: () => void;
-  resetForTest: () => void;
+  sortIcons: (parentId: EntryId, by: 'name' | 'date') => void;
 
   /*
    ********************************
@@ -928,6 +939,41 @@ const useFileSystemStore = create<FileSystemState>()(
     getDropTargetId: () => {
       return get().dropTarget ?? 'desktop';
     },
+    getDropTargetIconId: () => {
+      return get().dropTargetIcon ?? null;
+    },
+    getIsDirectory: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetIsIconDirectory: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.type === 'directory';
+    },
+    getIconAtPosition: (parentId, position) => {
+      const parent = get().getEntry({ id: parentId });
+      if (!parent || parent.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:GetIconAtPosition: Entry with id ${parentId} not found or not a directory`,
+          );
+        return null;
+      }
+      for (const childId of parent.children) {
+        const child = get().getEntry({ id: childId })!;
+        if (child.iconPosition?.x === position.x && child.iconPosition?.y === position.y) {
+          return child;
+        }
+      }
+      return null;
+    },
+    getDragInitiatorId: () => {
+      return get().dragInitiatorId ?? null;
+    },
+    getIsDragOverFolder: () => {
+      return get().isDragOverFolder ?? false;
+    },
     // getters end
 
     /*
@@ -947,6 +993,7 @@ const useFileSystemStore = create<FileSystemState>()(
           entry.iconPosition = position;
           return;
         }
+
         // Not dragging, and there's an empty position
         if (get().getIsIconPositionEmpty(entry.parentId!, position)) {
           entry.iconPosition = position;
@@ -1183,6 +1230,24 @@ const useFileSystemStore = create<FileSystemState>()(
     setDropTargetId: (id) => {
       set((state) => {
         state.dropTarget = id;
+      });
+    },
+    setDropTargetIconId: (id) => {
+      set((state) => {
+        state.dropTargetIcon = id;
+        if (id) {
+          const entry = get().getEntry({ id });
+          if (entry) {
+            state.isDragOverFolder = entry.type === 'directory';
+          }
+        } else {
+          state.isDragOverFolder = false;
+        }
+      });
+    },
+    setDragInitiatorId: (id) => {
+      set((state) => {
+        state.dragInitiatorId = id;
       });
     },
     // setters end
@@ -1533,6 +1598,49 @@ const useFileSystemStore = create<FileSystemState>()(
         // Set window back to default window size
         const defaultWindowSize = get().getDefaultWindowSize(id);
         entry.windowSize = defaultWindowSize;
+      });
+    },
+
+    /*
+     ********************************
+     *          Sort Icons          *
+     ********************************
+     */
+    sortIcons: (parentId, sortType) => {
+      set((state) => {
+        const parent = state.lookup.get(parentId) as Directory;
+        if (!parent) {
+          if (DEBUG)
+            console.warn(
+              `FileSystemStore:SortIcons: Entry with id ${parentId} not found or not a directory`,
+            );
+          return;
+        }
+        const children = parent.children.map((childId) => state.lookup.get(childId)!);
+        if (sortType === 'name') {
+          children.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortType === 'date') {
+          children.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        }
+
+        const cellSize = GRID_CELL_SIZE;
+        const parentWindowSize = get().getWindowSize(parentId);
+        const [parentWidth, parentHeight] = [parentWindowSize.width, parentWindowSize.height];
+        const maxCols = Math.floor(parentWidth / cellSize);
+        let maxRows = Math.floor(parentHeight / cellSize);
+        while (children.length >= maxCols * maxRows) {
+          maxRows++;
+        }
+        let col = 0;
+        let row = 0;
+        for (const child of children) {
+          child.iconPosition = { x: col * cellSize, y: row * cellSize };
+          row++;
+          if (row >= maxRows) {
+            row = 0;
+            col++;
+          }
+        }
       });
     },
 

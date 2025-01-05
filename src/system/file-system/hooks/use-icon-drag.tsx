@@ -1,3 +1,4 @@
+/* eslint-disable no-continue */
 import { useCallback, useState } from 'react';
 
 import useFileSystemStore, { FileSystemEntry, Position } from '@/system/file-system/store';
@@ -23,6 +24,8 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
   const getWindowSize = useFileSystemStore((state) => state.getWindowSize);
   const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
   const moveEntry = useFileSystemStore((state) => state.moveEntry);
+  const setDragInitiatorId = useFileSystemStore((state) => state.setDragInitiatorId);
+  const getDropTargetIconId = useFileSystemStore((state) => state.getDropTargetIconId);
 
   // Drag initiates on a single icon, however, we need to move all selected
   // icons. We'll do this by storing the starting position of each selected
@@ -48,6 +51,7 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
         positions[id] = startPos;
         setIsIconDragging(id, true);
       }
+      setDragInitiatorId(entry.id);
       setDisableSelect(true);
       setStartingPositions(positions);
       setDropTargetId(entry.parentId ?? 'desktop');
@@ -58,7 +62,9 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
       setDisableSelect,
       setIsIconDragging,
       entry.parentId,
+      entry.id,
       setDropTargetId,
+      setDragInitiatorId,
     ],
   );
 
@@ -70,11 +76,19 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
   const handleMouseUp = useCallback(
     (event: MouseEvent) => {
       if (event.button !== 0) return;
+      if (Object.keys(startingPositions).length === 0) return;
       clearAllIconsDragging();
+      setDragInitiatorId(null);
+      const dropTargetIconId = getDropTargetIconId();
+      const parentPosition = getWindowPosition(entry.parentId!);
+      const parentSize = getWindowSize(entry.parentId!);
       for (const id of Object.keys(startingPositions)) {
+        if (dropTargetIconId) {
+          moveEntry(id, dropTargetIconId);
+          setIconPosition(id, { x: 0, y: 0 });
+          continue;
+        }
         const pos = getIconPosition(id)!;
-        const parentPosition = getWindowPosition(entry.parentId!);
-        const parentSize = getWindowSize(entry.parentId!);
         let targetPosition = parentPosition;
         let targetSize = parentSize;
         if (dropTargetId !== entry.parentId) {
@@ -107,6 +121,8 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
       startingPositions,
       dropTargetId,
       moveEntry,
+      setDragInitiatorId,
+      getDropTargetIconId,
     ],
   );
 

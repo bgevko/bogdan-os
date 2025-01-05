@@ -5,7 +5,12 @@ import UseIconDrag from '@/system/file-system/hooks/use-icon-drag';
 import UseIconSelect from '@/system/file-system/hooks/use-icon-select';
 import { type FileSystemEntry } from '@/system/file-system/store';
 import useFileSystemStore from '@/system/file-system/store';
-import { areBoundingBoxesIntersecting, snapToTargetGrid } from '@/system/file-system/utils';
+import {
+  areBoundingBoxesIntersecting,
+  getOffsetsForContext,
+  snapToTargetGrid,
+  transformPosition,
+} from '@/system/file-system/utils';
 import { GRID_CELL_SIZE } from '@/themes';
 import { getLazyIcon, getEventTargetDataId } from '@/utils';
 import cn from '@/utils/format';
@@ -16,6 +21,8 @@ interface IconProps {
   selectRect: { position: { x: number; y: number }; size: { width: number; height: number } };
   dropTargetId: string;
   isAnyIconDragging: boolean;
+  parentPosition: { x: number; y: number };
+  parentSize: { width: number; height: number };
 }
 
 const FileExplorerIcon: React.FC<IconProps> = ({
@@ -24,10 +31,10 @@ const FileExplorerIcon: React.FC<IconProps> = ({
   selectRectVisible,
   dropTargetId,
   isAnyIconDragging,
+  parentPosition,
+  parentSize,
 }): ReactElement => {
   const setIsIconSelected = useFileSystemStore((state) => state.setIsIconSelected);
-  const isIconSelected = useFileSystemStore((state) => state.getIsIconSelected(entry.id));
-  const isIconDragging = useFileSystemStore((state) => state.getIsIconDragging(entry.id));
   const openEntry = useFileSystemStore((state) => state.openEntry);
   const setContextState = useFileSystemStore((state) => state.setContextState);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
@@ -35,6 +42,12 @@ const FileExplorerIcon: React.FC<IconProps> = ({
   const getWindowPosition = useFileSystemStore((state) => state.getWindowPosition);
   const blurWindowFocus = useFileSystemStore((state) => state.blurWindowFocus);
   const pushFocus = useFileSystemStore((state) => state.pushFocus);
+  const setDropTargetIconId = useFileSystemStore((state) => state.setDropTargetIconId);
+  const getIconAtPosition = useFileSystemStore((state) => state.getIconAtPosition);
+  const isDragOverFolder = useFileSystemStore((state) => state.getIsDragOverFolder());
+  const isIconSelected = useFileSystemStore((state) => state.getIsIconSelected(entry.id));
+  const isIconDragging = useFileSystemStore((state) => state.getIsIconDragging(entry.id));
+  const dragInitiatorId = useFileSystemStore((state) => state.getDragInitiatorId());
 
   const { isShiftPressed } = UseKeyPresses();
 
@@ -93,8 +106,6 @@ const FileExplorerIcon: React.FC<IconProps> = ({
    ***********************************
    */
   const dropGuidePos = useMemo(() => {
-    const parentPosition = getWindowPosition(entry.parentId!);
-    const parentSize = getWindowSize(entry.parentId!);
     let targetPosition = parentPosition;
     let targetSize = parentSize;
     if (dropTargetId !== entry.parentId) {
@@ -110,7 +121,65 @@ const FileExplorerIcon: React.FC<IconProps> = ({
       targetSize,
     });
     return pos;
-  }, [entry.iconPosition, entry.parentId, getWindowSize, getWindowPosition, dropTargetId]);
+  }, [
+    entry.iconPosition,
+    entry.parentId,
+    parentPosition,
+    parentSize,
+    getWindowSize,
+    getWindowPosition,
+    dropTargetId,
+  ]);
+
+  /*
+   **************************************
+   *      Dropping on folder icons      *
+   **************************************
+   */
+  const dropTargetIcon = useMemo((): FileSystemEntry | null => {
+    let targetOrigin = parentPosition;
+    let iconPosition = dropGuidePos;
+    if (dropTargetId !== entry.parentId) {
+      const offsets = getOffsetsForContext(entry.parentId!, dropTargetId);
+      targetOrigin = getWindowPosition(dropTargetId);
+      iconPosition = transformPosition({
+        position: dropGuidePos,
+        sourceOrigin: parentPosition,
+        targetOrigin: {
+          x: targetOrigin.x + offsets.x,
+          y: targetOrigin.y + offsets.y,
+        },
+      });
+    }
+
+    return getIconAtPosition(dropTargetId, iconPosition);
+  }, [
+    dropGuidePos,
+    dropTargetId,
+    entry.parentId,
+    parentPosition,
+    getIconAtPosition,
+    getWindowPosition,
+  ]);
+
+  const isDragInitiator = dragInitiatorId === entry.id;
+
+  useEffect(() => {
+    if (isIconDragging && isDragInitiator && dropTargetIcon?.id !== entry.id) {
+      setDropTargetIconId(dropTargetIcon?.id ?? null);
+    }
+  }, [
+    entry.id,
+    dragInitiatorId,
+    dropTargetIcon,
+    isDragInitiator,
+    isIconDragging,
+    setDropTargetIconId,
+  ]);
+
+  const isValidDrop = isDragInitiator && dropTargetIcon && dropTargetIcon.type === 'directory';
+  const isInvalidDrop = isDragInitiator && dropTargetIcon && dropTargetIcon.type === 'file';
+  const shouldHide = !isDragInitiator && isDragOverFolder;
 
   return (
     <Suspense
@@ -125,10 +194,14 @@ const FileExplorerIcon: React.FC<IconProps> = ({
     >
       <>
         {/* Drop Preview */}
-        {isIconDragging && (
+        {isIconDragging && !shouldHide && (
           <span
             className={cn(
               'border-black pointer-events-none absolute h-[88px] w-[80px] border-2 border-dashed transition-transform',
+              isValidDrop && 'bg-green-500/10 border-green-700',
+              isInvalidDrop && 'bg-red-500/10 border-red-700',
+              // When any other non-initator hovers over any other icon, negative feedback
+              !isDragInitiator && dropTargetIcon && 'bg-red-500/10 border-red-700',
             )}
             style={{
               transform: `
@@ -152,6 +225,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             isIconSelected && 'bg-black/20',
             !isIconDragging && 'transition-transform duragion 500',
             !isIconSelected && !isAnyIconDragging && 'hover:bg-black/10',
+            isIconDragging && 'opacity-60',
           )}
           style={{
             transform: `
@@ -212,7 +286,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
               event.stopPropagation();
             }}
           />
-          <span className="select-none text-base font-bold">{entry.name}</span>
+          <span className={cn('select-none text-base font-bold')}>{entry.name}</span>
         </button>
       </>
     </Suspense>

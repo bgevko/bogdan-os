@@ -15,9 +15,10 @@ const Directory = ({ entry }: AppComponent): React.ReactElement => {
   const setContextState = useFileSystemStore((state) => state.setContextState);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
   const getWindowState = useFileSystemStore((state) => state.getWindowState);
-  const getWindowPosition = useFileSystemStore((state) => state.getWindowPosition);
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
+  const windowPosition = useFileSystemStore((state) => state.getWindowPosition(entry?.id ?? ''));
+  const windowSize = useFileSystemStore((state) => state.getWindowSize(entry?.id ?? ''));
 
   // TODO: Hover focus
 
@@ -63,7 +64,6 @@ const Directory = ({ entry }: AppComponent): React.ReactElement => {
             if (getWindowState(entry.id) === 'maximized') {
               handleMouseDown(event);
             } else {
-              const windowPosition = getWindowPosition(entry.id);
               handleMouseDown(event, {
                 x: windowPosition.x,
                 y: windowPosition.y + WINDOW_HEADER_HEIGHT,
@@ -89,6 +89,8 @@ const Directory = ({ entry }: AppComponent): React.ReactElement => {
               selectRect={{ position: selectRectPosition, size: selectRectSize }}
               dropTargetId={dropTargetId}
               isAnyIconDragging={isAnyIconDragging}
+              parentPosition={windowPosition}
+              parentSize={windowSize}
             />
           );
         })}

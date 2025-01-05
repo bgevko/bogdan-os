@@ -23,10 +23,9 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
       [
         'Sort',
         {
-          callback: () => {
-            console.log('Sort');
+          callback: (entry) => {
+            useFileSystemStore.getState().sortIcons(entry?.id ?? '', 'name');
           },
-          disableCallback: () => true,
         },
       ],
     ]),
