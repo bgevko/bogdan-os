@@ -18,8 +18,6 @@ const Desktop = (): React.ReactElement => {
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
 
-  // TODO: Hover focus
-
   const {
     selectRectPosition,
     selectRectSize,

@@ -28,10 +28,17 @@ interface SnapProps extends TransformProps {
   sourceId: string;
   targetId: string;
   targetSize: Size;
+  finalPositionRelativeTo?: 'source' | 'target';
 }
-export function snapToTargetGrid(snapProps: SnapProps): Position {
-  const { position, sourceOrigin, targetOrigin, sourceId, targetId, targetSize } = snapProps;
-
+export function snapToTargetGrid({
+  position,
+  sourceOrigin,
+  targetOrigin,
+  sourceId,
+  targetId,
+  targetSize,
+  finalPositionRelativeTo = 'source',
+}: SnapProps): Position {
   // Apply offsets for taskbar, header, etc.
   const targetOffset = getOffsetsForContext(sourceId, targetId);
 
@@ -52,14 +59,14 @@ export function snapToTargetGrid(snapProps: SnapProps): Position {
   };
 
   // Clamp to target bounds
-  const clampedPosition = clampToGridBoundary(snappedPosition, {
+  const snappedTargetPosition = clampToGridBoundary(snappedPosition, {
     width: targetSize.width,
     height: targetId === 'desktop' ? targetSize.height : targetSize.height - WINDOW_HEADER_HEIGHT,
   });
 
   // Convert coordinate system back to source grid
-  const finalPosition = transformPosition({
-    position: clampedPosition,
+  const snappedSourcePosition = transformPosition({
+    position: snappedTargetPosition,
     sourceOrigin: {
       x: targetOrigin.x + targetOffset.x,
       y: targetOrigin.y + targetOffset.y,
@@ -69,7 +76,7 @@ export function snapToTargetGrid(snapProps: SnapProps): Position {
       y: sourceOrigin.y,
     },
   });
-  return finalPosition;
+  return finalPositionRelativeTo === 'target' ? snappedTargetPosition : snappedSourcePosition;
 }
 
 function getOffsetsForContext(sourceId: string, targetId: string): Position {

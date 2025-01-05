@@ -12,13 +12,17 @@ interface ReturnTypes {
 const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes => {
   const setIconPosition = useFileSystemStore((state) => state.setIconPosition);
   const getIconPosition = useFileSystemStore((state) => state.getIconPosition);
-  const getAllSelectedIds = useFileSystemStore((state) => state.getAllSelectedIds);
+  const getAllSelectedIdsSameParent = useFileSystemStore(
+    (state) => state.getAllSelectedIdsSameParent,
+  );
   const setDisableSelect = useFileSystemStore((state) => state.setDisableSelect);
   const isIconDragging = useFileSystemStore((state) => state.getIsIconDragging);
   const setIsIconDragging = useFileSystemStore((state) => state.setIsIconDragging);
+  const clearAllIconsDragging = useFileSystemStore((state) => state.clearAllIconsDragging);
   const getWindowPosition = useFileSystemStore((state) => state.getWindowPosition);
   const getWindowSize = useFileSystemStore((state) => state.getWindowSize);
   const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
+  const moveEntry = useFileSystemStore((state) => state.moveEntry);
 
   // Drag initiates on a single icon, however, we need to move all selected
   // icons. We'll do this by storing the starting position of each selected
@@ -33,7 +37,7 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
   const handleDragStart = useCallback(
     (event: React.MouseEvent) => {
       event.preventDefault();
-      const selected = getAllSelectedIds();
+      const selected = getAllSelectedIdsSameParent(entry.parentId ?? '');
       const positions: Record<string, Position> = {};
       for (const id of selected) {
         const pos = getIconPosition(id)!;
@@ -50,7 +54,7 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
     },
     [
       getIconPosition,
-      getAllSelectedIds,
+      getAllSelectedIdsSameParent,
       setDisableSelect,
       setIsIconDragging,
       entry.parentId,
@@ -66,9 +70,8 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
   const handleMouseUp = useCallback(
     (event: MouseEvent) => {
       if (event.button !== 0) return;
-      setIsIconDragging(entry.id, false);
+      clearAllIconsDragging();
       for (const id of Object.keys(startingPositions)) {
-        setIsIconDragging(id, false);
         const pos = getIconPosition(id)!;
         const parentPosition = getWindowPosition(entry.parentId!);
         const parentSize = getWindowSize(entry.parentId!);
@@ -78,30 +81,32 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
           targetPosition = getWindowPosition(dropTargetId);
           targetSize = getWindowSize(dropTargetId);
         }
-        const newPosition = snapToTargetGrid({
+        const targetPos = snapToTargetGrid({
           sourceId: entry.parentId!,
           targetId: dropTargetId,
           position: pos,
           sourceOrigin: parentPosition,
           targetOrigin: targetPosition,
           targetSize,
+          finalPositionRelativeTo: 'target',
         });
-        setIconPosition(id, newPosition);
+        moveEntry(id, dropTargetId);
+        setIconPosition(id, targetPos);
       }
       setStartingPositions({});
       setDisableSelect(false);
     },
     [
-      entry.id,
       entry.parentId,
       getWindowSize,
       getWindowPosition,
-      setIsIconDragging,
+      clearAllIconsDragging,
       setDisableSelect,
       getIconPosition,
       setIconPosition,
       startingPositions,
       dropTargetId,
+      moveEntry,
     ],
   );
 

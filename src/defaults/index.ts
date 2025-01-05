@@ -6,6 +6,7 @@ import {
   MenubarOptions,
   ContextMenuOptions,
 } from '@/system/file-system/store';
+import { DEFAULT_WINDOW_SIZE } from '@/themes';
 
 /*
  ****************************************************************
@@ -22,7 +23,7 @@ const appMetadata: Omit<File, 'iconPosition' | 'id' | 'name' | 'disableMobile' |
   updatedAt: new Date(),
   parentId: 'desktop',
   content: '',
-  defaultWindowSize: { width: 400, height: 500 },
+  defaultWindowSize: DEFAULT_WINDOW_SIZE,
   iconColor: '#fff',
   iconSize: 64,
   isIconSelected: false,

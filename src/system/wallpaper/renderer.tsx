@@ -75,7 +75,7 @@ const Renderer = ({ children }: { children: React.ReactNode }): React.ReactEleme
   }
 
   return (
-    <div className="size-full" ref={mountRef}>
+    <div className="preserve-3d flex size-full flex-col" ref={mountRef}>
       {children}
     </div>
   );

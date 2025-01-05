@@ -14,8 +14,8 @@ const Taskbar = (): JSX.Element => {
   return (
     <footer
       data-id="taskbar"
-      className="absolute inset-x-0 bottom-0 z-50 w-dvw"
-      style={{ top: `calc(100% - ${TASKBAR_HEIGHT.toString()}px)` }}
+      className="z-50 w-dvw bg-red-500"
+      style={{ height: TASKBAR_HEIGHT }}
       onMouseLeave={(event: React.MouseEvent) => {
         event.stopPropagation();
       }}
@@ -33,10 +33,7 @@ const Taskbar = (): JSX.Element => {
         clearContextState();
       }}
     >
-      <nav
-        style={{ backgroundColor: taskbarColor }}
-        className=" absolute bottom-0 flex h-10 w-full gap-1 px-4 py-1"
-      >
+      <nav style={{ backgroundColor: taskbarColor }} className="flex size-full gap-1 p-1 pl-8 pr-4">
         <ul className="flex size-full items-center justify-start gap-1">
           {entries.map((entryId) => {
             const entry = getEntry({ id: entryId });

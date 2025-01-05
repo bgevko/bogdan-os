@@ -14,7 +14,7 @@
     "prepare": "husky",
     "test": "vitest --run",
     "test:w": "vitest --watch",
-    "test:current": "vitest snapping.test",
+    "test:current": "vitest file-system.test.tsx",
     "test:ui": "vitest --ui"
   },
   "lint-staged": {

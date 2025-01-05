@@ -9,7 +9,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
 import { applications } from '@/defaults';
-import { TASKBAR_HEIGHT, GRID_CELL_SIZE } from '@/themes';
+import { TASKBAR_HEIGHT, GRID_CELL_SIZE, DEFAULT_WINDOW_SIZE } from '@/themes';
 
 enableMapSet();
 
@@ -124,9 +124,9 @@ interface Metadata {
   disableDelete?: boolean;
 
   // window stuff
+  defaultWindowSize: Size;
   disableMobile?: boolean;
   isOpen?: boolean;
-  defaultWindowSize?: { width: number; height: number };
   windowSize?: { width: number; height: number };
   windowPosition?: Position;
   windowState?: 'minimized' | 'maximized' | 'normal';
@@ -203,6 +203,7 @@ interface StoreActions {
   getLookup: () => Map<EntryId, FileSystemEntry>;
   getIsIconSelected: (id: EntryId) => boolean;
   getAllSelectedIds: () => EntryId[];
+  getAllSelectedIdsSameParent: (parentId: EntryId) => EntryId[];
   getIconPosition: (id: EntryId) => Position | null;
   getIconPositions: (parentId: EntryId) => { id: EntryId; position: Position }[];
   getIsIconPositionEmpty: (parentId: EntryId, position: Position) => boolean;
@@ -245,6 +246,7 @@ interface StoreActions {
   clearIconSelection: () => void;
   setDisableSelect: (isDisabled: boolean) => void;
   setIsIconDragging: (id: EntryId, isDragging: boolean) => void;
+  clearAllIconsDragging: () => void;
   setIsOpen: (id: EntryId, isOpen: boolean) => void;
   setWindowState: (id: EntryId, state: 'minimized' | 'maximized' | 'normal') => void;
   setWindowPosition: (id: EntryId, position: Position) => void;
@@ -334,6 +336,7 @@ const initialState: StoreState = {
   root: {
     id: 'root',
     iconPosition: { x: 0, y: 0 },
+    defaultWindowSize: DEFAULT_WINDOW_SIZE,
     name: '',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -356,18 +359,18 @@ const initialState: StoreState = {
           width: window.innerWidth,
           height: window.innerHeight - TASKBAR_HEIGHT,
         },
-        children: [...applications.keys(), 'test-folder', 'trash'],
+        children: [...applications.keys(), 'test-folder', 'other-folder'],
       },
     ],
     [
-      'trash',
+      'other-folder',
       {
-        id: 'trash',
+        id: 'other-folder',
         iconPosition: { x: 0, y: 0 },
         iconColor: '#fff',
         defaultWindowSize: { width: 500, height: 500 },
         icon: 'folder',
-        name: 'Trash',
+        name: 'OtherFolder',
         createdAt: new Date(),
         updatedAt: new Date(),
         parentId: 'desktop',
@@ -435,6 +438,7 @@ const testState: StoreState = {
   root: {
     id: 'root',
     iconPosition: { x: 0, y: 0 },
+    defaultWindowSize: DEFAULT_WINDOW_SIZE,
     name: '',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -569,7 +573,20 @@ const useFileSystemStore = create<FileSystemState>()(
     getAllSelectedIds: () => {
       return get().selected;
     },
-
+    getAllSelectedIdsSameParent: (parentId) => {
+      const entry = get().getEntry({ id: parentId });
+      if (!entry || entry.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:GetAllSelectedIdsSameParent: Entry with id ${parentId} not found or not a directory`,
+          );
+        return [];
+      }
+      return get().selected.filter((selectedId) => {
+        const selectedEntry = get().getEntry({ id: selectedId });
+        return selectedEntry?.parentId === parentId;
+      });
+    },
     getIconPosition: (id) => {
       const entry = get().getEntry({ id });
       if (!entry) {
@@ -1000,6 +1017,18 @@ const useFileSystemStore = create<FileSystemState>()(
         } else {
           state.dragging = state.dragging.filter((draggingId) => draggingId !== id);
         }
+      });
+    },
+    clearAllIconsDragging: () => {
+      set((state) => {
+        const dragging = state.dragging;
+        for (const id of dragging) {
+          const entry = state.lookup.get(id);
+          if (entry) {
+            entry.isIconDragging = false;
+          }
+        }
+        state.dragging = [];
       });
     },
     setIsOpen: (id, isOpen) => {
@@ -1475,8 +1504,8 @@ const useFileSystemStore = create<FileSystemState>()(
         const addOrSubtract = Math.random() < 0.5 ? -1 : 1;
         const [winWidth, winHeight] = [window.innerWidth, window.innerHeight - TASKBAR_HEIGHT];
         const pos = {
-          x: winWidth / 2 - entry.defaultWindowSize!.width / 2 + offset * addOrSubtract,
-          y: winHeight / 2 - entry.defaultWindowSize!.height / 2 + offset * addOrSubtract,
+          x: winWidth / 2 - entry.defaultWindowSize.width / 2 + offset * addOrSubtract,
+          y: winHeight / 2 - entry.defaultWindowSize.height / 2 + offset * addOrSubtract,
         };
         state.lookup.get(id)!.windowPosition = pos;
 

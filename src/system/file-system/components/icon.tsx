@@ -133,8 +133,9 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             style={{
               transform: `
                 translate(${dropGuidePos.x.toString()}px, ${dropGuidePos.y.toString()}px)
+                translateZ(1px)
               `,
-              zIndex: 49,
+              zIndex: 50,
             }}
           />
         )}
@@ -149,7 +150,6 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             'w-[80px] h-[88px]',
             'absolute px-2 rounded-md background-transparent cursor-default flex flex-col items-center focus:outline-none',
             isIconSelected && 'bg-black/20',
-            isIconDragging && 'z-50',
             !isIconDragging && 'transition-transform duragion 500',
             !isIconSelected && !isAnyIconDragging && 'hover:bg-black/10',
           )}
@@ -157,8 +157,10 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             transform: `
               translate(${entry.iconPosition.x.toString()}px, ${entry.iconPosition.y.toString()}px)
               scale(${isIconDragging ? '1.1' : '1'})
+              ${isIconDragging ? 'translateZ(1px)' : ''}
             `,
             pointerEvents: isIconDragging ? 'none' : 'auto',
+            zIndex: isIconDragging ? 50 : 0,
           }}
           onClick={(event) => {
             event.stopPropagation();

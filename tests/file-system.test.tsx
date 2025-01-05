@@ -27,6 +27,7 @@ describe('useFileSystemStore', () => {
    */
   it('should create a new file/folder', () => {
     act(() => {
+      store.resetForTest();
       // Files
       const file1Id = store.createEntry({
         parentId: 'root',

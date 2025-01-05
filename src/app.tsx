@@ -10,8 +10,8 @@ const App = (): React.ReactElement => {
     <>
       <Wallpaper>
         <WindowSystem />
-        <Taskbar />
         <Desktop />
+        <Taskbar />
       </Wallpaper>
       <MaximizedWindowHeader />
       <ContextMenu />

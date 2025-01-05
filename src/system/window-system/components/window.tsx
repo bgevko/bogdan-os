@@ -69,6 +69,7 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
     <section
       role="application"
       className={cn(
+        'preserve-3d',
         'window-shadow absolute flex flex-col rounded-lg',
         !isWindowMoving && !isWindowResizing && 'transition-transform duration-200 ease-out',
       )}
@@ -77,6 +78,7 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
         transform: `
           translate(${posX.toString()}px, ${posY.toString()}px)
           scale(${transformScale.toString()})
+          translateZ(0px)
         `,
         width: size.width,
         height: size.height,
@@ -100,19 +102,16 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
       {/* Window Body */}
       {isReady && !willTransform && (
         <article
-          className="relative flex flex-1 rounded-b-lg transition-opacity duration-200 ease-linear"
+          className="preserve-3d relative flex flex-1 rounded-b-lg transition-opacity duration-200 ease-linear"
           style={{
             opacity: contentOpacity,
           }}
         >
           <div
-            className="flex size-full flex-col"
+            className="preserve-3d flex size-full flex-col"
             onMouseDown={() => {
               pushFocus(entry.id);
               clearContextState();
-            }}
-            style={{
-              filter: isFocused ? 'none' : 'opacity(80%)',
             }}
           >
             {windowState !== 'maximized' && <Menubar entry={entry} />}

@@ -42,6 +42,9 @@ const Directory = ({ entry }: AppComponent): React.ReactElement => {
       />
       <div
         className="relative flex size-full p-4"
+        style={{
+          transformStyle: 'preserve-3d',
+        }}
         data-id="directory"
         onContextMenu={(event) => {
           event.preventDefault();

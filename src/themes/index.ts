@@ -1,4 +1,6 @@
-export const TASKBAR_HEIGHT = 48;
+import { Size } from '@/system/file-system/store';
+
+export const TASKBAR_HEIGHT = 40;
 export const CONTEXT_MENU_WIDTH = 150;
 export const CONTEXT_MENU_ITEM_HEIGHT = 30;
 export const MENU_BAR_HEIGHT = 20;
@@ -8,3 +10,4 @@ export const MAXIMIZED_WINDOW_HEADER_HEIGHT = 30;
 export const ICON_SIZE = { width: 80, height: 88 };
 export const GRID_CELL_SIZE = 100;
 export const CLOSE_ANIMATION_DURATION = 200;
+export const DEFAULT_WINDOW_SIZE: Size = { width: 400, height: 500 };
