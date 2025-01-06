@@ -56,6 +56,7 @@ export const applications = new Map<string, Omit<AppWithExtras, 'iconPosition'>>
       ...appMetadata,
       id: 'readme',
       icon: 'file',
+      iconColor: 'cyan',
       name: 'Readme',
       disableMobile: false,
       component: lazy(() => import('@/apps/readme')),
@@ -92,20 +93,20 @@ export const applications = new Map<string, Omit<AppWithExtras, 'iconPosition'>>
       },
     },
   ],
-  [
-    'hello-txt',
-    {
-      ...appMetadata,
-      id: 'hello-txt',
-      icon: 'file',
-      name: 'Hello',
-      extension: '.txt',
-      content: 'Hello, World!',
-      component: lazy(() => import('@/apps/hello-world')),
-      disableMobile: true,
-      defaultWindowSize: { width: 520, height: 550 },
-    },
-  ],
+  // [
+  //   'hello-txt',
+  //   {
+  //     ...appMetadata,
+  //     id: 'hello-txt',
+  //     icon: 'file',
+  //     name: 'Hello',
+  //     extension: '.txt',
+  //     content: 'Hello, World!',
+  //     component: lazy(() => import('@/apps/hello-world')),
+  //     disableMobile: true,
+  //     defaultWindowSize: { width: 520, height: 550 },
+  //   },
+  // ],
 ]);
 
 /*

@@ -136,11 +136,18 @@ interface Metadata {
   disableMaximize?: boolean;
   willTransform?: boolean;
   contentOpacity?: number;
-  windowCallback?: () => void;
+
+  // Window callbacks
+  windowOnUpdateCallback?: () => void;
+  windowOnCloseCallback?: () => void;
+  windowOnMinimizeCallback?: () => void;
 
   // Animation meta
   transformScale?: number; // For window and taskbar entry animations
   iconTransformScale?: number; // For icon animations
+
+  // Component state
+  isComponentMounted?: boolean;
 }
 
 /*
@@ -251,6 +258,7 @@ interface StoreActions {
   getIsDragOverFolder: () => boolean;
   getIsDisableMaximize: (id: EntryId) => boolean;
   getIsFullscreen: () => boolean;
+  getIsComponentMounted: (id: EntryId) => boolean;
 
   /*
    ********************************
@@ -277,14 +285,16 @@ interface StoreActions {
   setContentOpacity: (id: EntryId, opacity: number) => void;
   setWindowSize: (id: EntryId, { width, height }: { width: number; height: number }) => void;
   setIsMaximizedWindowHeaderVisible: (isVisible: boolean) => void;
-  setWindowCallback: (id: EntryId, callback: () => void) => void;
-  clearWindowCallback: (id: EntryId) => void;
+  setWindowOnUpdateCallback: (id: EntryId, callback: () => void) => void;
   setContextState: (contextState: ContextState) => void;
   clearContextState: () => void;
   setIsUsingSelectRect: (isUsing: boolean) => void;
   setDropTargetId: (id: EntryId) => void;
   setDropTargetIconId: (id: EntryId | null) => void;
   setDragInitiatorId: (id: EntryId | null) => void;
+  setIsComponentMounted: (id: EntryId, isMounted: boolean) => void;
+  setWindowOnCloseCallback: (id: EntryId, callback: () => void) => void;
+  setWindowOnMinimizeCallback: (id: EntryId, callback: () => void) => void;
 
   /*
    ********************************
@@ -325,8 +335,10 @@ interface StoreActions {
   toggleSizeToViewport: (id: EntryId) => void;
   pushFocus: (id: EntryId) => void;
   popFocus: () => void;
-  executeWindowCallback: (id: EntryId) => void;
   resetWindow(id: EntryId): void;
+  executeWindowOnUpdateCallback: (id: EntryId) => void;
+  executeWindowOnCloseCallback: (id: EntryId) => void;
+  executeWindowOnMinimizeCallback: (id: EntryId) => void;
 }
 interface FileSystemState extends StoreState, StoreActions {}
 
@@ -340,6 +352,7 @@ interface FileSystemState extends StoreState, StoreActions {}
 const flags = {
   disableSelect: false,
   windowBlur: false,
+  isFullscreen: false,
 };
 
 const windowState = {
@@ -379,25 +392,8 @@ const initialState: StoreState = {
           width: window.innerWidth,
           height: window.innerHeight - TASKBAR_HEIGHT,
         },
-        children: [...applications.keys(), 'test-folder', 'other-folder'],
+        children: [...applications.keys(), 'test-folder'],
         disableDelete: true,
-      },
-    ],
-    [
-      'other-folder',
-      {
-        id: 'other-folder',
-        iconPosition: { x: 0, y: 0 },
-        iconColor: '#fff',
-        defaultWindowSize: { width: 500, height: 500 },
-        icon: 'folder',
-        name: 'OtherFolder',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        parentId: 'desktop',
-        type: 'directory',
-        children: [],
-        disableDelete: false,
       },
     ],
     [
@@ -1012,6 +1008,9 @@ const useFileSystemStore = create<FileSystemState>()(
     getIsFullscreen: () => {
       return get().isFullscreen ?? false;
     },
+    getIsComponentMounted: (id) => {
+      return get().getEntry({ id })?.isComponentMounted ?? false;
+    },
     // getters end
 
     /*
@@ -1233,7 +1232,7 @@ const useFileSystemStore = create<FileSystemState>()(
         state.isMaximizedWindowHeaderVisible = isVisible;
       });
     },
-    setWindowCallback: (id, callback) => {
+    setWindowOnUpdateCallback: (id, callback) => {
       set((state) => {
         const entry = state.lookup.get(id);
         if (!entry) {
@@ -1241,20 +1240,7 @@ const useFileSystemStore = create<FileSystemState>()(
             console.warn(`FileSystemStore:SetWindowUpdateCallback: Entry with id ${id} not found`);
           return;
         }
-        entry.windowCallback = callback;
-      });
-    },
-    clearWindowCallback: (id) => {
-      set((state) => {
-        const entry = state.lookup.get(id);
-        if (!entry) {
-          if (DEBUG)
-            console.warn(
-              `FileSystemStore:ClearWindowUpdateCallback: Entry with id ${id} not found`,
-            );
-          return;
-        }
-        entry.windowCallback = undefined;
+        entry.windowOnUpdateCallback = callback;
       });
     },
     setContextState: (contextState) => {
@@ -1297,6 +1283,41 @@ const useFileSystemStore = create<FileSystemState>()(
     setDragInitiatorId: (id) => {
       set((state) => {
         state.dragInitiatorId = id;
+      });
+    },
+    setIsComponentMounted: (id, isMounted) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetIsComponentMounted: Entry with id ${id} not found`);
+          return;
+        }
+        entry.isComponentMounted = isMounted;
+      });
+    },
+    setWindowOnCloseCallback: (id, callback) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetWindowOnCloseCallback: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowOnCloseCallback = callback;
+      });
+    },
+    setWindowOnMinimizeCallback: (id, callback) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(
+              `FileSystemStore:SetWindowOnMinimizeCallback: Entry with id ${id} not found`,
+            );
+          return;
+        }
+        entry.windowOnMinimizeCallback = callback;
       });
     },
     // setters end
@@ -1652,6 +1673,15 @@ const useFileSystemStore = create<FileSystemState>()(
         // Set window back to default window size
         const defaultWindowSize = get().getDefaultWindowSize(id);
         entry.windowSize = defaultWindowSize;
+
+        // if there's a close callback, call it
+        if (entry.windowOnCloseCallback) {
+          entry.windowOnCloseCallback();
+        }
+        // clear callbacks
+        entry.windowOnUpdateCallback = undefined;
+        entry.windowOnCloseCallback = undefined;
+        entry.windowOnMinimizeCallback = undefined;
       });
     },
 
@@ -1717,6 +1747,11 @@ const useFileSystemStore = create<FileSystemState>()(
 
         // Set the transform scale
         entry.transformScale = 0;
+
+        // if there's a minimize callback, call it
+        if (entry.windowOnMinimizeCallback) {
+          entry.windowOnMinimizeCallback();
+        }
       });
     },
     toggleMinimize: (id) => {
@@ -1741,6 +1776,11 @@ const useFileSystemStore = create<FileSystemState>()(
 
         // Set the transform scale
         entry.transformScale = entry.windowState === 'minimized' ? 0 : 1;
+
+        // if there's a minimize callback, call it
+        if (entry.windowState === 'minimized' && entry.windowOnMinimizeCallback) {
+          entry.windowOnMinimizeCallback();
+        }
       });
     },
     toggleMaximize: (id) => {
@@ -1857,14 +1897,42 @@ const useFileSystemStore = create<FileSystemState>()(
         state.windowBlur = focused.length === 0;
       });
     },
-    executeWindowCallback: (id) => {
+    executeWindowOnUpdateCallback: (id) => {
       const entry = get().getEntry({ id });
       if (!entry) {
         if (DEBUG)
-          console.warn(`FileSystemStore:SyncAfterWindowChange: Entry with id ${id} not found`);
+          console.warn(`FileSystemStore:executeWindowCallbac: Entry with id ${id} not found`);
         return;
       }
-      const callback = entry.windowCallback;
+      const callback = entry.windowOnUpdateCallback;
+      if (callback) {
+        callback();
+      }
+    },
+    executeWindowOnCloseCallback: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:executeWindowOnCloseCallbac: Entry with id ${id} not found`,
+          );
+        return;
+      }
+      const callback = entry.windowOnCloseCallback;
+      if (callback) {
+        callback();
+      }
+    },
+    executeWindowOnMinimizeCallback: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:executeWindowOnMinimizeCallback: Entry with id ${id} not found`,
+          );
+        return;
+      }
+      const callback = entry.windowOnMinimizeCallback;
       if (callback) {
         callback();
       }

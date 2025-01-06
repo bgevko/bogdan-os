@@ -36,6 +36,8 @@
 
 - Fix the jumpy loading state
 - Renaming files and folders
-- Create sfx for droping into a folder
+- Create sfx for dropping into a folder
+- Create common commands for the menubar system
 - Make folder being dropped into animate slightly on drop
 - Update Readme
+- Fix slow load for directory when more than one file is inside

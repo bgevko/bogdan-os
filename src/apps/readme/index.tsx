@@ -1,4 +1,4 @@
-import '@/apps/readme/styles.scss';
+import '@/apps/readme/styles.css';
 
 const Readme = (): React.ReactElement => (
   <div
@@ -37,12 +37,14 @@ const Readme = (): React.ReactElement => (
 
     <p className="font-bold"> You can:</p>
     <ul>
-      <li>- Use Excalidraw</li>
-      <li>- Create files & folders (still limited)</li>
-      <li>- Drag things around</li>
-      <li>- Play Solitaire</li>
-      <li>- Create code block headers</li>
-      <li className="italic">SOON: Play Tetris</li>
+      <li>- Create files and drag things around.</li>
+      <li>- Use the available apps</li>
+      <li>
+        - <em>In Progress:</em> Text file support
+      </li>
+      <li>
+        - <em>In Progress:</em> Tetris
+      </li>
     </ul>
 
     <p>Thanks for visiting!</p>

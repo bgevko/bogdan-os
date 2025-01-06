@@ -48,8 +48,9 @@ const actions: MenubarItems = new Map([
         'Quit',
         {
           callback: (entry) => {
+            if (!entry) return;
             const closeEntry = useFilesystemStore.getState().closeEntry;
-            closeEntry(entry?.id ?? '');
+            closeEntry(entry.id);
           },
         },
       ],

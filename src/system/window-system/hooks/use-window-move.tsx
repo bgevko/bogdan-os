@@ -22,7 +22,9 @@ const UseWindowMove = (entry: FileSystemEntry): ReturnTypes => {
   const minimizeEntry = useFileSystemStore((state) => state.minimizeEntry);
   const toggleMinimize = useFileSystemStore((state) => state.toggleMinimize);
   const setContentOpacity = useFileSystemStore((state) => state.setContentOpacity);
-  const executeWindowCallback = useFileSystemStore((state) => state.executeWindowCallback);
+  const executeWindowOnUpdateCallback = useFileSystemStore(
+    (state) => state.executeWindowOnUpdateCallback,
+  );
   const windowState = useFileSystemStore((state) => state.getWindowState(entry.id));
 
   const [startingPosition, setStartingPosition] = useState({ x: 0, y: 0 });
@@ -59,14 +61,14 @@ const UseWindowMove = (entry: FileSystemEntry): ReturnTypes => {
     if (adjustedPos.x !== pos.x || adjustedPos.y !== pos.y) {
       setWindowPosition(entry.id, adjustedPos);
     }
-    executeWindowCallback(entry.id);
+    executeWindowOnUpdateCallback(entry.id);
   }, [
     entry.id,
     setIsMoving,
     setWindowPosition,
     getWindowPosition,
     getWindowSize,
-    executeWindowCallback,
+    executeWindowOnUpdateCallback,
   ]);
 
   /*
@@ -92,7 +94,7 @@ const UseWindowMove = (entry: FileSystemEntry): ReturnTypes => {
   // Sets a flag to let the window know to hide content
   // while minimizing / restoring. In the window component,
   // this is used to stop rendering window content before
-  // CSS transitions begin. It helps with performance.
+  // CSS transitions begin. It helps with performance..i think.
   const handleMinimize = useCallback(() => {
     setWillTransform(entry.id, true);
     setContentOpacity(entry.id, 0);

@@ -29,7 +29,9 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
   const setSize = useFileSystemStore((state) => state.setWindowSize);
   const setIsWindowResizing = useFileSystemStore((state) => state.setIsWindowResizing);
   const toggleMaximize = useFileSystemStore((state) => state.toggleMaximize);
-  const executeWindowCallback = useFileSystemStore((state) => state.executeWindowCallback);
+  const executeWindowOnUpdateCallback = useFileSystemStore(
+    (state) => state.executeWindowOnUpdateCallback,
+  );
   const closeEntry = useFileSystemStore((state) => state.closeEntry);
   const setTransformScale = useFileSystemStore((state) => state.setTransformScale);
 
@@ -57,8 +59,8 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
   const handleMouseUp = useCallback(() => {
     setResizeDirection(null);
     setIsWindowResizing(entry.id, false);
-    executeWindowCallback(entry.id);
-  }, [entry.id, setIsWindowResizing, executeWindowCallback]);
+    executeWindowOnUpdateCallback(entry.id);
+  }, [entry.id, setIsWindowResizing, executeWindowOnUpdateCallback]);
 
   /*
    ***********************************
@@ -167,9 +169,9 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
     // Slight wait before calling the update callback
     // this lets transformations finish before updating
     setTimeout(() => {
-      executeWindowCallback(entry.id);
+      executeWindowOnUpdateCallback(entry.id);
     }, CLOSE_ANIMATION_DURATION);
-  }, [entry.id, toggleMaximize, executeWindowCallback]);
+  }, [entry.id, toggleMaximize, executeWindowOnUpdateCallback]);
 
   /*
    ***********************************

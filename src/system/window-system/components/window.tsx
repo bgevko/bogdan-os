@@ -1,8 +1,10 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-import { type ReactElement, ReactNode, useState, useMemo, useEffect } from 'react';
+import { type ReactElement, Suspense, useState, useMemo, useEffect } from 'react';
 
+import { getComponent } from '@/defaults';
 import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store';
 import Menubar from '@/system/menubar';
+import Loading from '@/system/window-system/components/loading';
 import ResizeHandles from '@/system/window-system/components/resize-handles';
 import WindowHeader from '@/system/window-system/components/window-header';
 import { WINDOW_HEADER_HEIGHT } from '@/themes';
@@ -11,10 +13,9 @@ import cn from '@/utils/format';
 
 interface WindowProperties {
   entry: FileSystemEntry;
-  children: ReactNode;
 }
 
-const Window = ({ entry, children }: WindowProperties): ReactElement => {
+const Window = ({ entry }: WindowProperties): ReactElement => {
   const pos = useFileSystemStore((state) => state.getWindowPosition(entry.id));
   const size = useFileSystemStore((state) => state.getWindowSize(entry.id));
   const windowState = useFileSystemStore((state) => state.getWindowState(entry.id));
@@ -34,7 +35,7 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
 
   const [isReady, setIsReady] = useState(false);
   const LazyIcon = useMemo(() => getLazyIcon('secret'), [entry.id]);
-
+  const Component = useMemo(() => getComponent(entry.id, entry.type), [entry.id, entry.type]);
   /*
    ***********************************
    *  Not Ready For Smaller Screens  *
@@ -136,8 +137,10 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
             ) : (
               <>
                 {windowState !== 'maximized' && <Menubar entry={entry} />}
-                {/* Content */}
-                {children}
+                {/* App Componet */}
+                <Suspense fallback={<Loading />}>
+                  {Component && <Component entry={entry} />}
+                </Suspense>
               </>
             )}
           </div>

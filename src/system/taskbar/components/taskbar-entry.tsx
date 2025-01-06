@@ -60,7 +60,7 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
         width: TASKBAR_ENTRY_WIDTH,
         height: TASKBAR_ENTRY_HEIGHT,
         transform: `
-          scale(${transformScale.toString()})
+          scale(${isMinimized ? '1' : transformScale.toString()})
         `,
       }}
       onClick={(event) => {
