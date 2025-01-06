@@ -2,6 +2,7 @@ import { useMemo, useEffect, useState, useRef, Suspense } from 'react';
 
 import useFileSystemsStore, { type FileSystemEntry } from '@/system/file-system/store';
 import UseWindowMove from '@/system/window-system/hooks/use-window-move';
+import { TASKBAR_ENTRY_WIDTH, TASKBAR_ENTRY_HEIGHT } from '@/themes';
 import { getLazyIcon, getEventTargetDataId } from '@/utils';
 import cn from '@/utils/format';
 
@@ -10,12 +11,13 @@ interface taskbarEntryProperties {
 }
 
 const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
-  const isFocused = useFileSystemsStore((state) => state.getIsWindowFocused(entry.id));
-  const isOpen = useFileSystemsStore((state) => state.getIsOpen(entry.id));
   const pushFocus = useFileSystemsStore((state) => state.pushFocus);
   const setContextState = useFileSystemsStore((state) => state.setContextState);
   const clearContextState = useFileSystemsStore((state) => state.clearContextState);
   const windowState = useFileSystemsStore((state) => state.getWindowState(entry.id));
+  const isFocused = useFileSystemsStore((state) => state.getIsWindowFocused(entry.id));
+  const isOpen = useFileSystemsStore((state) => state.getIsOpen(entry.id));
+  const transformScale = useFileSystemsStore((state) => state.getTransformScale(entry.id));
   const { handleToggleMinimize } = UseWindowMove(entry);
 
   const [buttonDown, setButtonDown] = useState(false);
@@ -49,11 +51,18 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
       data-testid="taskbar-entry"
       data-id="taskbar-entry"
       className={cn(
-        'rounded-[4px] flex h-full w-[112px] items-center justify-center gap-1 text-grey-800 cursor-pointer select-none',
+        'rounded-[4px] flex items-center justify-center gap-1 text-grey-800 cursor-pointer select-none transition-transform duration-200',
         isMinimized && 'embossed',
         isFocused && 'debossed',
         buttonDown ? 'debossed' : 'embossed',
       )}
+      style={{
+        width: TASKBAR_ENTRY_WIDTH,
+        height: TASKBAR_ENTRY_HEIGHT,
+        transform: `
+          scale(${transformScale.toString()})
+        `,
+      }}
       onClick={(event) => {
         const eventTargetDataId = getEventTargetDataId(event);
         if (eventTargetDataId === 'taskbar-entry') {
@@ -104,7 +113,6 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
         }
       }}
     >
-      {/* <DynamicIcons path={path} color="white" size={32} shadow={false} /> */}
       <Suspense fallback={<span className="size-8 animate-pulse rounded-md" />}>
         <LazyIcon width={32} height={32} fill="#fff" className="select-none" />
       </Suspense>

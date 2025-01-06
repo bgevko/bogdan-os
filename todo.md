@@ -34,11 +34,8 @@
 
 ### TODO
 
-- Full screen mode context menu is slightly too low.
+- Fix the jumpy loading state
 - Renaming files and folders
-- Update Readme
-- Create a changelog
 - Create sfx for droping into a folder
 - Make folder being dropped into animate slightly on drop
-- Make icons animate in/out when deleting/creating
-- Make taskbar entry close before closing animation is complete
+- Update Readme

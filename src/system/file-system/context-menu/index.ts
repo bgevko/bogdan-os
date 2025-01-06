@@ -2,6 +2,7 @@ import useFileSystemStore, {
   ContextMenuItems,
   ContextMenuAction,
 } from '@/system/file-system/store';
+import { CLOSE_ANIMATION_DURATION } from '@/themes';
 
 const directoryContextMenuItems: ContextMenuItems = new Map([
   [
@@ -11,7 +12,7 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
         'New Folder',
         {
           callback: (entry) => {
-            entry = entry!;
+            if (!entry) return;
             useFileSystemStore.getState().createEntry({
               parentId: entry.id,
               name: 'NewFolder',
@@ -48,9 +49,15 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
         {
           callback: () => {
             const selected = useFileSystemStore.getState().getAllSelectedIds();
+            const setIconTransformScale = useFileSystemStore.getState().setIconTransformScale;
             for (const id of selected) {
-              useFileSystemStore.getState().deleteEntry(id);
+              setIconTransformScale(id, 0);
             }
+            setTimeout(() => {
+              for (const id of selected) {
+                useFileSystemStore.getState().deleteEntry(id);
+              }
+            }, CLOSE_ANIMATION_DURATION);
           },
           disableCallback: (entry) => {
             const canDeleteSelection = useFileSystemStore

@@ -134,10 +134,13 @@ interface Metadata {
   isWindowResizing?: boolean;
   disableResize?: boolean;
   disableMaximize?: boolean;
-  transformScale?: number;
   willTransform?: boolean;
   contentOpacity?: number;
   windowCallback?: () => void;
+
+  // Animation meta
+  transformScale?: number; // For window and taskbar entry animations
+  iconTransformScale?: number; // For icon animations
 }
 
 /*
@@ -229,6 +232,7 @@ interface StoreActions {
   getIsWindowMoving: (id: EntryId) => boolean;
   getIsWindowResizing: (id: EntryId) => boolean;
   getTransformScale: (id: EntryId) => number;
+  getIconTransformScale: (id: EntryId) => number;
   getWillTransform: (id: EntryId) => boolean;
   getContentOpacity: (id: EntryId) => number;
   getIsDisabledResize: (id: EntryId) => boolean;
@@ -268,6 +272,7 @@ interface StoreActions {
   setIsWindowMoving: (id: EntryId, isMoving: boolean) => void;
   setIsWindowResizing: (id: EntryId, isResizing: boolean) => void;
   setTransformScale: (id: EntryId, scale: number) => void;
+  setIconTransformScale: (id: EntryId, scale: number) => void;
   setWillTransform: (id: EntryId, willTransform: boolean) => void;
   setContentOpacity: (id: EntryId, opacity: number) => void;
   setWindowSize: (id: EntryId, { width, height }: { width: number; height: number }) => void;
@@ -869,6 +874,15 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return entry.transformScale ?? 0;
     },
+    getIconTransformScale: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetIconTransformScale: Entry with id ${id} not found`);
+        return 1;
+      }
+      return entry.iconTransformScale ?? 0;
+    },
     getWillTransform: (id) => {
       const entry = get().getEntry({ id });
       if (!entry) {
@@ -1169,6 +1183,17 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
         entry.transformScale = scale;
+      });
+    },
+    setIconTransformScale: (id, scale) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:SetIconTransformScale: Entry with id ${id} not found`);
+          return;
+        }
+        entry.iconTransformScale = scale;
       });
     },
     setWillTransform: (id, willTransform) => {
@@ -1567,6 +1592,9 @@ const useFileSystemStore = create<FileSystemState>()(
 
         // Update parentId of entry
         sourceEntry.parentId = targetParentId;
+
+        // Set icon scale to 1, to avoid animating in. I mostly want an abrupt drop, not a smooth transition here
+        sourceEntry.iconTransformScale = 1;
       });
     },
 

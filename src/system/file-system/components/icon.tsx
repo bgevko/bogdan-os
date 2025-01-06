@@ -11,7 +11,7 @@ import {
   snapToTargetGrid,
   transformPosition,
 } from '@/system/file-system/utils';
-import { GRID_CELL_SIZE } from '@/themes';
+import { GRID_CELL_SIZE, ICON_ANIMATION_DURATION } from '@/themes';
 import { getLazyIcon, getEventTargetDataId } from '@/utils';
 import cn from '@/utils/format';
 
@@ -44,6 +44,8 @@ const FileExplorerIcon: React.FC<IconProps> = ({
   const pushFocus = useFileSystemStore((state) => state.pushFocus);
   const setDropTargetIconId = useFileSystemStore((state) => state.setDropTargetIconId);
   const getIconAtPosition = useFileSystemStore((state) => state.getIconAtPosition);
+  const getIconTransformScale = useFileSystemStore((state) => state.getIconTransformScale);
+  const setTransformScale = useFileSystemStore((state) => state.setIconTransformScale);
   const isDragOverFolder = useFileSystemStore((state) => state.getIsDragOverFolder());
   const isIconSelected = useFileSystemStore((state) => state.getIsIconSelected(entry.id));
   const isIconDragging = useFileSystemStore((state) => state.getIsIconDragging(entry.id));
@@ -55,6 +57,20 @@ const FileExplorerIcon: React.FC<IconProps> = ({
     UseIconSelect(entry, selectRectVisible);
   const { handleDragStart, handleMouseMove, handleMouseUp } = UseIconDrag(entry, dropTargetId);
   const LazyIcon = useMemo(() => getLazyIcon(entry.icon!), [entry.icon]);
+
+  /*
+   ***********************************
+   *    Icon Smooth In transition    *
+   ***********************************
+   */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setTransformScale(entry.id, 1);
+    }, 50);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [entry.id, setTransformScale, getIconTransformScale]);
 
   /*
    ********************************
@@ -184,12 +200,13 @@ const FileExplorerIcon: React.FC<IconProps> = ({
   return (
     <Suspense
       fallback={
-        <div
-          className="absolute size-[80px] animate-pulse bg-gray-500/10"
-          style={{
-            transform: `translate(${entry.iconPosition.x.toString()}px, ${entry.iconPosition.y.toString()}px)`,
-          }}
-        />
+        <></>
+        // <div
+        //   className="absolute size-[80px] animate-pulse bg-gray-500/10"
+        //   style={{
+        //     transform: `translate(${entry.iconPosition.x.toString()}px, ${entry.iconPosition.y.toString()}px)`,
+        //   }}
+        // />
       }
     >
       <>
@@ -198,6 +215,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
           <span
             className={cn(
               'border-black pointer-events-none absolute h-[88px] w-[80px] border-2 border-dashed transition-transform',
+              `duragion-${ICON_ANIMATION_DURATION.toString()}`,
               isValidDrop && 'bg-green-500/10 border-green-700',
               isInvalidDrop && 'bg-red-500/10 border-red-700',
               // When any other non-initator hovers over any other icon, negative feedback
@@ -230,7 +248,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
           style={{
             transform: `
               translate(${entry.iconPosition.x.toString()}px, ${entry.iconPosition.y.toString()}px)
-              scale(${isIconDragging ? '1.1' : '1'})
+              scale(${isIconDragging ? '1.1' : getIconTransformScale(entry.id).toString()})
               ${isIconDragging ? 'translateZ(1px)' : ''}
             `,
             pointerEvents: isIconDragging ? 'none' : 'auto',
