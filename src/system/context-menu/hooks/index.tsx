@@ -10,7 +10,12 @@ import useFileSystemStore, {
   ContextMenuItem,
   ContextMenuItems,
 } from '@/system/file-system/store';
-import { CONTEXT_MENU_WIDTH, CONTEXT_MENU_ITEM_HEIGHT, TASKBAR_HEIGHT } from '@/themes';
+import {
+  CONTEXT_MENU_WIDTH,
+  CONTEXT_MENU_ITEM_HEIGHT,
+  TASKBAR_HEIGHT,
+  MAXIMIZED_WINDOW_HEADER_HEIGHT,
+} from '@/themes';
 
 interface ReturnTypes {
   contextMenuStyles: CSSProperties | null;
@@ -26,7 +31,7 @@ const UseContextMenu = (contextState: ContextState | null): ReturnTypes => {
   const contextMenuStyles = contextMenuOptions?.styles ?? null;
   const contextMenuClassname = contextMenuOptions?.className ?? null;
   const contextEntry = useFileSystemStore((state) => state.getEntry({ id: contextState?.id }));
-
+  const getIsFullscreen = useFileSystemStore((state) => state.getIsFullscreen);
   const [contextMenuItemsFromSource, setContextMenuItemsFromSource] =
     useState<ContextMenuItems | null>(null);
 
@@ -89,8 +94,12 @@ const UseContextMenu = (contextState: ContextState | null): ReturnTypes => {
     if (pos.x + CONTEXT_MENU_WIDTH > windowWidth) {
       x = windowWidth - CONTEXT_MENU_WIDTH;
     }
-    return { x, y };
-  }, [contextState, contextMenuItem]);
+    const isFullscreen = getIsFullscreen();
+    return {
+      x,
+      y: isFullscreen ? y - MAXIMIZED_WINDOW_HEADER_HEIGHT : y,
+    };
+  }, [contextState, contextMenuItem, getIsFullscreen]);
 
   return {
     contextMenuStyles,

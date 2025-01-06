@@ -34,8 +34,6 @@
 
 ### TODO
 
-- A folder shouldn't be able to be deleted if any child of it has the disableDelete property enabled
-- Full screen mode has unnecessary grid offset on the bottom
 - Full screen mode context menu is slightly too low.
 - Renaming files and folders
 - Update Readme

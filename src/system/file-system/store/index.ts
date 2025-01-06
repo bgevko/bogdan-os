@@ -174,6 +174,7 @@ interface StoreState {
   // window state
   opened: EntryId[];
   focused: EntryId[];
+  isFullscreen: boolean;
 
   // icon global info
   selected: EntryId[];
@@ -245,6 +246,7 @@ interface StoreActions {
   getDragInitiatorId: () => EntryId | null;
   getIsDragOverFolder: () => boolean;
   getIsDisableMaximize: (id: EntryId) => boolean;
+  getIsFullscreen: () => boolean;
 
   /*
    ********************************
@@ -313,8 +315,6 @@ interface StoreActions {
   openEntry: (id: EntryId) => void;
   closeEntry: (id: EntryId) => void;
   minimizeEntry: (id: EntryId) => void;
-  maximizeEntry: (id: EntryId) => void;
-  restoreEntry: (id: EntryId) => void;
   toggleMinimize: (id: EntryId) => void;
   toggleMaximize: (id: EntryId) => void;
   toggleSizeToViewport: (id: EntryId) => void;
@@ -994,6 +994,9 @@ const useFileSystemStore = create<FileSystemState>()(
         return false;
       }
       return entry.disableMaximize ?? false;
+    },
+    getIsFullscreen: () => {
+      return get().isFullscreen ?? false;
     },
     // getters end
 
@@ -1688,42 +1691,6 @@ const useFileSystemStore = create<FileSystemState>()(
         entry.transformScale = 0;
       });
     },
-    maximizeEntry: (id) => {
-      set((state) => {
-        const entry = state.lookup.get(id);
-        if (!entry) {
-          if (DEBUG) console.warn(`FileSystemStore:MaximizeEntry: Entry with id ${id} not found`);
-          return;
-        }
-        entry.windowState = 'maximized';
-
-        // Push the focus
-        const focused = state.focused.filter((openedId) => openedId !== id);
-        focused.push(id);
-        state.focused = focused;
-
-        // Set the transform scale
-        entry.transformScale = 1;
-      });
-    },
-    restoreEntry: (id) => {
-      set((state) => {
-        const entry = state.lookup.get(id);
-        if (!entry) {
-          if (DEBUG) console.warn(`FileSystemStore:RestoreEntry: Entry with id ${id} not found`);
-          return;
-        }
-        entry.windowState = 'normal';
-
-        // Push the focus
-        const focused = state.focused.filter((openedId) => openedId !== id);
-        focused.push(id);
-        state.focused = focused;
-
-        // Set the transform scale
-        entry.transformScale = 1;
-      });
-    },
     toggleMinimize: (id) => {
       set((state) => {
         const entry = state.lookup.get(id);
@@ -1789,6 +1756,9 @@ const useFileSystemStore = create<FileSystemState>()(
             maximizedEntry.windowSize = defaultSize;
             maximizedEntry.windowState = 'normal';
           }
+
+          // Set the full screen flag
+          state.isFullscreen = true;
         }
         // Max back to normal
         else if (newState === 'normal') {
@@ -1799,6 +1769,7 @@ const useFileSystemStore = create<FileSystemState>()(
           };
           entry.windowPosition = center;
           entry.windowSize = defaultSize;
+          state.isFullscreen = false;
         }
 
         entry.windowState = newState;
