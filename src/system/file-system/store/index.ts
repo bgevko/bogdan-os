@@ -132,7 +132,8 @@ interface Metadata {
   windowState?: 'minimized' | 'maximized' | 'normal';
   isWindowMoving?: boolean;
   isWindowResizing?: boolean;
-  isDisabledResize?: boolean;
+  disableResize?: boolean;
+  disableMaximize?: boolean;
   transformScale?: number;
   willTransform?: boolean;
   contentOpacity?: number;
@@ -243,6 +244,7 @@ interface StoreActions {
   getIconAtPosition: (parentId: EntryId, position: Position) => FileSystemEntry | null;
   getDragInitiatorId: () => EntryId | null;
   getIsDragOverFolder: () => boolean;
+  getIsDisableMaximize: (id: EntryId) => boolean;
 
   /*
    ********************************
@@ -319,6 +321,7 @@ interface StoreActions {
   pushFocus: (id: EntryId) => void;
   popFocus: () => void;
   executeWindowCallback: (id: EntryId) => void;
+  resetWindow(id: EntryId): void;
 }
 interface FileSystemState extends StoreState, StoreActions {}
 
@@ -835,13 +838,8 @@ const useFileSystemStore = create<FileSystemState>()(
         return 0;
       }
 
-      // Maximized return a high z-index
-      if (entry.windowState === 'maximized') {
-        return 100;
-      }
-
       const index = get().focused.indexOf(id) ?? 0;
-      return index + 1;
+      return index + 2;
     },
     getIsWindowMoving: (id) => {
       const entry = get().getEntry({ id });
@@ -891,7 +889,7 @@ const useFileSystemStore = create<FileSystemState>()(
           console.warn(`FileSystemStore:GetIsDisabledResize: Entry with id ${id} not found`);
         return false;
       }
-      return entry.isDisabledResize ?? false;
+      return entry.disableResize ?? false;
     },
     getMaximizedEntry: () => {
       // There should really only be one maximized window at a time,
@@ -973,6 +971,15 @@ const useFileSystemStore = create<FileSystemState>()(
     },
     getIsDragOverFolder: () => {
       return get().isDragOverFolder ?? false;
+    },
+    getIsDisableMaximize: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry) {
+        if (DEBUG)
+          console.warn(`FileSystemStore:GetIsDisableMaximize: Entry with id ${id} not found`);
+        return false;
+      }
+      return entry.disableMaximize ?? false;
     },
     // getters end
 
@@ -1733,7 +1740,8 @@ const useFileSystemStore = create<FileSystemState>()(
             console.warn(`FileSystemStore:ToggleMaximizeEntry: Entry with id ${id} not found`);
           return;
         }
-        entry.windowState = entry.windowState === 'maximized' ? 'normal' : 'maximized';
+
+        const newState = entry.windowState === 'maximized' ? 'normal' : 'maximized';
 
         // handle focus
         state.focused = state.focused.filter((focusedId) => focusedId !== id);
@@ -1745,15 +1753,29 @@ const useFileSystemStore = create<FileSystemState>()(
         const [winWidth, winHeight] = [window.innerWidth, window.innerHeight];
 
         // Normal to max
-        if (entry.windowState === 'maximized') {
+        if (newState === 'maximized') {
           entry.windowPosition = { x: 0, y: 0 };
           entry.windowSize = { width: winWidth, height: winHeight };
 
           // Start with maximized header not visible
           state.isMaximizedWindowHeaderVisible = false;
+
+          // If another window is maximized, restore it
+          const maximized = get().getMaximizedEntry();
+          if (maximized) {
+            const defaultSize = get().getDefaultWindowSize(maximized.id);
+            const center = {
+              x: winWidth / 2 - defaultSize.width / 2,
+              y: winHeight / 2 - defaultSize.height / 2,
+            };
+            const maximizedEntry = state.lookup.get(maximized.id)!;
+            maximizedEntry.windowPosition = center;
+            maximizedEntry.windowSize = defaultSize;
+            maximizedEntry.windowState = 'normal';
+          }
         }
         // Max back to normal
-        else if (entry.windowState === 'normal') {
+        else if (newState === 'normal') {
           const defaultSize = get().getDefaultWindowSize(id);
           const center = {
             x: winWidth / 2 - defaultSize.width / 2,
@@ -1762,6 +1784,8 @@ const useFileSystemStore = create<FileSystemState>()(
           entry.windowPosition = center;
           entry.windowSize = defaultSize;
         }
+
+        entry.windowState = newState;
       });
     },
     toggleSizeToViewport(id) {
@@ -1829,6 +1853,19 @@ const useFileSystemStore = create<FileSystemState>()(
       if (callback) {
         callback();
       }
+    },
+    resetWindow: (id) => {
+      set((state) => {
+        const entry = state.lookup.get(id);
+        if (!entry) {
+          if (DEBUG) console.warn(`FileSystemStore:ResetWindow: Entry with id ${id} not found`);
+          return;
+        }
+        entry.windowState = 'normal';
+        entry.windowPosition = get().getWindowCenterPosition(id);
+        entry.windowSize = get().getDefaultWindowSize(id);
+        console.log(entry.windowSize);
+      });
     },
 
     /*

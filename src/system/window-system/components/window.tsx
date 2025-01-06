@@ -73,9 +73,10 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
   const posY = windowState === 'minimized' ? window.innerHeight - WINDOW_HEADER_HEIGHT : pos.y;
   const posX = windowState === 'minimized' ? 0 : pos.x;
 
-  const background = isFocused
-    ? 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)'
-    : 'linear-gradient(180deg, #FFE9C6 0%, rgba(91, 91, 91, 0.10) 100%)';
+  const background =
+    isFocused || windowState === 'maximized'
+      ? 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)'
+      : 'linear-gradient(180deg, #FFE9C6 0%, rgba(91, 91, 91, 0.10) 100%)';
 
   return (
     <section
@@ -94,7 +95,7 @@ const Window = ({ entry, children }: WindowProperties): ReactElement => {
         `,
         width: size.width,
         height: size.height,
-        zIndex,
+        zIndex: windowState === 'maximized' ? 1 : zIndex,
       }}
       onMouseEnter={() => {
         if (isAnyIconDragging()) {

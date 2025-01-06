@@ -14,7 +14,7 @@ const Taskbar = (): JSX.Element => {
   return (
     <footer
       data-id="taskbar"
-      className="z-50 w-dvw bg-red-500"
+      className="w-dvw bg-red-500"
       style={{ height: TASKBAR_HEIGHT }}
       onMouseLeave={(event: React.MouseEvent) => {
         event.stopPropagation();
