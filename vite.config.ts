@@ -45,6 +45,8 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@/solitaire': path.resolve(__dirname, './src/apps/solitaire'),
+        '@/system': path.resolve(__dirname, './src/system'),
+        '@/sounds': path.resolve(__dirname, './src/system/sounds'),
         '@': path.resolve(__dirname, './src'),
       },
     },

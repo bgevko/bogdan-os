@@ -1,15 +1,21 @@
-import Desktop from '@/components/system/desktop';
-import ProcessLoader from '@/components/system/process-loader';
-import Taskbar from '@/components/system/taskbar';
-import Wallpaper from '@/components/system/wallpaper';
+import ContextMenu from '@/system/context-menu';
+import Desktop from '@/system/file-system/desktop';
+import Taskbar from '@/system/taskbar';
+import Wallpaper from '@/system/wallpaper';
+import WindowSystem from '@/system/window-system';
+import MaximizedWindowHeader from '@/system/window-system/components/maximized-window-header';
 
 const App = (): React.ReactElement => {
   return (
-    <Wallpaper>
-      <ProcessLoader />
-      <Taskbar />
-      <Desktop />
-    </Wallpaper>
+    <>
+      <Wallpaper>
+        <WindowSystem />
+        <Desktop />
+        <Taskbar />
+      </Wallpaper>
+      <MaximizedWindowHeader />
+      <ContextMenu />
+    </>
   );
 };
 

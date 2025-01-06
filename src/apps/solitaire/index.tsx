@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
 import { useEffect, useState, useRef } from 'react';
 
 import { Stock, Waste, Foundations, Tableau } from '@/solitaire/components';
@@ -9,6 +7,7 @@ import HighScores from '@/solitaire/components/high-scores';
 import Timer, { TimerHandle } from '@/solitaire/components/timer';
 import WinScreen from '@/solitaire/components/win-screen';
 import useSolitaireStore from '@/solitaire/store';
+import useFileSystemStore from '@/system/file-system/store';
 import { formatTime } from '@/utils/format';
 
 const Solitaire = (): React.ReactElement => {
@@ -36,17 +35,34 @@ const Solitaire = (): React.ReactElement => {
   const difficulty = useSolitaireStore((state) => state.getDifficulty());
   const pauseGameFlag = useSolitaireStore((state) => state.getPauseGameFlag());
   const setPauseGameFlag = useSolitaireStore((state) => state.setPauseGameFlag);
+  const setWindowOnCloseCallback = useFileSystemStore((state) => state.setWindowOnCloseCallback);
+  const setWindowOnMinimizeCallback = useFileSystemStore(
+    (state) => state.setWindowOnMinimizeCallback,
+  );
 
   const timerRef = useRef<TimerHandle>(null);
 
   const startingTime = getSecondsElapsed();
   const [time, setTime] = useState(startingTime);
   const [timeBonus, setTimeBonus] = useState(0);
-
   // Init game on component mount
   useEffect(() => {
     // Init game
-    init();
+    try {
+      init();
+      setWindowOnCloseCallback('solitaire', () => {
+        setPauseGameFlag(true);
+      });
+      setWindowOnMinimizeCallback('solitaire', () => {
+        setPauseGameFlag(true);
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.error('Storage quota exceeded:', error);
+        localStorage.clear();
+        alert('The game state was too large and has been reset.');
+      }
+    }
   }, [init]);
 
   // Set the timer
@@ -126,25 +142,30 @@ const Solitaire = (): React.ReactElement => {
 
   return (
     <section
+      className="size-full rounded-b-lg"
       style={{
         background: 'linear-gradient(180deg, #63AFE5 0%, #93E9B8 100%)',
       }}
-      className="size-full rounded-b-lg"
+      onContextMenu={(e) => {
+        e.preventDefault();
+      }}
     >
-      <div className="mx-auto flex h-full w-[800px] flex-col gap-2 rounded-b-lg pt-8">
-        <div className="flex">
-          <div className="flex min-h-[148px] gap-4">
-            <Stock />
-            <Waste />
+      {!pauseGameFlag && (
+        <div className="mx-auto flex h-full w-[800px] flex-col gap-2 rounded-b-lg pt-8">
+          <div className="flex">
+            <div className="flex min-h-[148px] gap-4">
+              <Stock />
+              <Waste />
+            </div>
+            <span className="ml-[132px] flex gap-4">
+              <Foundations />
+            </span>
           </div>
-          <span className="ml-[132px] flex gap-4">
-            <Foundations />
-          </span>
+          <div className="flex size-full gap-4">
+            <Tableau />
+          </div>
         </div>
-        <div className="flex size-full gap-4">
-          <Tableau />
-        </div>
-      </div>
+      )}
       {isGameWon && (
         <WinScreen
           time={time}

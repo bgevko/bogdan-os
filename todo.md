@@ -21,7 +21,7 @@
 - File drop should have a sound
 
 - Official apps that are not meant to be editable should be system shortcuts
-  on the desktop. The file itself should be housed in a different directory
+  on the desktop. The file itself should be in a different directory
 
 ### Theme system
 
@@ -31,3 +31,13 @@
 
 - Animations and polish
 - Non-local high scores
+
+### TODO
+
+- Fix the jumpy loading state
+- Renaming files and folders
+- Create sfx for dropping into a folder
+- Create common commands for the menubar system
+- Make folder being dropped into animate slightly on drop
+- Update Readme
+- Fix slow load for directory when more than one file is inside

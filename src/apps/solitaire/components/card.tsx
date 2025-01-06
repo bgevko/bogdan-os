@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useEffect, useState } from 'react';
 
 import cn from '@/utils/format';
@@ -56,6 +54,9 @@ export const CardIcon: React.FC<CardIconProps> = ({
       width={width ?? CARD_WIDTH}
       height={CARD_HEIGHT}
       style={style}
+      onContextMenu={(event) => {
+        event.preventDefault();
+      }}
     />
   );
 };

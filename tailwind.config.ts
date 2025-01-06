@@ -1,15 +1,12 @@
 import { type Config } from 'tailwindcss';
 
-// eslint-disable-next-line no-relative-import-paths/no-relative-import-paths
-import { currentTheme as theme } from './src/themes';
-
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   plugins: [],
   theme: {
-    extend: {
-      colors: theme.colors,
-    },
+    // extend: {
+    //   colors: theme.colors,
+    // },
   },
 };
 

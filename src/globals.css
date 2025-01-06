@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+body {
+  font-family: 'Sofia Sans Condensed', sans-serif;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid orange; /* stylelint-disable-line color-named */
+}
+
+button:disabled {
+  color: gray; /* stylelint-disable-line color-named */
+}
+
+button:disabled:hover {
+  background: none;
+}
+
+/* stylelint-disable-next-line selector-no-qualifying-type */
+input[type='radio']:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.embossed {
+  background: linear-gradient(112deg, #fc9898 -52.33%, #ffcaca 160.26%);
+  box-shadow:
+    1px 1px 4px 0 rgba(255 255 255 / 50%) inset,
+    -1px -1px 2px 0 rgba(0 0 0 / 31%) inset,
+    0 0 0.7px 1px rgba(0 0 0 / 30%);
+}
+
+.debossed {
+  background: linear-gradient(112deg, #ffafaf -51.91%, #facdcd 27.07%);
+  box-shadow:
+    1px 1px 5px 0 rgba(0 0 0 / 50%) inset,
+    -2px -2px 10px 0 rgba(255 255 255 / 50%) inset,
+    0 0 0.7px 1px rgba(0 0 0 / 30%);
+}
+
+.window-shadow {
+  box-shadow: 0 4px 4px 0 rgba(0 0 0 / 25%);
+}
+
+.icon-shadow {
+  filter: drop-shadow(2px 3px 0 #0d0d0d);
+  overflow: visible;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}

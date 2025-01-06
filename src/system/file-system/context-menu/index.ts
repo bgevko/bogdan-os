@@ -1,0 +1,74 @@
+import useFileSystemStore, {
+  ContextMenuItems,
+  ContextMenuAction,
+} from '@/system/file-system/store';
+import { CLOSE_ANIMATION_DURATION } from '@/themes';
+
+const directoryContextMenuItems: ContextMenuItems = new Map([
+  [
+    'directory',
+    new Map<string, ContextMenuAction>([
+      [
+        'New Folder',
+        {
+          callback: (entry) => {
+            if (!entry) return;
+            useFileSystemStore.getState().createEntry({
+              parentId: entry.id,
+              name: 'NewFolder',
+              type: 'directory',
+            });
+          },
+        },
+      ],
+      [
+        'Sort',
+        {
+          callback: (entry) => {
+            useFileSystemStore.getState().sortIcons(entry?.id ?? '', 'name');
+          },
+        },
+      ],
+    ]),
+  ],
+  [
+    'icon',
+    new Map<string, ContextMenuAction>([
+      [
+        'Rename',
+        {
+          callback: () => {
+            console.log('Rename');
+          },
+          disableCallback: () => true,
+          bottomBorder: true,
+        },
+      ],
+      [
+        'Delete',
+        {
+          callback: () => {
+            const selected = useFileSystemStore.getState().getAllSelectedIds();
+            const setIconTransformScale = useFileSystemStore.getState().setIconTransformScale;
+            for (const id of selected) {
+              setIconTransformScale(id, 0);
+            }
+            setTimeout(() => {
+              for (const id of selected) {
+                useFileSystemStore.getState().deleteEntry(id);
+              }
+            }, CLOSE_ANIMATION_DURATION);
+          },
+          disableCallback: (entry) => {
+            const canDeleteSelection = useFileSystemStore
+              .getState()
+              .getCanDeleteSelection(entry?.parentId ?? '');
+            return !canDeleteSelection;
+          },
+        },
+      ],
+    ]),
+  ],
+]);
+
+export default directoryContextMenuItems;

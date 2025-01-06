@@ -2,27 +2,25 @@ import { Excalidraw } from '@excalidraw/excalidraw';
 import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
 import { useEffect, useRef } from 'react';
 
-import useProcessesStore from '@/stores/use-processes-store';
-import cn from '@/utils/format'; // Assuming 'cn' is your classnames utility
+import useFileSystemStore, { AppComponent } from '@/system/file-system/store';
+import cn from '@/utils/format';
 
-const ExcalidrawWrapper = ({ rootPath }: { rootPath: string }): React.ReactElement => {
-  const resized = useProcessesStore((state) => state.getIsUpdatingSize(rootPath));
-  const moved = useProcessesStore((state) => state.getIsUpdatingPosition(rootPath));
+const ExcalidrawWrapper = ({ entry }: AppComponent): React.ReactElement => {
+  entry = entry!;
+  const setWindowOnUpdateCallback = useFileSystemStore((state) => state.setWindowOnUpdateCallback);
   const excalidrawAPI = useRef<ExcalidrawImperativeAPI>();
 
-  // Refresh Excalidraw when resized or moved
   useEffect(() => {
-    if (resized || moved) {
+    const updateExcalidraw = () => {
       excalidrawAPI.current?.refresh();
-    }
-  }, [resized, moved]);
+    };
+
+    setWindowOnUpdateCallback(entry.id, updateExcalidraw);
+  }, [entry.id, setWindowOnUpdateCallback]);
 
   return (
     <div
       role="toolbar"
-      onMouseDown={(event: React.MouseEvent) => {
-        event.stopPropagation();
-      }}
       className={cn('flex size-full items-center justify-center')}
       onContextMenu={(event) => {
         event.preventDefault();

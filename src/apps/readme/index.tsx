@@ -1,12 +1,17 @@
-const Solitaire = (): React.ReactElement => (
+import '@/apps/readme/styles.css';
+
+const Readme = (): React.ReactElement => (
   <div
+    className="flex size-full flex-col gap-2 rounded-b-lg p-4"
     style={{
       background: 'linear-gradient(180deg, #FFFFFF 0%, #FFE1AF 100%)',
     }}
-    className="flex size-full flex-col gap-2 rounded-b-lg p-4"
+    onContextMenu={(e) => {
+      e.preventDefault();
+    }}
   >
     <h1
-      className="rainbow backgroundw-full py-2 text-center text-4xl font-bold"
+      className="rainbow background w-full py-2 text-center text-4xl font-bold"
       style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}
     >
       <span className="wave">W</span>
@@ -32,12 +37,14 @@ const Solitaire = (): React.ReactElement => (
 
     <p className="font-bold"> You can:</p>
     <ul>
-      <li>- Use Excalidraw</li>
-      <li>- Create files & folders (still limited)</li>
-      <li>- Drag things around</li>
-      <li>- Play Solitaire</li>
-      <li>- Create code block headers</li>
-      <li className="italic">SOON: Play Tetris</li>
+      <li>- Create files and drag things around.</li>
+      <li>- Use the available apps</li>
+      <li>
+        - <em>In Progress:</em> Text file support
+      </li>
+      <li>
+        - <em>In Progress:</em> Tetris
+      </li>
     </ul>
 
     <p>Thanks for visiting!</p>
@@ -56,4 +63,4 @@ const Solitaire = (): React.ReactElement => (
   </div>
 );
 
-export default Solitaire;
+export default Readme;
