@@ -115,13 +115,13 @@ interface Metadata {
   parentId: EntryId | null;
 
   // Icon stuff
+  disableDelete: boolean;
   icon?: string;
   iconSize?: number;
   iconColor?: string;
   iconPosition: Position;
   isIconSelected?: boolean;
   isIconDragging?: boolean;
-  disableDelete?: boolean;
 
   // window stuff
   defaultWindowSize: Size;
@@ -300,7 +300,7 @@ interface StoreActions {
   deleteEntry: (id: EntryId) => boolean;
   renameEntry: (id: EntryId, name: string) => void;
   updateFileContent: (id: EntryId, content: string) => void;
-  moveEntry: (id: EntryId, targetParentId: EntryId) => void;
+  moveEntry: (sourceId: EntryId, targetParentId: EntryId) => void;
   printTree: (id: EntryId) => void;
   printDirectory: (id: EntryId) => void;
   sortIcons: (parentId: EntryId, by: 'name' | 'date') => void;
@@ -357,6 +357,7 @@ const initialState: StoreState = {
     parentId: null,
     type: 'directory',
     children: ['desktop'],
+    disableDelete: true,
   },
   lookup: new Map([
     [
@@ -374,6 +375,7 @@ const initialState: StoreState = {
           height: window.innerHeight - TASKBAR_HEIGHT,
         },
         children: [...applications.keys(), 'test-folder', 'other-folder'],
+        disableDelete: true,
       },
     ],
     [
@@ -459,6 +461,7 @@ const testState: StoreState = {
     parentId: null,
     type: 'directory',
     children: [],
+    disableDelete: true,
   },
   lookup: new Map(),
   ...flags,
@@ -912,13 +915,24 @@ const useFileSystemStore = create<FileSystemState>()(
       return contextState ?? null;
     },
     getIsDisableDelete: (id) => {
-      const entry = get().getEntry({ id });
-      if (!entry) {
-        if (DEBUG)
-          console.warn(`FileSystemStore:GetIsDisableDelete: Entry with id ${id} not found`);
+      function _isDisableDelete(_id: EntryId): boolean {
+        const entry = get().getEntry({ id: _id });
+        const isDisabled = entry?.disableDelete ?? false;
+        if (isDisabled) {
+          return true;
+        }
+        const children = get().getChildren(_id);
+        if (!children) {
+          return false;
+        }
+        for (const childId of children) {
+          if (_isDisableDelete(childId)) {
+            return true;
+          }
+        }
         return false;
       }
-      return entry.disableDelete ?? true;
+      return _isDisableDelete(id);
     },
     getCanDeleteSelection: (parentId) => {
       const parent = get().getEntry({ id: parentId });
@@ -1498,29 +1512,29 @@ const useFileSystemStore = create<FileSystemState>()(
      *          Move Entry          *
      ********************************
      */
-    moveEntry: (id, targetParentId) => {
-      if (id === 'root') {
+    moveEntry: (sourceId, targetParentId) => {
+      if (sourceId === 'root') {
         if (DEBUG) console.warn(`FileSystemStore:MoveEntry: Cannot move root directory`);
         return;
       }
 
-      if (id === targetParentId) {
+      if (sourceId === targetParentId) {
         if (DEBUG) console.warn(`FileSystemStore:MoveEntry: Cannot move entry into itself`);
         return;
       }
 
-      if (get().getIsAncestor(id, targetParentId)) {
+      if (get().getIsAncestor(sourceId, targetParentId)) {
         if (DEBUG)
           console.warn(
-            `FileSystemStore:MoveEntry: Cannot move entry with id ${id} into its descendant with id ${targetParentId}`,
+            `FileSystemStore:MoveEntry: Cannot move entry with id ${sourceId} into its descendant with id ${targetParentId}`,
           );
         return;
       }
 
       set((state) => {
-        const entry = state.lookup.get(id);
-        if (!entry) {
-          if (DEBUG) console.warn(`FileSystemStore:MoveEntry: Entry with id ${id} not found`);
+        const sourceEntry = state.lookup.get(sourceId);
+        if (!sourceEntry) {
+          if (DEBUG) console.warn(`FileSystemStore:MoveEntry: Entry with id ${sourceId} not found`);
           return;
         }
 
@@ -1540,14 +1554,16 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
         const oldParent =
-          entry.parentId === 'root' ? state.root : (state.lookup.get(entry.parentId!) as Directory);
-        oldParent.children = oldParent.children.filter((childId) => childId !== id);
+          sourceEntry.parentId === 'root'
+            ? state.root
+            : (state.lookup.get(sourceEntry.parentId!) as Directory);
+        oldParent.children = oldParent.children.filter((childId) => childId !== sourceId);
 
         // Add entry to new parent
-        targetParentDir?.children.push(id);
+        targetParentDir?.children.push(sourceId);
 
         // Update parentId of entry
-        entry.parentId = targetParentId;
+        sourceEntry.parentId = targetParentId;
       });
     },
 

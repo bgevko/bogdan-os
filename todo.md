@@ -34,8 +34,6 @@
 
 ### TODO
 
-- Full screen mode and folders / other apps. It is assumed that only app will be in full screen mode at a time. I have to rethink this, as users can open
-  other apps or directories while in full screen mode.
 - A folder shouldn't be able to be deleted if any child of it has the disableDelete property enabled
 - Full screen mode has unnecessary grid offset on the bottom
 - Full screen mode context menu is slightly too low.

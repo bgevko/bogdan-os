@@ -28,6 +28,7 @@ const appMetadata: Omit<File, 'iconPosition' | 'id' | 'name' | 'disableMobile' |
   iconSize: 64,
   isIconSelected: false,
   isIconDragging: false,
+  disableDelete: true,
 };
 
 interface AppWithExtras extends File {
