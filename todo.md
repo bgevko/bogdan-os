@@ -41,3 +41,4 @@
 - Make folder being dropped into animate slightly on drop
 - Update Readme
 - Fix slow load for directory when more than one file is inside
+- Fullscreen mode has some issues when minimizing directories

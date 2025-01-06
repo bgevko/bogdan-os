@@ -676,7 +676,11 @@ const useFileSystemStore = create<FileSystemState>()(
         if (DEBUG) console.warn(`FileSystemStore:GetWindowSize: Entry with id ${id} not found`);
         return { width: 0, height: 0 };
       }
-      return entry.windowSize ?? entry.defaultWindowSize ?? { width: 0, height: 0 };
+      const size = entry.windowSize ?? entry.defaultWindowSize ?? { width: 0, height: 0 };
+      return {
+        width: Math.min(size.width, window.innerWidth),
+        height: Math.min(size.height, window.innerHeight - TASKBAR_HEIGHT),
+      };
     },
     getDefaultWindowSize: (id) => {
       const entry = get().getEntry({ id });
@@ -1643,8 +1647,11 @@ const useFileSystemStore = create<FileSystemState>()(
         const offset = Math.floor(Math.random() * 50);
         const addOrSubtract = Math.random() < 0.5 ? -1 : 1;
         const [winWidth, winHeight] = [window.innerWidth, window.innerHeight - TASKBAR_HEIGHT];
+        const isWidthBiggerThanViewport = entry.defaultWindowSize.width > winWidth;
         const pos = {
-          x: winWidth / 2 - entry.defaultWindowSize.width / 2 + offset * addOrSubtract,
+          x: isWidthBiggerThanViewport
+            ? 0
+            : winWidth / 2 - entry.defaultWindowSize.width / 2 + offset * addOrSubtract,
           y: winHeight / 2 - entry.defaultWindowSize.height / 2 + offset * addOrSubtract,
         };
         state.lookup.get(id)!.windowPosition = pos;
