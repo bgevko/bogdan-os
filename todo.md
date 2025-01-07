@@ -32,6 +32,11 @@
 - Animations and polish
 - Non-local high scores
 
+### Headers
+
+- Add a reset button
+- Add option for inline wrap
+
 ### TODO
 
 - Fix the jumpy loading state
