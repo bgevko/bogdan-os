@@ -56,7 +56,7 @@ export const applications = new Map<string, Omit<AppWithExtras, 'iconPosition'>>
       ...appMetadata,
       id: 'readme',
       icon: 'file',
-      iconColor: 'cyan',
+      iconColor: '#bbf0ef',
       name: 'Readme',
       disableMobile: false,
       component: lazy(() => import('@/apps/readme')),
