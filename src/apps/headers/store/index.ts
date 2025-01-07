@@ -9,6 +9,7 @@ export interface State {
   padding: string;
   wrap: string;
   showHelpFlag: boolean;
+  resetFlag: boolean;
 }
 
 interface Actions {
@@ -19,6 +20,7 @@ interface Actions {
   getPadding: () => string;
   getWrap: () => string;
   getShowHelpFlag: () => boolean;
+  getResetFlag: () => boolean;
 
   // setters
   setCenter: (center: string) => void;
@@ -27,19 +29,38 @@ interface Actions {
   setPadding: (padding: string) => void;
   setWrap: (wrap: string) => void;
   setShowHelpFlag: (flag: boolean) => void;
+  setResetFlag: (flag: boolean) => void;
+
+  // actions
+  reset: () => void;
 }
 
+/*
+ ********************************
+ *             Types            *
+ ********************************
+ */
 interface HeaderState extends State, Actions {}
+
+/*
+ ********************************
+ *         Initial State        *
+ ********************************
+ */
+const initialState: State = {
+  center: '#',
+  sides: '||',
+  length: '32',
+  padding: '0',
+  wrap: '/*',
+  showHelpFlag: false,
+  resetFlag: false,
+};
 
 const useHeadersStore = create<HeaderState>()(
   persist(
     immer((set, get) => ({
-      center: '#',
-      sides: '||',
-      length: '48',
-      padding: '1',
-      wrap: '/*',
-      showHelpFlag: false,
+      ...initialState,
 
       // getters
       getCenter: () => get().center,
@@ -48,6 +69,7 @@ const useHeadersStore = create<HeaderState>()(
       getPadding: () => get().padding,
       getWrap: () => get().wrap,
       getShowHelpFlag: () => get().showHelpFlag,
+      getResetFlag: () => get().resetFlag,
 
       // setters
       setCenter: (center) => {
@@ -78,6 +100,22 @@ const useHeadersStore = create<HeaderState>()(
       setShowHelpFlag: (flag) => {
         set((state) => {
           state.showHelpFlag = flag;
+        });
+      },
+      setResetFlag: (flag) => {
+        set((state) => {
+          state.resetFlag = flag;
+        });
+      },
+      reset: () => {
+        set((state) => {
+          state.center = initialState.center;
+          state.sides = initialState.sides;
+          state.length = initialState.length;
+          state.padding = initialState.padding;
+          state.wrap = initialState.wrap;
+          state.showHelpFlag = initialState.showHelpFlag;
+          state.resetFlag = true;
         });
       },
     })),

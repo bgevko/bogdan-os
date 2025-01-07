@@ -7,20 +7,20 @@ const actions: MenubarItems = new Map([
     'Headers',
     new Map<string, MenubarAction>([
       [
-        'Help',
+        'Reset',
         {
           callback: () => {
-            const setShowHelpFlag = useHeadersStore.getState().setShowHelpFlag;
-            setShowHelpFlag(true);
+            const reset = useHeadersStore.getState().reset;
+            reset();
           },
         },
       ],
       [
-        'GitHub',
+        'About',
         {
           callback: () => {
-            const url = 'https://github.com/bgevko/bogdan-os';
-            window.open(url, '_blank');
+            const setShowHelpFlag = useHeadersStore.getState().setShowHelpFlag;
+            setShowHelpFlag(true);
           },
           bottomBorder: true,
         },

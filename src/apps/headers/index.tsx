@@ -23,6 +23,7 @@ const Headers = (): React.ReactElement => {
   const setSavedWrap = useHeadersStore((state) => state.setWrap);
   const showHelpFlag = useHeadersStore((state) => state.getShowHelpFlag());
   const setShowHelpFlag = useHeadersStore((state) => state.setShowHelpFlag);
+  const resetFlag = useHeadersStore((state) => state.getResetFlag());
 
   /*
    ********************************
@@ -48,6 +49,21 @@ const Headers = (): React.ReactElement => {
   const wrapRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
+  /*
+   ********************************
+   *             Reset            *
+   ********************************
+   */
+  useEffect(() => {
+    if (resetFlag) {
+      setCenter(useHeadersStore.getState().getCenter());
+      setSides(useHeadersStore.getState().getSides());
+      setLengthInput(useHeadersStore.getState().getLength());
+      setPaddingInput(useHeadersStore.getState().getPadding());
+      setWrapInput(useHeadersStore.getState().getWrap());
+      useHeadersStore.getState().setResetFlag(false);
+    }
+  }, [resetFlag]);
   /*
    ********************************
    *                              *
@@ -362,7 +378,9 @@ const Headers = (): React.ReactElement => {
         ref={outputRef}
         className={cn(
           'flex size-full  items-center justify-center overflow-auto rounded-md border bg-gray-50 p-2 cursor-pointer',
+          // eslint-disable-next-line react-compiler/react-compiler
           isHorizontalOverflow() && 'justify-start',
+          // eslint-disable-next-line react-compiler/react-compiler
           isVerticalOverflow() && 'items-start',
           isCopying && 'bg-gray-200',
           !isCopying && didCopy && 'bg-white',
