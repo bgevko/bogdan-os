@@ -1,3 +1,5 @@
+/* stylelint-disable property-no-vendor-prefix */
+/* stylelint-disable selector-no-qualifying-type */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,7 +28,6 @@ button:disabled:hover {
   background: none;
 }
 
-/* stylelint-disable-next-line selector-no-qualifying-type */
 input[type='radio']:focus {
   outline: none;
   box-shadow: none;
@@ -64,4 +65,9 @@ input[type='radio']:focus {
 ::selection {
   background: #0226ed;
   color: #fff;
+}
+
+.no-select::selection {
+  background: transparent;
+  color: inherit; /* Retains the original text color */
 }

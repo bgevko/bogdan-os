@@ -370,7 +370,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             maxLength={26}
             disabled
             className={cn(
-              'absolute resize-none overflow-visible text-base font-bold bg-transparent text-center',
+              'absolute no-select resize-none overflow-visible text-base font-bold bg-transparent text-center',
               'focus:outline-none',
             )}
             style={{
