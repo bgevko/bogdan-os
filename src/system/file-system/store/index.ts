@@ -1689,6 +1689,9 @@ const useFileSystemStore = create<FileSystemState>()(
 
         // Set icon scale to 1, to avoid animating in. I mostly want an abrupt drop, not a smooth transition here
         sourceEntry.iconTransformScale = 1;
+
+        // If the name of the entry already exists in the parent id, give the entry a unqiue name
+        sourceEntry.name = get().validateName(targetParentId, sourceEntry.name)!;
       });
     },
 
