@@ -377,6 +377,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
               bottom: -20,
               width: '105px',
               overflowWrap: 'break-word',
+              pointerEvents: 'none',
             }}
             value={renameInputValue}
           />
