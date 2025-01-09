@@ -905,7 +905,6 @@ const useSolitaireStore = create<SolitaireState>()(
       reset: () => {
         set((state) => {
           state.isGameInProgress = false;
-
           localStorage.removeItem('solitaire-store');
         });
       },

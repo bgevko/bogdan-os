@@ -1,3 +1,4 @@
+import GlobalEvents from '@/components/global-events';
 import ContextMenu from '@/system/context-menu';
 import Desktop from '@/system/file-system/desktop';
 import Taskbar from '@/system/taskbar';
@@ -15,6 +16,7 @@ const App = (): React.ReactElement => {
       </Wallpaper>
       <MaximizedWindowHeader />
       <ContextMenu />
+      <GlobalEvents />
     </>
   );
 };

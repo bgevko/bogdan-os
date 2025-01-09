@@ -13,6 +13,7 @@ const Desktop = (): React.ReactElement => {
   const setContextState = useFileSystemStore((state) => state.setContextState);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
   const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
+  const clearRenaming = useFileSystemStore((state) => state.clearRenaming);
   const desktopChildren = useFileSystemStore((state) => state.getDirectory('desktop'));
   const desktopEntry = useFileSystemStore((state) => state.getEntry({ id: 'desktop' }));
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
@@ -63,6 +64,7 @@ const Desktop = (): React.ReactElement => {
             }
             blurWindowFocus(true);
             clearContextState();
+            clearRenaming();
           }
         }}
         onClick={(event) => {

@@ -13,6 +13,7 @@ interface WindowHeaderProperties {
 const WindowHeader: React.FC<WindowHeaderProperties> = ({ entry }): ReactElement => {
   const isFocused = useFileSystemStore((state) => state.getIsWindowFocused(entry.id));
   const isOpen = useFileSystemStore((state) => state.getIsOpen(entry.id));
+  const name = useFileSystemStore((state) => state.getName(entry.id));
   const pushFocus = useFileSystemStore((state) => state.pushFocus);
   const toggleSizeToViewport = useFileSystemStore((state) => state.toggleSizeToViewport);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
@@ -80,7 +81,7 @@ const WindowHeader: React.FC<WindowHeaderProperties> = ({ entry }): ReactElement
         }}
       >
         <HeaderButtons entry={entry} />
-        <h1 className={cn(headerTextColor, 'cursor-default select-none')}>{entry.name}</h1>
+        <h1 className={cn(headerTextColor, 'cursor-default select-none')}>{name}</h1>
       </header>
     </>
   );
