@@ -315,6 +315,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
           event.stopPropagation();
           if (event.button === 2) return;
           handleToggleSelect();
+          handleFocusSelect();
           handleMouseDownSelect(event);
           clearContextState();
           if (entry.parentId === 'desktop') {
