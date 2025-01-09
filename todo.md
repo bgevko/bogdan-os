@@ -9,11 +9,6 @@
 
 ### System
 
-- File renaming
-
-  - Creating a new file should allow you to name it
-  - Right clicking on a file should allow you to rename it
-
 - Copy and paste
 
   - Through context menu, or through keyboard shortcuts
@@ -34,16 +29,14 @@
 
 ### Headers
 
-- Add a reset button
 - Add option for inline wrap
 
 ### TODO
 
 - Fix the jumpy loading state
-- Renaming files and folders
 - Create sfx for dropping into a folder
 - Create common commands for the menubar system
 - Make folder being dropped into animate slightly on drop
-- Update Readme
 - Fix slow load for directory when more than one file is inside
 - Fullscreen mode has some issues when minimizing directories
+- Can't delete folders in Safari
