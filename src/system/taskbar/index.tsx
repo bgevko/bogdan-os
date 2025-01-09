@@ -10,6 +10,7 @@ const Taskbar = (): JSX.Element => {
   const getEntry = useFileSystemStore((state) => state.getEntry);
   const blurWindowFocus = useFileSystemStore((state) => state.blurWindowFocus);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
+  const clearRenaming = useFileSystemStore((state) => state.clearRenaming);
   const taskbarColor = '#FFAFAF';
   return (
     <footer
@@ -26,11 +27,13 @@ const Taskbar = (): JSX.Element => {
         event.preventDefault();
         if (getEventTargetDataId(event) === 'taskbar') {
           clearContextState();
+          clearRenaming();
         }
       }}
       onClick={() => {
         blurWindowFocus(true);
         clearContextState();
+        clearRenaming();
       }}
     >
       <nav style={{ backgroundColor: taskbarColor }} className="flex size-full gap-1 p-1 pl-8 pr-4">

@@ -13,11 +13,14 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
         {
           callback: (entry) => {
             if (!entry) return;
-            useFileSystemStore.getState().createEntry({
+            const newEntryId = useFileSystemStore.getState().createEntry({
               parentId: entry.id,
               name: 'NewFolder',
               type: 'directory',
             });
+            if (newEntryId) {
+              useFileSystemStore.getState().setRenaming(newEntryId);
+            }
           },
         },
       ],
@@ -37,10 +40,10 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
       [
         'Rename',
         {
-          callback: () => {
-            console.log('Rename');
+          callback: (entry) => {
+            if (!entry) return;
+            useFileSystemStore.getState().setRenaming(entry.id);
           },
-          disableCallback: () => true,
           bottomBorder: true,
         },
       ],

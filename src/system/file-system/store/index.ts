@@ -137,17 +137,14 @@ interface Metadata {
   willTransform?: boolean;
   contentOpacity?: number;
 
-  // Window callbacks
-  windowOnUpdateCallback?: () => void;
-  windowOnCloseCallback?: () => void;
-  windowOnMinimizeCallback?: () => void;
-
   // Animation meta
   transformScale?: number; // For window and taskbar entry animations
   iconTransformScale?: number; // For icon animations
 
-  // Component state
-  isComponentMounted?: boolean;
+  // Window callbacks
+  windowOnUpdateCallback?: () => void;
+  windowOnCloseCallback?: () => void;
+  windowOnMinimizeCallback?: () => void;
 }
 
 /*
@@ -180,6 +177,7 @@ interface StoreState {
   windowBlur: boolean;
   isMaximizedWindowHeaderVisible?: boolean;
   isUsingSelectRect?: boolean;
+  shouldUpdateName?: boolean;
 
   // window state
   opened: EntryId[];
@@ -189,6 +187,7 @@ interface StoreState {
   // icon global info
   selected: EntryId[];
   dragging: EntryId[];
+  renaming: EntryId | null;
   dragInitiatorId?: EntryId | null;
   dropTarget?: EntryId;
   dropTargetIcon?: EntryId | null;
@@ -258,7 +257,11 @@ interface StoreActions {
   getIsDragOverFolder: () => boolean;
   getIsDisableMaximize: (id: EntryId) => boolean;
   getIsFullscreen: () => boolean;
-  getIsComponentMounted: (id: EntryId) => boolean;
+  getIsRenaming: (id: EntryId) => boolean;
+  getShouldUpdateName: () => boolean;
+  getDirectoryNames: (id: EntryId) => Set<string>;
+  validateName: (parentId: EntryId, name: string, exclude?: string) => string | null;
+  // getters end
 
   /*
    ********************************
@@ -292,9 +295,11 @@ interface StoreActions {
   setDropTargetId: (id: EntryId) => void;
   setDropTargetIconId: (id: EntryId | null) => void;
   setDragInitiatorId: (id: EntryId | null) => void;
-  setIsComponentMounted: (id: EntryId, isMounted: boolean) => void;
   setWindowOnCloseCallback: (id: EntryId, callback: () => void) => void;
   setWindowOnMinimizeCallback: (id: EntryId, callback: () => void) => void;
+  setRenaming: (id: EntryId) => void;
+  clearRenaming: () => void;
+  // setters end
 
   /*
    ********************************
@@ -315,7 +320,7 @@ interface StoreActions {
     type: 'file' | 'directory';
   }) => EntryId | null;
   deleteEntry: (id: EntryId) => boolean;
-  renameEntry: (id: EntryId, name: string) => void;
+  renameEntry: (id: EntryId, name: string) => string | null;
   updateFileContent: (id: EntryId, content: string) => void;
   moveEntry: (sourceId: EntryId, targetParentId: EntryId) => void;
   printTree: (id: EntryId) => void;
@@ -360,6 +365,7 @@ const windowState = {
   focused: [],
   selected: [],
   dragging: [],
+  renaming: null,
 };
 
 const initialState: StoreState = {
@@ -881,7 +887,7 @@ const useFileSystemStore = create<FileSystemState>()(
           console.warn(`FileSystemStore:GetIconTransformScale: Entry with id ${id} not found`);
         return 1;
       }
-      return entry.iconTransformScale ?? 0;
+      return entry.iconTransformScale ?? 1;
     },
     getWillTransform: (id) => {
       const entry = get().getEntry({ id });
@@ -1012,8 +1018,47 @@ const useFileSystemStore = create<FileSystemState>()(
     getIsFullscreen: () => {
       return get().isFullscreen ?? false;
     },
-    getIsComponentMounted: (id) => {
-      return get().getEntry({ id })?.isComponentMounted ?? false;
+    getIsRenaming: (id) => {
+      return get().renaming === id;
+    },
+    getShouldUpdateName: () => {
+      return get().shouldUpdateName ?? false;
+    },
+    getDirectoryNames: (id) => {
+      const entry = get().getEntry({ id });
+      if (!entry || entry.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:GetDirectoryNames: Entry with id ${id} not found or not a directory`,
+          );
+        return new Set();
+      }
+      const children = get().getDirectory(id);
+      if (!children) {
+        return new Set();
+      }
+      return new Set(children.map((child) => child.name));
+    },
+    validateName: (parentId, name, exclude) => {
+      // Will ensure that the name is unique within the parent directory
+      const parent = get().getEntry({ id: parentId });
+      if (!parent || parent.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:ValidateName: Entry with id ${parentId} not found or not a directory`,
+          );
+        return null;
+      }
+      const directoryNames = get().getDirectoryNames(parentId);
+      if (!directoryNames.has(name)) return name;
+      let index = 2;
+      let unqiueName = `${name}(${index.toString()})`;
+      while (directoryNames.has(unqiueName)) {
+        if (unqiueName === exclude) break;
+        index++;
+        unqiueName = `${name}(${index.toString()})`;
+      }
+      return unqiueName;
     },
     // getters end
 
@@ -1289,17 +1334,6 @@ const useFileSystemStore = create<FileSystemState>()(
         state.dragInitiatorId = id;
       });
     },
-    setIsComponentMounted: (id, isMounted) => {
-      set((state) => {
-        const entry = state.lookup.get(id);
-        if (!entry) {
-          if (DEBUG)
-            console.warn(`FileSystemStore:SetIsComponentMounted: Entry with id ${id} not found`);
-          return;
-        }
-        entry.isComponentMounted = isMounted;
-      });
-    },
     setWindowOnCloseCallback: (id, callback) => {
       set((state) => {
         const entry = state.lookup.get(id);
@@ -1322,6 +1356,18 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
         entry.windowOnMinimizeCallback = callback;
+      });
+    },
+    setRenaming: (id) => {
+      // debug
+      set((state) => {
+        state.renaming = id;
+      });
+    },
+    clearRenaming: () => {
+      set((state) => {
+        state.renaming = null;
+        state.shouldUpdateName = true;
       });
     },
     // setters end
@@ -1384,6 +1430,15 @@ const useFileSystemStore = create<FileSystemState>()(
      ********************************
      */
     createEntry: ({ parentId, name, extension, content, type }) => {
+      const parentEntry = get().getEntry({ id: parentId });
+      if (!parentEntry || parentEntry.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:CreateEntry: Parent with id ${parentId} not found or not a directory`,
+          );
+        return null;
+      }
+
       // Throw a warning if extension is included in name
       if (name.includes('.') && DEBUG)
         console.warn(
@@ -1402,9 +1457,11 @@ const useFileSystemStore = create<FileSystemState>()(
           );
         return null;
       }
+
       const id = uuidv4();
+      const uniqueName = get().validateName(parentId, name)!;
       const common = {
-        name,
+        name: uniqueName,
         id,
         iconPosition: emptyPosition,
         iconColor: '#fff',
@@ -1520,8 +1577,9 @@ const useFileSystemStore = create<FileSystemState>()(
     renameEntry: (id, name) => {
       if (id === 'root') {
         if (DEBUG) console.warn(`FileSystemStore:RenameEntry: Cannot rename root directory`);
-        return;
+        return null;
       }
+      let newName = null;
       set((state) => {
         const entry = state.lookup.get(id);
         if (!entry) {
@@ -1533,9 +1591,20 @@ const useFileSystemStore = create<FileSystemState>()(
             `FileSystemStore:RenameEntry: Don't include the extension in name: '${name}'.`,
           );
         }
-        entry.name = name;
-        entry.updatedAt = new Date();
+        if (name === '') {
+          if (DEBUG) console.warn(`FileSystemStore:RenameEntry: Name cannot be empty`);
+          state.shouldUpdateName = false;
+          return;
+        }
+        if (entry.name !== name) {
+          const uniqueName = get().validateName(entry.parentId!, name, entry.name)!;
+          entry.name = uniqueName;
+          entry.updatedAt = new Date();
+          newName = uniqueName;
+        }
+        state.shouldUpdateName = false;
       });
+      return newName;
     },
     /*
      ********************************

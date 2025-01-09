@@ -14,7 +14,9 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
   const pushFocus = useFileSystemsStore((state) => state.pushFocus);
   const setContextState = useFileSystemsStore((state) => state.setContextState);
   const clearContextState = useFileSystemsStore((state) => state.clearContextState);
+  const clearRenaming = useFileSystemsStore((state) => state.clearRenaming);
   const windowState = useFileSystemsStore((state) => state.getWindowState(entry.id));
+  const name = useFileSystemsStore((state) => state.getName(entry.id));
   const isFocused = useFileSystemsStore((state) => state.getIsWindowFocused(entry.id));
   const isOpen = useFileSystemsStore((state) => state.getIsOpen(entry.id));
   const transformScale = useFileSystemsStore((state) => state.getTransformScale(entry.id));
@@ -81,6 +83,7 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
         setMouseDown(true);
 
         clearContextState();
+        clearRenaming();
       }}
       onMouseUp={() => {
         setButtonDown(false);
@@ -116,7 +119,7 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
       <Suspense fallback={<span className="size-8 animate-pulse rounded-md" />}>
         <LazyIcon width={32} height={32} fill="#fff" className="select-none" />
       </Suspense>
-      {entry.name}
+      {name}
     </button>
   );
 };

@@ -15,6 +15,7 @@ const Directory = ({ entry }: AppComponent): React.ReactElement => {
   const setContextState = useFileSystemStore((state) => state.setContextState);
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
   const getWindowState = useFileSystemStore((state) => state.getWindowState);
+  const clearRenaming = useFileSystemStore((state) => state.clearRenaming);
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
   const windowPosition = useFileSystemStore((state) => state.getWindowPosition(entry?.id ?? ''));
@@ -74,6 +75,7 @@ const Directory = ({ entry }: AppComponent): React.ReactElement => {
             }
             pushFocus(entry.id);
             clearContextState();
+            clearRenaming();
           }
         }}
         onClick={(event) => {

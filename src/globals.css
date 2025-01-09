@@ -60,3 +60,8 @@ input[type='radio']:focus {
 .preserve-3d {
   transform-style: preserve-3d;
 }
+
+::selection {
+  background: #0226ed;
+  color: #fff;
+}
