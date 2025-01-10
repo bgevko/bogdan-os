@@ -1796,6 +1796,21 @@ const useFileSystemStore = create<FileSystemState>()(
         return null;
       }
 
+      // No coyping to an ancestor
+      if (get().getIsAncestor(sourceId, targetParentId)) {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:CopyEntry: Cannot copy entry with id ${sourceId} into its descendant with id ${targetParentId}`,
+          );
+        return null;
+      }
+
+      // No copying to itself
+      if (sourceId === targetParentId) {
+        if (DEBUG) console.warn(`FileSystemStore:CopyEntry: Cannot copy entry into itself`);
+        return null;
+      }
+
       set((state) => {
         const sourceEntry = state.getEntry(sourceId);
         const targetParentDir = state.getEntry(targetParentId) as Directory;
