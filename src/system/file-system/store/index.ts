@@ -1868,10 +1868,9 @@ const useFileSystemStore = create<FileSystemState>()(
       set((state) => {
         if (!copyEntryId) return;
         const copyEntry = state.getEntry(copyEntryId)!;
-        const name = copyEntry.name.includes('-copy') ? copyEntry.name : `${copyEntry.name}-copy`;
         copyEntry.name = state.validateName({
-          parentId: copyEntry.parentId!,
-          name,
+          parentId: targetParentId,
+          name: copyEntry.name,
         })!;
 
         // Move the copy over a bit
