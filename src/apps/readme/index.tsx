@@ -37,7 +37,7 @@ const Readme = (): React.ReactElement => (
 
     <p className="font-bold"> You can:</p>
     <ul>
-      <li>- Create files and drag things around.</li>
+      <li>- Create, copy, move, and delete folders</li>
       <li>- Use the available apps</li>
       <li>
         - <em>In Progress:</em> Text file support
