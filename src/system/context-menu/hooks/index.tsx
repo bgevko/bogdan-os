@@ -30,7 +30,7 @@ const UseContextMenu = (contextState: ContextState | null): ReturnTypes => {
   const contextMenuSource = contextMenuOptions?.source ?? null;
   const contextMenuStyles = contextMenuOptions?.styles ?? null;
   const contextMenuClassname = contextMenuOptions?.className ?? null;
-  const contextEntry = useFileSystemStore((state) => state.getEntry({ id: contextState?.id }));
+  const contextEntry = useFileSystemStore((state) => state.getEntry(contextState?.id ?? ''));
   const getIsFullscreen = useFileSystemStore((state) => state.getIsFullscreen);
   const [contextMenuItemsFromSource, setContextMenuItemsFromSource] =
     useState<ContextMenuItems | null>(null);

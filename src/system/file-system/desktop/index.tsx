@@ -15,7 +15,7 @@ const Desktop = (): React.ReactElement => {
   const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
   const clearRenaming = useFileSystemStore((state) => state.clearRenaming);
   const desktopChildren = useFileSystemStore((state) => state.getDirectory('desktop'));
-  const desktopEntry = useFileSystemStore((state) => state.getEntry({ id: 'desktop' }));
+  const desktopEntry = useFileSystemStore((state) => state.getEntry('desktop'));
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
   const windowPosition = useFileSystemStore((state) => state.getWindowPosition('desktop'));

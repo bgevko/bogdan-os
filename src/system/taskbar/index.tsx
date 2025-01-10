@@ -39,7 +39,7 @@ const Taskbar = (): JSX.Element => {
       <nav style={{ backgroundColor: taskbarColor }} className="flex size-full gap-1 p-1 pl-8 pr-4">
         <ul className="flex size-full items-center justify-start gap-1">
           {entries.map((entryId) => {
-            const entry = getEntry({ id: entryId });
+            const entry = getEntry(entryId);
             if (entry) {
               return <TaskbarEntry key={entry.id} entry={entry} />;
             }
