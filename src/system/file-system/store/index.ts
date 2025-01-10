@@ -101,6 +101,7 @@ export interface Size {
   width: number;
   height: number;
 }
+export type KeyCommand = 'copy' | 'paste' | 'delete' | 'select-all';
 
 /*
  ********************************
@@ -116,6 +117,7 @@ interface Metadata {
 
   // Icon stuff
   disableDelete: boolean;
+  disableCopy?: boolean;
   icon?: string;
   iconSize?: number;
   iconColor?: string;
@@ -169,7 +171,6 @@ export type FileSystemEntry = File | Directory;
  ********************************
  */
 interface StoreState {
-  root: Directory;
   lookup: Map<EntryId, FileSystemEntry>;
 
   // flags
@@ -178,6 +179,7 @@ interface StoreState {
   isMaximizedWindowHeaderVisible?: boolean;
   isUsingSelectRect?: boolean;
   shouldUpdateName?: boolean;
+  keyCommand?: KeyCommand | null;
 
   // window state
   opened: EntryId[];
@@ -187,6 +189,7 @@ interface StoreState {
   // icon global info
   selected: EntryId[];
   dragging: EntryId[];
+  clipboard: EntryId[];
   renaming: EntryId | null;
   dragInitiatorId?: EntryId | null;
   dropTarget?: EntryId;
@@ -202,7 +205,7 @@ interface StoreActions {
    *            Getters           *
    ********************************
    */
-  getEntry: ({ id, name }: { id?: EntryId; name?: string }) => FileSystemEntry | null;
+  getEntry: (id: EntryId) => FileSystemEntry | null;
   getOpenedEntries: () => EntryId[];
   getId: (name: string) => EntryId | null;
   getParentId: (id: EntryId) => EntryId | null;
@@ -213,8 +216,6 @@ interface StoreActions {
   getIsAncestor: (ancestorId: EntryId, childId: EntryId) => boolean;
   getContent: (id: EntryId) => string | null;
   getPath: (id: EntryId) => string;
-  getRoot: () => Directory;
-  getLookup: () => Map<EntryId, FileSystemEntry>;
   getIsIconSelected: (id: EntryId) => boolean;
   getAllSelectedIds: () => EntryId[];
   getAllSelectedIdsSameParent: (parentId: EntryId) => EntryId[];
@@ -247,7 +248,9 @@ interface StoreActions {
   getWindowCenterPosition: (id: EntryId) => Position;
   getContextState: () => ContextState | null;
   getIsDisableDelete: (id: EntryId) => boolean;
+  getIsDisableCopy: (id: EntryId) => boolean;
   getCanDeleteSelection: (parentId: EntryId) => boolean;
+  getCanCopySelection: (parentId: EntryId) => boolean;
   getIsUsingSelectRect: () => boolean;
   getDropTargetId: () => EntryId;
   getDropTargetIconId: () => EntryId | null;
@@ -260,7 +263,20 @@ interface StoreActions {
   getIsRenaming: (id: EntryId) => boolean;
   getShouldUpdateName: () => boolean;
   getDirectoryNames: (id: EntryId) => Set<string>;
-  validateName: (parentId: EntryId, name: string, exclude?: string) => string | null;
+  // validateName: (parentId: EntryId, name: string, exclude?: string) => string | null;
+  validateName: ({
+    parentId,
+    name,
+    exclude,
+    include,
+  }: {
+    parentId: EntryId;
+    name: string;
+    exclude?: string;
+    include?: Set<string>;
+  }) => string | null;
+  getClipboard: () => EntryId[];
+  getKeyCommand: () => KeyCommand | null;
   // getters end
 
   /*
@@ -272,6 +288,7 @@ interface StoreActions {
   resetForTest: () => void;
   setIconPosition: (id: EntryId, position: Position) => void;
   setIsIconSelected: (id: EntryId, isSelected: boolean) => void;
+  selectAllIcons: (parentId: EntryId) => void;
   clearIconSelection: () => void;
   setDisableSelect: (isDisabled: boolean) => void;
   setIsIconDragging: (id: EntryId, isDragging: boolean) => void;
@@ -299,6 +316,8 @@ interface StoreActions {
   setWindowOnMinimizeCallback: (id: EntryId, callback: () => void) => void;
   setRenaming: (id: EntryId) => void;
   clearRenaming: () => void;
+  setKeyCommand: (event: KeyboardEvent) => void;
+  clearKeyCommand: () => void;
   // setters end
 
   /*
@@ -323,6 +342,7 @@ interface StoreActions {
   renameEntry: (id: EntryId, name: string) => string | null;
   updateFileContent: (id: EntryId, content: string) => void;
   moveEntry: (sourceId: EntryId, targetParentId: EntryId) => void;
+  copyEntry: (sourceId: EntryId, targetParentId: EntryId) => EntryId | null;
   printTree: (id: EntryId) => void;
   printDirectory: (id: EntryId) => void;
   sortIcons: (parentId: EntryId, by: 'name' | 'date') => void;
@@ -344,6 +364,8 @@ interface StoreActions {
   executeWindowOnUpdateCallback: (id: EntryId) => void;
   executeWindowOnCloseCallback: (id: EntryId) => void;
   executeWindowOnMinimizeCallback: (id: EntryId) => void;
+  selectedToClipboard: () => void;
+  pasteClipboard: (parentId: EntryId) => void;
 }
 interface FileSystemState extends StoreState, StoreActions {}
 
@@ -365,25 +387,30 @@ const windowState = {
   focused: [],
   selected: [],
   dragging: [],
+  clipboard: [],
   renaming: null,
 };
 
 const initialState: StoreState = {
   ...flags,
   ...windowState,
-  root: {
-    id: 'root',
-    iconPosition: { x: 0, y: 0 },
-    defaultWindowSize: DEFAULT_WINDOW_SIZE,
-    name: '',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    parentId: null,
-    type: 'directory',
-    children: ['desktop'],
-    disableDelete: true,
-  },
   lookup: new Map([
+    [
+      'root',
+      {
+        id: 'root',
+        iconPosition: { x: 0, y: 0 },
+        defaultWindowSize: DEFAULT_WINDOW_SIZE,
+        name: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        parentId: null,
+        type: 'directory',
+        children: ['desktop'],
+        disableDelete: true,
+        disableCopy: true,
+      },
+    ],
     [
       'desktop',
       {
@@ -400,6 +427,7 @@ const initialState: StoreState = {
         },
         children: [...applications.keys(), 'test-folder'],
         disableDelete: true,
+        disableCopy: true,
       },
     ],
     [
@@ -458,21 +486,25 @@ const initialState: StoreState = {
 };
 
 const testState: StoreState = {
-  root: {
-    id: 'root',
-    iconPosition: { x: 0, y: 0 },
-    defaultWindowSize: DEFAULT_WINDOW_SIZE,
-    name: '',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    parentId: null,
-    type: 'directory',
-    children: [],
-    disableDelete: true,
-  },
-  lookup: new Map(),
   ...flags,
   ...windowState,
+  lookup: new Map([
+    [
+      'root',
+      {
+        id: 'root',
+        iconPosition: { x: 0, y: 0 },
+        defaultWindowSize: DEFAULT_WINDOW_SIZE,
+        name: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        parentId: null,
+        type: 'directory',
+        children: [],
+        disableDelete: true,
+      },
+    ],
+  ]),
 };
 
 /*
@@ -490,28 +522,13 @@ const useFileSystemStore = create<FileSystemState>()(
      *            Getters           *
      ********************************
      */
-    getEntry: ({ id, name }) => {
-      if (id === 'root' || name === '') {
-        return get().root;
-      }
-      if (id !== undefined) {
-        const entry = get().lookup.get(id);
-        if (!entry) {
-          if (DEBUG) console.warn(`FileSystemStore:GetEntry: Entry with id ${id} not found`);
-          return null;
-        }
-        return entry;
-      }
-      if (name !== undefined) {
-        for (const entry of get().lookup.values()) {
-          if (entry.name === name) {
-            return entry;
-          }
-        }
-        if (DEBUG) console.warn(`FileSystemStore:GetEntry: Entry with name ${name} not found`);
+    getEntry: (id: EntryId) => {
+      const entry = get().lookup.get(id);
+      if (!entry) {
+        if (DEBUG) console.warn(`FileSystemStore:GetEntry: Entry with id ${id} not found`);
         return null;
       }
-      return null;
+      return entry;
     },
     getOpenedEntries: () => {
       return get().opened;
@@ -534,7 +551,7 @@ const useFileSystemStore = create<FileSystemState>()(
 
     getIsAncestor: (ancestorId, childId) => {
       function _isAncestor(_ancestorId: EntryId, _childId: EntryId): boolean {
-        const entry = get().getEntry({ id: _childId });
+        const entry = get().getEntry(_childId);
         if (!entry?.parentId) {
           return false;
         }
@@ -547,7 +564,7 @@ const useFileSystemStore = create<FileSystemState>()(
     },
 
     getContent: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetContent: Entry with id ${id} not found`);
         return null;
@@ -566,7 +583,7 @@ const useFileSystemStore = create<FileSystemState>()(
           path = `/${path}`;
           return;
         }
-        const entry = get().getEntry({ id: currentId });
+        const entry = get().getEntry(currentId);
         if (!entry) {
           if (DEBUG) console.warn(`FileSystemStore:GetPath: Entry with id ${currentId} not found`);
           return;
@@ -584,10 +601,8 @@ const useFileSystemStore = create<FileSystemState>()(
       return path;
     },
 
-    getRoot: () => get().root,
-    getLookup: () => get().lookup,
     getIsIconSelected: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetIsIconSelected: Entry with id ${id} not found`);
         return false;
@@ -598,7 +613,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return get().selected;
     },
     getAllSelectedIdsSameParent: (parentId) => {
-      const entry = get().getEntry({ id: parentId });
+      const entry = get().getEntry(parentId);
       if (!entry || entry.type !== 'directory') {
         if (DEBUG)
           console.warn(
@@ -607,12 +622,12 @@ const useFileSystemStore = create<FileSystemState>()(
         return [];
       }
       return get().selected.filter((selectedId) => {
-        const selectedEntry = get().getEntry({ id: selectedId });
+        const selectedEntry = get().getEntry(selectedId);
         return selectedEntry?.parentId === parentId;
       });
     },
     getIconPosition: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetIconPosition: Entry with id ${id} not found`);
         return null;
@@ -621,7 +636,7 @@ const useFileSystemStore = create<FileSystemState>()(
     },
 
     getIconPositions(parentId) {
-      const entry = get().getEntry({ id: parentId });
+      const entry = get().getEntry(parentId);
       if (!entry || entry.type !== 'directory') {
         if (DEBUG)
           console.warn(
@@ -640,11 +655,11 @@ const useFileSystemStore = create<FileSystemState>()(
     getDisableSelect: () => get().disableSelect,
 
     getParentId: (id) => {
-      return get().getEntry({ id })?.parentId ?? null;
+      return get().getEntry(id)?.parentId ?? null;
     },
-    getName: (id) => get().getEntry({ id })?.name ?? '',
+    getName: (id) => get().getEntry(id)?.name ?? '',
     getChildren: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetChildren: Entry with id ${id} not found`);
         return [];
@@ -655,7 +670,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.children;
     },
     getDirectory: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetDirectory: Entry with id ${id} not found`);
         return null;
@@ -663,10 +678,10 @@ const useFileSystemStore = create<FileSystemState>()(
       if (entry.type !== 'directory') {
         return null;
       }
-      return entry.children.map((childId) => get().getEntry({ id: childId })) as FileSystemEntry[];
+      return entry.children.map((childId) => get().getEntry(childId)) as FileSystemEntry[];
     },
     getIsIconDragging: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetIsIconDragging: Entry with id ${id} not found`);
         return false;
@@ -677,7 +692,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return get().dragging.length > 0;
     },
     getWindowSize: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetWindowSize: Entry with id ${id} not found`);
         return { width: 0, height: 0 };
@@ -689,7 +704,7 @@ const useFileSystemStore = create<FileSystemState>()(
       };
     },
     getDefaultWindowSize: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetDefaultWindowSize: Entry with id ${id} not found`);
@@ -698,7 +713,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.defaultWindowSize ?? { width: 0, height: 0 };
     },
     getIsIconPositionEmpty: (parentId, position) => {
-      const entry = get().getEntry({ id: parentId });
+      const entry = get().getEntry(parentId);
       if (!entry || entry.type !== 'directory') {
         if (DEBUG) console.warn(`FileSystemStore:IsCellEmpty: Entry with id ${parentId} not found`);
         return false;
@@ -727,7 +742,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return true;
     },
     getEmptyIconPosition: (parentId, rowOrColumn = 'column') => {
-      const entry = get().getEntry({ id: parentId });
+      const entry = get().getEntry(parentId);
       if (!entry || entry.type !== 'directory') {
         if (DEBUG)
           console.warn(`FileSystemStore:getEmptyIconPosition: Entry with id ${parentId} not found`);
@@ -771,7 +786,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return null;
     },
     getIsOpen: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetIsOpen: Entry with id ${id} not found`);
         return false;
@@ -779,7 +794,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.isOpen ?? false;
     },
     getWindowPosition: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetWindowPosition: Entry with id ${id} not found`);
         return { x: 0, y: 0 };
@@ -797,7 +812,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return items;
     },
     getWindowCenterPosition: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetWindowCenterPosition: Entry with id ${id} not found`);
@@ -814,7 +829,7 @@ const useFileSystemStore = create<FileSystemState>()(
       };
     },
     getWindowState: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetWindowState: Entry with id ${id} not found`);
         return null;
@@ -827,7 +842,7 @@ const useFileSystemStore = create<FileSystemState>()(
       if (isBlurred || focused.length === 0) {
         return id === 'desktop';
       }
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetIsWindowFocused: Entry with id ${id} not found`);
@@ -847,7 +862,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return get().focused;
     },
     getWindowZIndex: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry?.isOpen) {
         return 0;
       }
@@ -856,7 +871,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return index + 2;
     },
     getIsWindowMoving: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetIsWindowMoving: Entry with id ${id} not found`);
         return false;
@@ -864,7 +879,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.isWindowMoving ?? false;
     },
     getIsWindowResizing: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetIsWindowResizing: Entry with id ${id} not found`);
@@ -873,7 +888,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.isWindowResizing ?? false;
     },
     getTransformScale: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetTransformScale: Entry with id ${id} not found`);
         return 1;
@@ -881,7 +896,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.transformScale ?? 0;
     },
     getIconTransformScale: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetIconTransformScale: Entry with id ${id} not found`);
@@ -890,7 +905,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.iconTransformScale ?? 1;
     },
     getWillTransform: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:GetWillTransform: Entry with id ${id} not found`);
         return false;
@@ -898,7 +913,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.willTransform ?? false;
     },
     getContentOpacity: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG) console.warn(`FileSystemStore:getContentOpacity: Entry with id ${id} not found`);
         return 1;
@@ -906,7 +921,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.contentOpacity ?? 0;
     },
     getIsDisabledResize: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetIsDisabledResize: Entry with id ${id} not found`);
@@ -920,7 +935,7 @@ const useFileSystemStore = create<FileSystemState>()(
       // interaction with other windows.
       const opened = get().getOpenedEntries();
       for (const id of opened) {
-        const entry = get().getEntry({ id });
+        const entry = get().getEntry(id);
         if (entry?.windowState === 'maximized') {
           return entry;
         }
@@ -936,7 +951,7 @@ const useFileSystemStore = create<FileSystemState>()(
     },
     getIsDisableDelete: (id) => {
       function _isDisableDelete(_id: EntryId): boolean {
-        const entry = get().getEntry({ id: _id });
+        const entry = get().getEntry(_id);
         const isDisabled = entry?.disableDelete ?? false;
         if (isDisabled) {
           return true;
@@ -954,8 +969,28 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return _isDisableDelete(id);
     },
+    getIsDisableCopy: (id) => {
+      function _isDisableCopy(_id: EntryId): boolean {
+        const entry = get().getEntry(_id);
+        const isDisabled = entry?.disableCopy ?? false;
+        if (isDisabled) {
+          return true;
+        }
+        const children = get().getChildren(_id);
+        if (!children) {
+          return false;
+        }
+        for (const childId of children) {
+          if (_isDisableCopy(childId)) {
+            return true;
+          }
+        }
+        return false;
+      }
+      return _isDisableCopy(id);
+    },
     getCanDeleteSelection: (parentId) => {
-      const parent = get().getEntry({ id: parentId });
+      const parent = get().getEntry(parentId);
       if (!parent) {
         return false;
       }
@@ -964,6 +999,17 @@ const useFileSystemStore = create<FileSystemState>()(
         return false;
       }
       return selectedIds.every((selectedId) => !get().getIsDisableDelete(selectedId));
+    },
+    getCanCopySelection: (parentId) => {
+      const parent = get().getEntry(parentId);
+      if (!parent) {
+        return false;
+      }
+      const selectedIds = get().getAllSelectedIds();
+      if (selectedIds.length === 0) {
+        return false;
+      }
+      return selectedIds.every((selectedId) => !get().getIsDisableCopy(selectedId));
     },
     getIsUsingSelectRect: () => {
       return get().isUsingSelectRect ?? false;
@@ -975,7 +1021,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return get().dropTargetIcon ?? null;
     },
     getIsDirectory: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetIsIconDirectory: Entry with id ${id} not found`);
@@ -984,7 +1030,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return entry.type === 'directory';
     },
     getIconAtPosition: (parentId, position) => {
-      const parent = get().getEntry({ id: parentId });
+      const parent = get().getEntry(parentId);
       if (!parent || parent.type !== 'directory') {
         if (DEBUG)
           console.warn(
@@ -993,7 +1039,7 @@ const useFileSystemStore = create<FileSystemState>()(
         return null;
       }
       for (const childId of parent.children) {
-        const child = get().getEntry({ id: childId })!;
+        const child = get().getEntry(childId)!;
         if (child.iconPosition?.x === position.x && child.iconPosition?.y === position.y) {
           return child;
         }
@@ -1007,7 +1053,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return get().isDragOverFolder ?? false;
     },
     getIsDisableMaximize: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:GetIsDisableMaximize: Entry with id ${id} not found`);
@@ -1025,7 +1071,7 @@ const useFileSystemStore = create<FileSystemState>()(
       return get().shouldUpdateName ?? false;
     },
     getDirectoryNames: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry || entry.type !== 'directory') {
         if (DEBUG)
           console.warn(
@@ -1039,26 +1085,40 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return new Set(children.map((child) => child.name));
     },
-    validateName: (parentId, name, exclude) => {
+
+    /**
+     * Returns a unique name in the directory, appending an index if necessary
+     * @param parentId - The id of the parent directory
+     * @param name - The name to validate
+     * @param exclude - The name to exclude from the validation. Useful in some cases, like renaming
+     * @param include - Additional names to check against. Useful when trying to validate names for directory that hasn't finished updating, during copying.
+     */
+    validateName: ({ parentId, name, exclude, include }) => {
       // Will ensure that the name is unique within the parent directory
-      const parent = get().getEntry({ id: parentId });
+      const parent = get().getEntry(parentId);
       if (!parent || parent.type !== 'directory') {
-        if (DEBUG)
+        if (DEBUG && !include?.has(name))
           console.warn(
             `FileSystemStore:ValidateName: Entry with id ${parentId} not found or not a directory`,
           );
         return null;
       }
       const directoryNames = get().getDirectoryNames(parentId);
-      if (!directoryNames.has(name)) return name;
+      if (!directoryNames.has(name) && !include?.has(name)) return name;
       let index = 2;
       let unqiueName = `${name}(${index.toString()})`;
-      while (directoryNames.has(unqiueName)) {
+      while (directoryNames.has(unqiueName) || include?.has(unqiueName)) {
         if (unqiueName === exclude) break;
         index++;
         unqiueName = `${name}(${index.toString()})`;
       }
-      return unqiueName;
+      return unqiueName.slice(0, 26); // 26 character limit for names
+    },
+    getClipboard: () => {
+      return get().clipboard;
+    },
+    getKeyCommand: () => {
+      return get()?.keyCommand ?? null;
     },
     // getters end
 
@@ -1294,7 +1354,8 @@ const useFileSystemStore = create<FileSystemState>()(
     },
     setContextState: (contextState) => {
       const { id } = contextState;
-      const entry = get().getEntry({ id });
+      if (!id) return;
+      const entry = get().getEntry(id);
       set((state) => {
         if (entry) {
           state.contextState = contextState;
@@ -1320,7 +1381,7 @@ const useFileSystemStore = create<FileSystemState>()(
       set((state) => {
         state.dropTargetIcon = id;
         if (id) {
-          const entry = get().getEntry({ id });
+          const entry = get().getEntry(id);
           if (entry) {
             state.isDragOverFolder = entry.type === 'directory';
           }
@@ -1370,6 +1431,30 @@ const useFileSystemStore = create<FileSystemState>()(
         state.shouldUpdateName = true;
       });
     },
+    selectAllIcons(parentId) {
+      const parent = get().getEntry(parentId);
+      if (!parent || parent.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:SelectAllIcons: Entry with id ${parentId} not found or not a directory`,
+          );
+        return;
+      }
+      set((state) => {
+        for (const childId of parent.children) {
+          const entry = state.lookup.get(childId);
+          if (entry) {
+            entry.isIconSelected = true;
+            state.selected.push(childId);
+          }
+        }
+      });
+    },
+    clearKeyCommand: () => {
+      set((state) => {
+        state.keyCommand = null;
+      });
+    },
     // setters end
 
     /*
@@ -1384,7 +1469,7 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
         visited.add(entryId);
-        const entry = get().getEntry({ id: entryId });
+        const entry = get().getEntry(entryId);
         if (!entry) {
           if (DEBUG) console.warn(`FileSystemStore:GetTree: Entry with id ${entryId} not found`);
           return;
@@ -1404,7 +1489,7 @@ const useFileSystemStore = create<FileSystemState>()(
     },
 
     printDirectory: (id) => {
-      const directory = get().getEntry({ id });
+      const directory = get().getEntry(id);
       if (!directory) {
         if (DEBUG) console.warn(`FileSystemStore:PrintDirectory: Entry with id ${id} not found`);
         return;
@@ -1415,7 +1500,7 @@ const useFileSystemStore = create<FileSystemState>()(
       }
 
       for (const childId of directory.children) {
-        const child = get().getEntry({ id: childId })!;
+        const child = get().getEntry(childId)!;
         if (child.type === 'file') {
           console.log(`${child.name}.${child.extension}`);
         } else {
@@ -1430,12 +1515,19 @@ const useFileSystemStore = create<FileSystemState>()(
      ********************************
      */
     createEntry: ({ parentId, name, extension, content, type }) => {
-      const parentEntry = get().getEntry({ id: parentId });
+      const parentEntry = get().getEntry(parentId);
       if (!parentEntry || parentEntry.type !== 'directory') {
         if (DEBUG)
           console.warn(
             `FileSystemStore:CreateEntry: Parent with id ${parentId} not found or not a directory`,
           );
+        return null;
+      }
+
+      // If over 1000 lookup entries, don't create any more. Will change later for something more elegant,
+      // but for now, let's save the user from themselves.
+      if (get().lookup.size >= 1000) {
+        if (DEBUG) console.warn(`FileSystemStore:CreateEntry: Maximum entries reached`);
         return null;
       }
 
@@ -1459,7 +1551,7 @@ const useFileSystemStore = create<FileSystemState>()(
       }
 
       const id = uuidv4();
-      const uniqueName = get().validateName(parentId, name)!;
+      const uniqueName = get().validateName({ parentId, name })!;
       const common = {
         name: uniqueName,
         id,
@@ -1493,21 +1585,17 @@ const useFileSystemStore = create<FileSystemState>()(
 
       let didCreate = false;
       set((state) => {
-        try {
-          state.lookup.set(id, entry);
-          if (parentId === 'root') {
-            state.root.children.push(id);
-          } else {
-            const parent = state.lookup.get(parentId) as Directory;
-            parent.children.push(id);
-          }
-          didCreate = true;
-        } catch (error) {
-          if (DEBUG) {
-            console.error('FileSystemStore:CreateEntry:', error);
-          }
+        state.lookup.set(id, entry);
+        const parent = state.lookup.get(parentId) as Directory;
+        if (!parent) {
+          if (DEBUG)
+            console.warn(`FileSystemStore:CreateEntry: Parent with id ${parentId} not found`);
           didCreate = false;
+          return;
         }
+        parent.children.push(id);
+        state.lookup.set(parentId, parent);
+        didCreate = true;
       });
       if (didCreate) {
         return id;
@@ -1547,10 +1635,7 @@ const useFileSystemStore = create<FileSystemState>()(
           }
 
           // Delete entry from parent table
-          const parent =
-            entry.parentId === 'root'
-              ? state.root
-              : (state.lookup.get(entry.parentId!) as Directory);
+          const parent = state.lookup.get(entry.parentId!) as Directory;
           if (!parent) {
             if (DEBUG)
               console.warn(
@@ -1597,7 +1682,11 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
         if (entry.name !== name) {
-          const uniqueName = get().validateName(entry.parentId!, name, entry.name)!;
+          const uniqueName = get().validateName({
+            parentId: entry.parentId!,
+            name,
+            exclude: entry.name,
+          })!;
           entry.name = uniqueName;
           entry.updatedAt = new Date();
           newName = uniqueName;
@@ -1660,8 +1749,7 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
 
-        const targetParentDir =
-          targetParentId === 'root' ? state.root : (state.lookup.get(targetParentId) as Directory);
+        const targetParentDir = state.lookup.get(targetParentId) as Directory;
         if (!targetParentDir) {
           if (DEBUG)
             console.warn(`FileSystemStore:MoveEntry: Parent with id ${targetParentId} not found`);
@@ -1675,10 +1763,7 @@ const useFileSystemStore = create<FileSystemState>()(
             );
           return;
         }
-        const oldParent =
-          sourceEntry.parentId === 'root'
-            ? state.root
-            : (state.lookup.get(sourceEntry.parentId!) as Directory);
+        const oldParent = state.lookup.get(sourceEntry.parentId!) as Directory;
         oldParent.children = oldParent.children.filter((childId) => childId !== sourceId);
 
         // Add entry to new parent
@@ -1691,8 +1776,110 @@ const useFileSystemStore = create<FileSystemState>()(
         sourceEntry.iconTransformScale = 1;
 
         // If the name of the entry already exists in the parent id, give the entry a unqiue name
-        sourceEntry.name = get().validateName(targetParentId, sourceEntry.name)!;
+        sourceEntry.name = get().validateName({
+          parentId: targetParentId,
+          name: sourceEntry.name,
+        })!;
       });
+    },
+
+    /*
+     ********************************
+     *          Copy Entry          *
+     ********************************
+     */
+    copyEntry(sourceId, targetParentId) {
+      let copyEntryId: EntryId | null = null;
+      // No copying root
+      if (sourceId === 'root') {
+        if (DEBUG) console.warn(`FileSystemStore:CopyEntry: Cannot copy root directory`);
+        return null;
+      }
+
+      set((state) => {
+        const sourceEntry = state.getEntry(sourceId);
+        const targetParentDir = state.getEntry(targetParentId) as Directory;
+
+        if (!sourceEntry) {
+          if (DEBUG) console.warn(`FileSystemStore:CopyEntry: Entry with id ${sourceId} not found`);
+          return;
+        }
+        if (!targetParentDir || targetParentDir.type !== 'directory') {
+          if (DEBUG)
+            console.warn(`FileSystemStore:CopyEntry: Parent with id ${targetParentId} not found`);
+          return;
+        }
+
+        // Collect copies into a new map
+        const collectedCopies = new Map<EntryId, FileSystemEntry>();
+        copyEntryId = gatherCopies(sourceId, targetParentId);
+
+        // No need to do anything else if no copies were successful
+        if (!copyEntryId) return;
+
+        // Update the state with the collected copies
+        for (const [newId, entry] of collectedCopies) {
+          const parent = state.lookup.get(entry.parentId!) as Directory;
+          if (parent && parent.type === 'directory') {
+            parent.children.push(newId);
+          }
+          state.lookup.set(newId, entry);
+        }
+
+        // helper to get all the copies
+        function gatherCopies(_sourceId: EntryId, _parentId: EntryId): EntryId | null {
+          const source = state.getEntry(_sourceId)!;
+          if (!source) return null;
+
+          // Create a shallow copy
+          const newId = uuidv4();
+          const shallowCopy = {
+            ...source,
+            id: newId,
+            parentId: _parentId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          // If directory, gather child copies
+          if (shallowCopy.type === 'directory') {
+            const srcDir = source as Directory;
+            const copyDir = shallowCopy as Directory;
+            const newChildren: EntryId[] = [];
+
+            for (const childId of srcDir.children) {
+              const childCopyId = gatherCopies(childId, newId);
+              if (childCopyId) {
+                newChildren.push(childCopyId);
+              }
+            }
+            copyDir.children = newChildren;
+          }
+
+          // Stash the copy in the collected copies map
+          collectedCopies.set(newId, shallowCopy);
+          return newId;
+        }
+      });
+
+      // Rename the base copy entry folder.
+      // We're doing it out here because we don't want to rename every child, just the copy that is in the same
+      // directory as the original. Also move the position over so it doesn't copy directly on top of the original
+      set((state) => {
+        if (!copyEntryId) return;
+        const copyEntry = state.getEntry(copyEntryId)!;
+        const name = copyEntry.name.includes('-copy') ? copyEntry.name : `${copyEntry.name}-copy`;
+        copyEntry.name = state.validateName({
+          parentId: copyEntry.parentId!,
+          name,
+        })!;
+
+        // Move the copy over a bit
+        const shiftDirection = copyEntry.parentId === 'desktop' ? 'column' : 'row';
+        copyEntry.iconPosition = state.getEmptyIconPosition(copyEntry.parentId!, shiftDirection)!;
+      });
+
+      return copyEntryId;
     },
 
     /*
@@ -1949,7 +2136,7 @@ const useFileSystemStore = create<FileSystemState>()(
       });
     },
     pushFocus: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry?.isOpen) {
         return;
       }
@@ -1977,7 +2164,7 @@ const useFileSystemStore = create<FileSystemState>()(
       });
     },
     executeWindowOnUpdateCallback: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(`FileSystemStore:executeWindowCallbac: Entry with id ${id} not found`);
@@ -1989,7 +2176,7 @@ const useFileSystemStore = create<FileSystemState>()(
       }
     },
     executeWindowOnCloseCallback: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(
@@ -2003,7 +2190,7 @@ const useFileSystemStore = create<FileSystemState>()(
       }
     },
     executeWindowOnMinimizeCallback: (id) => {
-      const entry = get().getEntry({ id });
+      const entry = get().getEntry(id);
       if (!entry) {
         if (DEBUG)
           console.warn(
@@ -2029,6 +2216,54 @@ const useFileSystemStore = create<FileSystemState>()(
         console.log(entry.windowSize);
       });
     },
+    selectedToClipboard: () => {
+      set((state) => {
+        state.clipboard = [...state.selected];
+      });
+    },
+    pasteClipboard: (parentId) => {
+      const clipboard = get().clipboard;
+      const lookup = get().lookup;
+      const copyEntry = get().copyEntry;
+
+      if (clipboard.length === 0) {
+        return;
+      }
+
+      // If over 1000 total lookup items, don't paste
+      if (lookup.size + clipboard.length > 1000) {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:PasteClipboard: Cannot paste. Would exceed 1000 total items`,
+          );
+        return;
+      }
+      for (const id of clipboard) {
+        if (!get().getIsDisableCopy(id)) {
+          copyEntry(id, parentId);
+        }
+      }
+    },
+
+    /*
+     ********************************
+     *       Keyboard Commands      *
+     ********************************
+     */
+    setKeyCommand: (event) => {
+      set((state) => {
+        // Do this to retrigger whatever component is listening to the keyCommand state
+        state.keyCommand = null;
+
+        if (event.metaKey && event.key === 'a') {
+          state.keyCommand = 'select-all';
+        } else if (event.metaKey && event.key === 'c') {
+          state.keyCommand = 'copy';
+        } else if (event.metaKey && event.key === 'v') {
+          state.keyCommand = 'paste';
+        }
+      });
+    },
 
     /*
      ********************************
@@ -2039,12 +2274,8 @@ const useFileSystemStore = create<FileSystemState>()(
       set(initiateState(initialState));
     },
 
-    // Completely empty system for testing
     resetForTest: () => {
-      set((state) => {
-        state.root = testState.root;
-        state.lookup = new Map();
-      });
+      set(initiateState(testState));
     },
   })),
 );
@@ -2084,9 +2315,10 @@ function initiateState(state: StoreState): StoreState {
     for (const childId of dir.children) {
       const child = state.lookup.get(childId);
       if (!child) {
-        // default config is probably messed up if this happens
-        // let's throw an error for now
-        console.warn(`FileSystemStore:InitiateState: Child with id ${childId} not found`);
+        // This happens when we included a child in a directory children, but it doesn't exist in the lookup
+        console.warn(
+          `FileSystemStore:InitiateState: Child with id ${childId} not found. Did you forget to add it to the lookup?`,
+        );
         continue;
       }
       const cell = GRID_CELL_SIZE;

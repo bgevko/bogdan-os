@@ -8,7 +8,7 @@ const WindowSystem = (): React.ReactElement => {
   return (
     <>
       {entries.map((entryId) => {
-        const entry = getEntry({ id: entryId });
+        const entry = getEntry(entryId);
         if (!entry) {
           return null;
         }

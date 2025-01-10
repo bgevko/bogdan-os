@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import UseKeyPresses from '@/hooks/use-key-presses';
 import FileExplorerIcon from '@/system/file-system/components/icon';
@@ -14,12 +14,18 @@ const Desktop = (): React.ReactElement => {
   const clearContextState = useFileSystemStore((state) => state.clearContextState);
   const setDropTargetId = useFileSystemStore((state) => state.setDropTargetId);
   const clearRenaming = useFileSystemStore((state) => state.clearRenaming);
+  const selectAllIcons = useFileSystemStore((state) => state.selectAllIcons);
+  const selectedToClipboard = useFileSystemStore((state) => state.selectedToClipboard);
+  const clearKeyCommand = useFileSystemStore((state) => state.clearKeyCommand);
+  const pasteClipboard = useFileSystemStore((state) => state.pasteClipboard);
   const desktopChildren = useFileSystemStore((state) => state.getDirectory('desktop'));
-  const desktopEntry = useFileSystemStore((state) => state.getEntry({ id: 'desktop' }));
+  const desktopEntry = useFileSystemStore((state) => state.getEntry('desktop'));
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
   const windowPosition = useFileSystemStore((state) => state.getWindowPosition('desktop'));
   const windowSize = useFileSystemStore((state) => state.getWindowSize('desktop'));
+  const keyCommand = useFileSystemStore((state) => state.getKeyCommand());
+  const isFocused = useFileSystemStore((state) => state.getIsWindowFocused('desktop'));
 
   const {
     selectRectPosition,
@@ -29,6 +35,31 @@ const Desktop = (): React.ReactElement => {
   } = UseDragSelect(desktopEntry!);
 
   const { isShiftPressed } = UseKeyPresses();
+
+  /*
+   *************************************
+   *  Listen for desktop key commands  *
+   *************************************
+   */
+
+  useEffect(() => {
+    if (!keyCommand || !isFocused) return;
+    switch (keyCommand) {
+      case 'select-all': {
+        selectAllIcons('desktop');
+        break;
+      }
+      case 'copy': {
+        selectedToClipboard();
+        break;
+      }
+      case 'paste': {
+        pasteClipboard('desktop');
+        break;
+      }
+      default:
+    }
+  }, [keyCommand, isFocused, selectAllIcons, selectedToClipboard, pasteClipboard]);
 
   if (!desktopChildren) {
     return <></>;
@@ -53,6 +84,7 @@ const Desktop = (): React.ReactElement => {
               category: 'directory',
               clickPosition,
             });
+            clearIconSelection();
           }
         }}
         onMouseDown={(event) => {
@@ -65,6 +97,7 @@ const Desktop = (): React.ReactElement => {
             blurWindowFocus(true);
             clearContextState();
             clearRenaming();
+            clearKeyCommand();
           }
         }}
         onClick={(event) => {
