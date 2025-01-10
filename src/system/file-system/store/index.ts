@@ -101,6 +101,7 @@ export interface Size {
   width: number;
   height: number;
 }
+export type KeyCommand = 'copy' | 'paste' | 'delete' | 'select-all';
 
 /*
  ********************************
@@ -116,6 +117,7 @@ interface Metadata {
 
   // Icon stuff
   disableDelete: boolean;
+  disableCopy?: boolean;
   icon?: string;
   iconSize?: number;
   iconColor?: string;
@@ -177,6 +179,7 @@ interface StoreState {
   isMaximizedWindowHeaderVisible?: boolean;
   isUsingSelectRect?: boolean;
   shouldUpdateName?: boolean;
+  keyCommand?: KeyCommand | null;
 
   // window state
   opened: EntryId[];
@@ -186,6 +189,7 @@ interface StoreState {
   // icon global info
   selected: EntryId[];
   dragging: EntryId[];
+  clipboard: EntryId[];
   renaming: EntryId | null;
   dragInitiatorId?: EntryId | null;
   dropTarget?: EntryId;
@@ -244,7 +248,9 @@ interface StoreActions {
   getWindowCenterPosition: (id: EntryId) => Position;
   getContextState: () => ContextState | null;
   getIsDisableDelete: (id: EntryId) => boolean;
+  getIsDisableCopy: (id: EntryId) => boolean;
   getCanDeleteSelection: (parentId: EntryId) => boolean;
+  getCanCopySelection: (parentId: EntryId) => boolean;
   getIsUsingSelectRect: () => boolean;
   getDropTargetId: () => EntryId;
   getDropTargetIconId: () => EntryId | null;
@@ -269,6 +275,8 @@ interface StoreActions {
     exclude?: string;
     include?: Set<string>;
   }) => string | null;
+  getClipboard: () => EntryId[];
+  getKeyCommand: () => KeyCommand | null;
   // getters end
 
   /*
@@ -280,6 +288,7 @@ interface StoreActions {
   resetForTest: () => void;
   setIconPosition: (id: EntryId, position: Position) => void;
   setIsIconSelected: (id: EntryId, isSelected: boolean) => void;
+  selectAllIcons: (parentId: EntryId) => void;
   clearIconSelection: () => void;
   setDisableSelect: (isDisabled: boolean) => void;
   setIsIconDragging: (id: EntryId, isDragging: boolean) => void;
@@ -307,6 +316,8 @@ interface StoreActions {
   setWindowOnMinimizeCallback: (id: EntryId, callback: () => void) => void;
   setRenaming: (id: EntryId) => void;
   clearRenaming: () => void;
+  setKeyCommand: (event: KeyboardEvent) => void;
+  clearKeyCommand: () => void;
   // setters end
 
   /*
@@ -353,6 +364,8 @@ interface StoreActions {
   executeWindowOnUpdateCallback: (id: EntryId) => void;
   executeWindowOnCloseCallback: (id: EntryId) => void;
   executeWindowOnMinimizeCallback: (id: EntryId) => void;
+  selectedToClipboard: () => void;
+  pasteClipboard: (parentId: EntryId) => void;
 }
 interface FileSystemState extends StoreState, StoreActions {}
 
@@ -374,6 +387,7 @@ const windowState = {
   focused: [],
   selected: [],
   dragging: [],
+  clipboard: [],
   renaming: null,
 };
 
@@ -394,6 +408,7 @@ const initialState: StoreState = {
         type: 'directory',
         children: ['desktop'],
         disableDelete: true,
+        disableCopy: true,
       },
     ],
     [
@@ -412,6 +427,7 @@ const initialState: StoreState = {
         },
         children: [...applications.keys(), 'test-folder'],
         disableDelete: true,
+        disableCopy: true,
       },
     ],
     [
@@ -953,6 +969,26 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return _isDisableDelete(id);
     },
+    getIsDisableCopy: (id) => {
+      function _isDisableCopy(_id: EntryId): boolean {
+        const entry = get().getEntry(_id);
+        const isDisabled = entry?.disableCopy ?? false;
+        if (isDisabled) {
+          return true;
+        }
+        const children = get().getChildren(_id);
+        if (!children) {
+          return false;
+        }
+        for (const childId of children) {
+          if (_isDisableCopy(childId)) {
+            return true;
+          }
+        }
+        return false;
+      }
+      return _isDisableCopy(id);
+    },
     getCanDeleteSelection: (parentId) => {
       const parent = get().getEntry(parentId);
       if (!parent) {
@@ -963,6 +999,17 @@ const useFileSystemStore = create<FileSystemState>()(
         return false;
       }
       return selectedIds.every((selectedId) => !get().getIsDisableDelete(selectedId));
+    },
+    getCanCopySelection: (parentId) => {
+      const parent = get().getEntry(parentId);
+      if (!parent) {
+        return false;
+      }
+      const selectedIds = get().getAllSelectedIds();
+      if (selectedIds.length === 0) {
+        return false;
+      }
+      return selectedIds.every((selectedId) => !get().getIsDisableCopy(selectedId));
     },
     getIsUsingSelectRect: () => {
       return get().isUsingSelectRect ?? false;
@@ -1066,6 +1113,12 @@ const useFileSystemStore = create<FileSystemState>()(
         unqiueName = `${name}(${index.toString()})`;
       }
       return unqiueName.slice(0, 26); // 26 character limit for names
+    },
+    getClipboard: () => {
+      return get().clipboard;
+    },
+    getKeyCommand: () => {
+      return get()?.keyCommand ?? null;
     },
     // getters end
 
@@ -1378,6 +1431,30 @@ const useFileSystemStore = create<FileSystemState>()(
         state.shouldUpdateName = true;
       });
     },
+    selectAllIcons(parentId) {
+      const parent = get().getEntry(parentId);
+      if (!parent || parent.type !== 'directory') {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:SelectAllIcons: Entry with id ${parentId} not found or not a directory`,
+          );
+        return;
+      }
+      set((state) => {
+        for (const childId of parent.children) {
+          const entry = state.lookup.get(childId);
+          if (entry) {
+            entry.isIconSelected = true;
+            state.selected.push(childId);
+          }
+        }
+      });
+    },
+    clearKeyCommand: () => {
+      set((state) => {
+        state.keyCommand = null;
+      });
+    },
     // setters end
 
     /*
@@ -1444,6 +1521,13 @@ const useFileSystemStore = create<FileSystemState>()(
           console.warn(
             `FileSystemStore:CreateEntry: Parent with id ${parentId} not found or not a directory`,
           );
+        return null;
+      }
+
+      // If over 1000 lookup entries, don't create any more. Will change later for something more elegant,
+      // but for now, let's save the user from themselves.
+      if (get().lookup.size >= 1000) {
+        if (DEBUG) console.warn(`FileSystemStore:CreateEntry: Maximum entries reached`);
         return null;
       }
 
@@ -1780,14 +1864,19 @@ const useFileSystemStore = create<FileSystemState>()(
 
       // Rename the base copy entry folder.
       // We're doing it out here because we don't want to rename every child, just the copy that is in the same
-      // directory as the original
+      // directory as the original. Also move the position over so it doesn't copy directly on top of the original
       set((state) => {
         if (!copyEntryId) return;
         const copyEntry = state.getEntry(copyEntryId)!;
+        const name = copyEntry.name.includes('-copy') ? copyEntry.name : `${copyEntry.name}-copy`;
         copyEntry.name = state.validateName({
           parentId: copyEntry.parentId!,
-          name: `${copyEntry.name}-copy`,
+          name,
         })!;
+
+        // Move the copy over a bit
+        const shiftDirection = copyEntry.parentId === 'desktop' ? 'column' : 'row';
+        copyEntry.iconPosition = state.getEmptyIconPosition(copyEntry.parentId!, shiftDirection)!;
       });
 
       return copyEntryId;
@@ -2125,6 +2214,54 @@ const useFileSystemStore = create<FileSystemState>()(
         entry.windowPosition = get().getWindowCenterPosition(id);
         entry.windowSize = get().getDefaultWindowSize(id);
         console.log(entry.windowSize);
+      });
+    },
+    selectedToClipboard: () => {
+      set((state) => {
+        state.clipboard = [...state.selected];
+      });
+    },
+    pasteClipboard: (parentId) => {
+      const clipboard = get().clipboard;
+      const lookup = get().lookup;
+      const copyEntry = get().copyEntry;
+
+      if (clipboard.length === 0) {
+        return;
+      }
+
+      // If over 1000 total lookup items, don't paste
+      if (lookup.size + clipboard.length > 1000) {
+        if (DEBUG)
+          console.warn(
+            `FileSystemStore:PasteClipboard: Cannot paste. Would exceed 1000 total items`,
+          );
+        return;
+      }
+      for (const id of clipboard) {
+        if (!get().getIsDisableCopy(id)) {
+          copyEntry(id, parentId);
+        }
+      }
+    },
+
+    /*
+     ********************************
+     *       Keyboard Commands      *
+     ********************************
+     */
+    setKeyCommand: (event) => {
+      set((state) => {
+        // Do this to retrigger whatever component is listening to the keyCommand state
+        state.keyCommand = null;
+
+        if (event.metaKey && event.key === 'a') {
+          state.keyCommand = 'select-all';
+        } else if (event.metaKey && event.key === 'c') {
+          state.keyCommand = 'copy';
+        } else if (event.metaKey && event.key === 'v') {
+          state.keyCommand = 'paste';
+        }
       });
     },
 

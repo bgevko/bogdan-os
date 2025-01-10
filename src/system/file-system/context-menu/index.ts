@@ -25,6 +25,19 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
         },
       ],
       [
+        'Paste',
+        {
+          callback: (entry) => {
+            if (!entry) return;
+            useFileSystemStore.getState().pasteClipboard(entry.id);
+          },
+          disableCallback: () => {
+            return useFileSystemStore.getState().getClipboard().length === 0;
+          },
+          bottomBorder: true,
+        },
+      ],
+      [
         'Sort',
         {
           callback: (entry) => {
@@ -37,6 +50,22 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
   [
     'icon',
     new Map<string, ContextMenuAction>([
+      [
+        'Copy',
+        {
+          callback: (entry) => {
+            if (!entry) return;
+            useFileSystemStore.getState().selectedToClipboard();
+          },
+          disableCallback: (entry) => {
+            const canCopySelection = useFileSystemStore
+              .getState()
+              .getCanCopySelection(entry?.parentId ?? '');
+            return !canCopySelection;
+          },
+          bottomBorder: true,
+        },
+      ],
       [
         'Rename',
         {

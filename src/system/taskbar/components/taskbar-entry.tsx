@@ -15,17 +15,18 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
   const setContextState = useFileSystemsStore((state) => state.setContextState);
   const clearContextState = useFileSystemsStore((state) => state.clearContextState);
   const clearRenaming = useFileSystemsStore((state) => state.clearRenaming);
+  const clearKeyCommand = useFileSystemsStore((state) => state.clearKeyCommand);
   const windowState = useFileSystemsStore((state) => state.getWindowState(entry.id));
-  const name = useFileSystemsStore((state) => state.getName(entry.id));
   const isFocused = useFileSystemsStore((state) => state.getIsWindowFocused(entry.id));
   const isOpen = useFileSystemsStore((state) => state.getIsOpen(entry.id));
   const transformScale = useFileSystemsStore((state) => state.getTransformScale(entry.id));
   const { handleToggleMinimize } = UseWindowMove(entry);
+  let name = useFileSystemsStore((state) => state.getName(entry.id));
+  name = name.length <= 11 ? name : `${name.slice(0, 11)}...`;
 
   const [buttonDown, setButtonDown] = useState(false);
   const [mouseDown, setMouseDown] = useState(false);
 
-  // temp stubs
   const isMinimized = windowState === 'minimized';
 
   const tabReference = useRef<HTMLButtonElement>(null);
@@ -84,6 +85,7 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
 
         clearContextState();
         clearRenaming();
+        clearKeyCommand();
       }}
       onMouseUp={() => {
         setButtonDown(false);
