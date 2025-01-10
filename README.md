@@ -1,4 +1,6 @@
-# Web Desktop Environment
+# BogdanOS
+![Screenshot 2025-01-10 at 9 42 56 PM](https://github.com/user-attachments/assets/907de20d-30a3-4e0a-89d4-c1ac3af6e71b)
+
 
 This project is a work in progress to create a desktop environment in the browser.
 You can see the demo at https://os.bgevko.com
