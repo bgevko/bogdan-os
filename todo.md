@@ -40,3 +40,5 @@
 - Fix slow load for directory when more than one file is inside
 - Fullscreen mode has some issues when minimizing directories
 - Can't delete folders in Safari
+- Copy -> Delete -> Paste doesn't work, it should be allowed.
+- Delete should go to trash

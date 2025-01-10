@@ -263,7 +263,6 @@ interface StoreActions {
   getIsRenaming: (id: EntryId) => boolean;
   getShouldUpdateName: () => boolean;
   getDirectoryNames: (id: EntryId) => Set<string>;
-  // validateName: (parentId: EntryId, name: string, exclude?: string) => string | null;
   validateName: ({
     parentId,
     name,
@@ -1105,14 +1104,15 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       const directoryNames = get().getDirectoryNames(parentId);
       if (!directoryNames.has(name) && !include?.has(name)) return name;
+      if (name === exclude) return name;
       let index = 2;
-      let unqiueName = `${name}(${index.toString()})`;
-      while (directoryNames.has(unqiueName) || include?.has(unqiueName)) {
-        if (unqiueName === exclude) break;
+      let uniqueName = `${name}(${index.toString()})`;
+      while (directoryNames.has(uniqueName) || include?.has(uniqueName)) {
+        if (uniqueName === exclude) break;
         index++;
-        unqiueName = `${name}(${index.toString()})`;
+        uniqueName = `${name}(${index.toString()})`;
       }
-      return unqiueName.slice(0, 26); // 26 character limit for names
+      return uniqueName.slice(0, 26); // 26 character limit for names
     },
     getClipboard: () => {
       return get().clipboard;
@@ -1871,6 +1871,7 @@ const useFileSystemStore = create<FileSystemState>()(
         copyEntry.name = state.validateName({
           parentId: targetParentId,
           name: copyEntry.name,
+          exclude: copyEntry.name,
         })!;
 
         // Move the copy over a bit
