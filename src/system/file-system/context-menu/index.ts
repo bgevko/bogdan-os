@@ -31,8 +31,11 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
             if (!entry) return;
             useFileSystemStore.getState().pasteClipboard(entry.id);
           },
-          disableCallback: () => {
-            return useFileSystemStore.getState().getClipboard().length === 0;
+          disableCallback: (entry) => {
+            if (!entry) return true;
+            const clipBoardEmptry = useFileSystemStore.getState().getClipboard().length === 0;
+            const canPaste = useFileSystemStore.getState().getCanPaste(entry.id);
+            return clipBoardEmptry || !canPaste;
           },
           bottomBorder: true,
         },

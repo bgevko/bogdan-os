@@ -274,8 +274,10 @@ interface StoreActions {
     exclude?: string;
     include?: Set<string>;
   }) => string | null;
+  validateNameAgainst({ name, names }: { name: string; names: Set<string> }): string | null;
   getClipboard: () => EntryId[];
   getKeyCommand: () => KeyCommand | null;
+  getCanPaste: (targetId: EntryId) => boolean;
   // getters end
 
   /*
@@ -1114,11 +1116,28 @@ const useFileSystemStore = create<FileSystemState>()(
       }
       return uniqueName.slice(0, 26); // 26 character limit for names
     },
+    validateNameAgainst: ({ name, names }) => {
+      if (!names.has(name)) return name;
+      let index = 2;
+      let uniqueName = `${name}(${index.toString()})`;
+      while (names.has(uniqueName)) {
+        index++;
+        uniqueName = `${name}(${index.toString()})`;
+      }
+      return uniqueName.slice(0, 26); // 26 character limit for names
+    },
     getClipboard: () => {
       return get().clipboard;
     },
     getKeyCommand: () => {
       return get()?.keyCommand ?? null;
+    },
+    getCanPaste: (targetId) => {
+      const clipboard = get().getClipboard();
+      for (const id of clipboard) {
+        if (get().getIsAncestor(id, targetId) || id === targetId) return false;
+      }
+      return true;
     },
     // getters end
 
@@ -1808,8 +1827,12 @@ const useFileSystemStore = create<FileSystemState>()(
       // No copying to itself
       if (sourceId === targetParentId) {
         if (DEBUG) console.warn(`FileSystemStore:CopyEntry: Cannot copy entry into itself`);
+        console.log('Cannot copy entry into itself');
         return null;
       }
+
+      // help with naming later
+      const priorCopyTargetNames = get().getDirectoryNames(targetParentId);
 
       set((state) => {
         const sourceEntry = state.getEntry(sourceId);
@@ -1877,16 +1900,18 @@ const useFileSystemStore = create<FileSystemState>()(
         }
       });
 
+      if (!copyEntryId) return null;
       // Rename the base copy entry folder.
       // We're doing it out here because we don't want to rename every child, just the copy that is in the same
       // directory as the original. Also move the position over so it doesn't copy directly on top of the original
       set((state) => {
         if (!copyEntryId) return;
         const copyEntry = state.getEntry(copyEntryId)!;
-        copyEntry.name = state.validateName({
-          parentId: targetParentId,
+
+        // Unique name
+        copyEntry.name = get().validateNameAgainst({
           name: copyEntry.name,
-          exclude: copyEntry.name,
+          names: priorCopyTargetNames,
         })!;
 
         // Move the copy over a bit
@@ -2269,6 +2294,9 @@ const useFileSystemStore = create<FileSystemState>()(
       set((state) => {
         // Do this to retrigger whatever component is listening to the keyCommand state
         state.keyCommand = null;
+        if (get().renaming) {
+          return;
+        }
 
         if (event.metaKey && event.key === 'a') {
           state.keyCommand = 'select-all';
