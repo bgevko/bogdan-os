@@ -75,6 +75,8 @@ const directoryContextMenuItems: ContextMenuItems = new Map([
           callback: (entry) => {
             if (!entry) return;
             useFileSystemStore.getState().setRenaming(entry.id);
+            useFileSystemStore.getState().clearIconSelection();
+            useFileSystemStore.getState().setIsIconSelected(entry.id, true);
           },
           bottomBorder: true,
         },
