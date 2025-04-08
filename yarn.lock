@@ -1217,7 +1217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^19.0.0":
+"@types/react-dom@npm:^19.1.1":
   version: 19.1.1
   resolution: "@types/react-dom@npm:19.1.1"
   peerDependencies:
@@ -1226,7 +1226,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^19.0.0":
+"@types/react@npm:^19.1.0":
   version: 19.1.0
   resolution: "@types/react@npm:19.1.0"
   dependencies:
@@ -1934,8 +1934,8 @@ __metadata:
     "@testing-library/react": "npm:^16.3.0"
     "@testing-library/user-event": "npm:^14.6.1"
     "@types/node": "npm:^22.14.0"
-    "@types/react": "npm:^19.0.0"
-    "@types/react-dom": "npm:^19.0.0"
+    "@types/react": "npm:^19.1.0"
+    "@types/react-dom": "npm:^19.1.1"
     "@types/three": "npm:^0.175.0"
     "@typescript-eslint/eslint-plugin": "npm:^7.18.0"
     "@typescript-eslint/parser": "npm:^7.18.0"
@@ -1963,8 +1963,8 @@ __metadata:
     postcss: "npm:^8.5.3"
     postcss-import: "npm:^16.1.0"
     prettier: "npm:^3.5.3"
-    react: "npm:^19.0.0"
-    react-dom: "npm:^19.0.0"
+    react: "npm:^19.1.0"
+    react-dom: "npm:^19.1.0"
     tailwind-merge: "npm:^2.6.0"
     tailwindcss: "npm:^3.4.17"
     three: "npm:^0.169.0"
@@ -5810,7 +5810,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^19.0.0":
+"react-dom@npm:^19.1.0":
   version: 19.1.0
   resolution: "react-dom@npm:19.1.0"
   dependencies:
@@ -5849,7 +5849,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^19.0.0":
+"react@npm:^19.1.0":
   version: 19.1.0
   resolution: "react@npm:19.1.0"
   checksum: 10c0/530fb9a62237d54137a13d2cfb67a7db6a2156faed43eecc423f4713d9b20c6f2728b026b45e28fcd72e8eadb9e9ed4b089e99f5e295d2f0ad3134251bdd3698
