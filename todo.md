@@ -38,6 +38,10 @@
   - Paste twice (cmd + V)
   - Open & close any file / folder. Item will be copied again each time closing a file.
 
+### Migrate Zustand 4 -> 5
+
+- Will require debugging, as there are some breaking changes. [docs](https://zustand.docs.pmnd.rs/migrations/migrating-to-v5)
+
 ### TODO
 
 - Fix the jumpy loading state
