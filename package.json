@@ -1,8 +1,22 @@
 {
-  "name": "webos",
-  "private": true,
+  "name": "bogdan-os",
   "version": "0.0.0",
+  "private": true,
   "type": "module",
+  "description": "BogdanOS is a web-based desktop environment built with modern web technologies.",
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/bogdanos.git"
+  },
+  "keywords": [
+    "web desktop",
+    "os",
+    "virtual desktop",
+    "bogdanos",
+    "webos"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -24,7 +38,7 @@
     "*.{js,ts,tsx}": "eslint --fix"
   },
   "dependencies": {
-    "@excalidraw/excalidraw": "^0.17.6",
+    "@excalidraw/excalidraw": "0.17.6",
     "clsx": "^2.1.1",
     "immer": "^10.1.1",
     "react": "^18.3.1",
