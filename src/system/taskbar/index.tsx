@@ -1,11 +1,13 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+import React from 'react';
+
 import useFileSystemStore from '@/system/file-system/store';
 import Clock from '@/system/taskbar/components/clock';
 import TaskbarEntry from '@/system/taskbar/components/taskbar-entry';
 import { TASKBAR_HEIGHT } from '@/themes';
 import { getEventTargetDataId } from '@/utils';
 
-const Taskbar = (): JSX.Element => {
+const Taskbar = (): React.JSX.Element => {
   const entries = useFileSystemStore((state) => state.getOpenedEntries());
   const getEntry = useFileSystemStore((state) => state.getEntry);
   const blurWindowFocus = useFileSystemStore((state) => state.blurWindowFocus);

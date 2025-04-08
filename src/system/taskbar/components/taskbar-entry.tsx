@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useRef, Suspense } from 'react';
+import React, { useMemo, useEffect, useState, useRef, Suspense } from 'react';
 
 import useFileSystemsStore, { type FileSystemEntry } from '@/system/file-system/store';
 import UseWindowMove from '@/system/window-system/hooks/use-window-move';
@@ -10,7 +10,7 @@ interface taskbarEntryProperties {
   entry: FileSystemEntry;
 }
 
-const TaskbarEntry = ({ entry }: taskbarEntryProperties): JSX.Element => {
+const TaskbarEntry = ({ entry }: taskbarEntryProperties): React.JSX.Element => {
   const pushFocus = useFileSystemsStore((state) => state.pushFocus);
   const setContextState = useFileSystemsStore((state) => state.setContextState);
   const clearContextState = useFileSystemsStore((state) => state.clearContextState);

@@ -8,7 +8,7 @@ import cn from '@/utils/format';
 const ExcalidrawWrapper = ({ entry }: AppComponent): React.ReactElement => {
   entry = entry!;
   const setWindowOnUpdateCallback = useFileSystemStore((state) => state.setWindowOnUpdateCallback);
-  const excalidrawAPI = useRef<ExcalidrawImperativeAPI>();
+  const excalidrawAPI = useRef<ExcalidrawImperativeAPI>(null);
 
   useEffect(() => {
     const updateExcalidraw = () => {

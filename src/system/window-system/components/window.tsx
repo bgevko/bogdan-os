@@ -34,7 +34,7 @@ const Window = ({ entry }: WindowProperties): ReactElement => {
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging);
 
   const [isReady, setIsReady] = useState(false);
-  const LazyIcon = useMemo(() => getLazyIcon('secret'), [entry.id]);
+  const LazyIcon = useMemo(() => getLazyIcon('secret'), [entry.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const Component = useMemo(() => getComponent(entry.id, entry.type), [entry.id, entry.type]);
   /*
    ***********************************

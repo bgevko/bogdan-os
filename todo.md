@@ -31,6 +31,13 @@
 
 - Add option for inline wrap
 
+### Paste bug
+
+- To reproduce:
+  - Copy a file (cmd + C)
+  - Paste twice (cmd + V)
+  - Open & close any file / folder. Item will be copied again each time closing a file.
+
 ### TODO
 
 - Fix the jumpy loading state
