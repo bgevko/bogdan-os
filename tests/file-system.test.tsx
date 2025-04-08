@@ -490,7 +490,7 @@ describe('useFileSystemStore', () => {
       expect(rootChildren).toHaveLength(2);
 
       // Check various properties
-      expect(file2Entry.name).toEqual('file1-copy');
+      expect(file2Entry.name).toEqual('file1(2)');
       expect(file2Entry.id).toEqual(file2Id);
       expect(file2Entry.parentId).toEqual('root');
       expect(file2Entry.type).toEqual('file');
@@ -512,7 +512,7 @@ describe('useFileSystemStore', () => {
       expect(file3Id).not.toBeNull();
       const file3Entry = store.getEntry(file3Id) as File;
       expect(file3Entry).not.toBeNull();
-      expect(file3Entry.name).toEqual('file1-copy(2)');
+      expect(file3Entry.name).toEqual('file1(3)');
 
       // Copy into another directory
       const dir1Id = store.createEntry({
@@ -525,7 +525,7 @@ describe('useFileSystemStore', () => {
       expect(dir1Children).toHaveLength(1);
       const file4Entry = store.getEntry(file4Id) as File;
       expect(file4Entry).not.toBeNull();
-      expect(file4Entry.name).toEqual('file1-copy');
+      expect(file4Entry.name).toEqual('file1');
       expect(file4Entry.parentId).toEqual(dir1Id);
       expect(file4Entry.type).toEqual('file');
       expect(file4Entry.extension).toEqual('txt');
@@ -535,7 +535,7 @@ describe('useFileSystemStore', () => {
       const file5Id = store.copyEntry(file4Id, 'root')!;
       const file5Entry = store.getEntry(file5Id) as File;
       expect(file5Entry).not.toBeNull();
-      expect(file5Entry.name).toEqual('file1-copy-copy');
+      expect(file5Entry.name).toEqual('file1(4)');
       expect(file5Entry.parentId).toEqual('root');
       expect(file5Entry.type).toEqual('file');
       expect(file5Entry.extension).toEqual('txt');
@@ -577,7 +577,7 @@ describe('useFileSystemStore', () => {
       expect(rootChildren).toHaveLength(2);
       const folderCopyEntry = store.getEntry(folderCopyId) as Directory;
       expect(folderCopyEntry).not.toBeNull();
-      expect(folderCopyEntry.name).toEqual('folder1-copy');
+      expect(folderCopyEntry.name).toEqual('folder1(2)');
       expect(folderCopyEntry.parentId).toEqual('root');
       expect(folderCopyEntry.type).toEqual('directory');
 
@@ -625,7 +625,7 @@ describe('useFileSystemStore', () => {
       expect(rootChildren2).toHaveLength(3);
       const folderCopy2Entry = store.getEntry(folderCopy2Id) as Directory;
       expect(folderCopy2Entry).not.toBeNull();
-      expect(folderCopy2Entry.name).toEqual('folder1-copy(2)');
+      expect(folderCopy2Entry.name).toEqual('folder1(3)');
       expect(folderCopy2Entry.parentId).toEqual('root');
       const folderCopy2Children = store.getChildren(folderCopy2Id);
       const folderCopy2FileId = folderCopy2Children.find(
@@ -647,7 +647,6 @@ describe('useFileSystemStore', () => {
       expect(folderCopy2NestedFolderEntry.parentId).toEqual(folderCopy2Id);
       expect(folderCopy2NestedFolderEntry.type).toEqual('directory');
       expect(store.getChildren(folderCopy2NestedFolderId)).toHaveLength(1);
-      store.printTree('root');
     });
   });
 });

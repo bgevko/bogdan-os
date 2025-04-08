@@ -42,3 +42,7 @@
 - Can't delete folders in Safari
 - Copy -> Delete -> Paste doesn't work, it should be allowed.
 - Delete should go to trash
+
+### Migrations
+
+- Excalidraw upgrade breaks excalidraw

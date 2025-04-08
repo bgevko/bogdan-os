@@ -38,6 +38,7 @@ export default defineConfig(() => {
       globals: true,
       environment: 'jsdom',
       setupFiles: './tests/setup.ts',
+      threads: false,
     },
     build: {
       outDir: outDir,

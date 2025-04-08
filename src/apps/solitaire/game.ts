@@ -4,7 +4,7 @@
 
 // game.ts
 
-const DEBUG = true;
+const DEBUG = false;
 
 export interface Move {
   description: string;
