@@ -293,7 +293,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
         data-id={`${entry.type}-icon`}
         className={cn(
           'w-[80px] h-[88px]',
-          'absolute px-2 rounded-md background-transparent cursor-default flex flex-col items-center focus:outline-none',
+          'absolute px-2 rounded-md background-transparent cursor-default flex flex-col items-center focus:outline-hidden',
           isIconSelected && 'bg-black/20',
           !isIconDragging && 'transition-transform duragion 500',
           !isIconSelected && !isAnyIconDragging && 'hover:bg-black/10',
@@ -372,7 +372,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             disabled
             className={cn(
               'absolute no-select resize-none overflow-visible text-base font-bold bg-transparent text-center',
-              'focus:outline-none',
+              'focus:outline-hidden',
             )}
             style={{
               bottom: -20,
@@ -389,7 +389,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             maxLength={26}
             className={cn(
               'absolute resize-none overflow-visible text-base font-bold bg-transparent text-center',
-              'focus:outline-none',
+              'focus:outline-hidden',
             )}
             style={{
               bottom: -20,

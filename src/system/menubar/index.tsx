@@ -95,7 +95,7 @@ const DropDownMenu = ({
   menuItem: MenubarItem;
 }): ReactElement => {
   return (
-    <ul className="window-shadow absolute left-0 z-50 flex w-max flex-col gap-1 rounded border border-stone-200 bg-stone-50 p-1">
+    <ul className="window-shadow absolute left-0 z-50 flex w-max flex-col gap-1 rounded-sm border border-stone-200 bg-stone-50 p-1">
       {[...menuItem.entries()].map(([label, item]) => {
         let isDisabled = false;
         if (item.disableCallback) {

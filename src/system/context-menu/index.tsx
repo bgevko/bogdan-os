@@ -49,7 +49,7 @@ const DropdownMenu = ({
         width: CONTEXT_MENU_WIDTH,
         transform: `translate(${position.x.toString()}px, ${position.y.toString()}px)`,
       }}
-      className="window-shadow absolute left-0 z-50 flex flex-col gap-1 rounded border border-stone-200 bg-stone-50 p-1"
+      className="window-shadow absolute left-0 z-50 flex flex-col gap-1 rounded-sm border border-stone-200 bg-stone-50 p-1"
       onClick={() => {
         onClick();
       }}
