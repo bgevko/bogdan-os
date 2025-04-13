@@ -393,12 +393,12 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             maxLength={26}
             className={cn(
               'absolute resize-none overflow-visible text-base font-bold bg-transparent text-center',
-              'focus:outline-hidden',
             )}
             style={{
               bottom: -20,
               width: '105px',
               overflowWrap: 'break-word',
+              outline: 'none',
             }}
             value={renameInputValue}
             onChange={(event) => {

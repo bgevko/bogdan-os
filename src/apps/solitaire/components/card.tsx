@@ -39,7 +39,6 @@ export const CardIcon: React.FC<CardIconProps> = ({
         }
       })
       .catch((error: unknown) => {
-        // eslint-disable-next-line no-console
         console.error(`Icon "${icon}" not found.`, error);
       });
     return () => {

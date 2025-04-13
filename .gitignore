@@ -31,3 +31,4 @@ icons.afdesign
 
 # other
 .yarn
+.eslint-config-inspector

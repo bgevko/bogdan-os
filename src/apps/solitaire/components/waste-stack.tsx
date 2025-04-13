@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 
 import Card from '@/solitaire/components/card';
 import useSolitaireStore from '@/solitaire/store';
+import { assertDefined } from '@/utils';
 
 interface WasteStackProps {
   cards: number[];
@@ -32,7 +33,7 @@ const WasteStackBase = ({ cards, onClick }: WasteStackProps): React.ReactElement
       if (isEmpty || !isOverTopCard) return;
       setDragStartPos({ x: event.clientX, y: event.clientY });
       setIsDragging(true);
-      setDragCards([cards.at(-1)!]);
+      setDragCards([assertDefined(cards.at(-1))]);
     },
     [cards, setDragCards, isEmpty, isOverTopCard],
   );
@@ -63,7 +64,7 @@ const WasteStackBase = ({ cards, onClick }: WasteStackProps): React.ReactElement
      * */
 
     // Helper function to create a delay
-    // eslint-disable-next-line no-promise-executor-return
+
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     if (moveWasteToFirstAvailableFoundation()) {
@@ -73,7 +74,7 @@ const WasteStackBase = ({ cards, onClick }: WasteStackProps): React.ReactElement
         [0, 1, 2, 3, 4, 5, 6].some((index) => moveTableauToFirstAvailableFoundation(index))
       ) {
         // Add a delay between each loop iteration to create the cascading effect
-        // eslint-disable-next-line no-await-in-loop
+
         await delay(50);
       }
     }

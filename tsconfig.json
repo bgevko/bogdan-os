@@ -1,6 +1,6 @@
 {
   "include": ["**/*.ts", "**/*.tsx", "eslint.config.mjs"],
-  "exclude": ["node_modules", "dist", "build", "coverage", "public", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", "build", "coverage", "public", "vite.config.ts", "tests/*"],
   "references": [{ "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],

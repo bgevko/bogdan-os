@@ -29,11 +29,11 @@ body {
 input:focus,
 textarea:focus,
 select:focus {
-  outline: 2px solid orange; /* stylelint-disable-line color-named */
+  outline: 2px solid orange;
 }
 
 button:disabled {
-  color: gray; /* stylelint-disable-line color-named */
+  color: gray;
 }
 
 button:disabled:hover {
