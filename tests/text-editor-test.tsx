@@ -212,7 +212,12 @@ describe('useEditorStore', () => {
       store.insertNode('root', paragraphNode);
       store.insertNode('paragraph-1', textNode);
       store.insertNode('paragraph-1', textNode2);
-      store.traverseNodes(store.getNode('root')!, (node) => {
+
+      const rootNode = store.getNode('root');
+      expect(rootNode).toBeDefined();
+      if (!rootNode) return;
+
+      store.traverseNodes(rootNode, (node) => {
         if (node.node === 'text') {
           store.updateNode(node.id, {
             text: `${node.text}!`,

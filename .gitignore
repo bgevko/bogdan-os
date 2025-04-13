@@ -28,3 +28,7 @@ dist-ssr
 .test
 
 icons.afdesign
+
+# other
+.yarn
+.eslint-config-inspector

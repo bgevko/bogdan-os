@@ -43,4 +43,6 @@ const Timer = forwardRef<TimerHandle, TimerProps>(({ initialSeconds }, ref) => {
   return null; // No UI rendering to avoid re-renders
 });
 
+Timer.displayName = 'Timer';
+
 export default Timer;

@@ -1,8 +1,8 @@
-/* eslint-disable no-continue */
 import { useCallback, useState } from 'react';
 
 import useFileSystemStore, { FileSystemEntry, Position } from '@/system/file-system/store';
 import { snapToTargetGrid } from '@/system/file-system/utils';
+import { assertNotNull } from '@/utils';
 
 interface ReturnTypes {
   handleDragStart: (event: React.MouseEvent) => void;
@@ -43,7 +43,7 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
       const selected = getAllSelectedIdsSameParent(entry.parentId ?? '');
       const positions: Record<string, Position> = {};
       for (const id of selected) {
-        const pos = getIconPosition(id)!;
+        const pos = assertNotNull(getIconPosition(id), 'handleDragStart: undefined bheavior');
         const startPos = {
           x: event.clientX - pos.x,
           y: event.clientY - pos.y,
@@ -80,15 +80,16 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
       clearAllIconsDragging();
       setDragInitiatorId(null);
       const dropTargetIconId = getDropTargetIconId();
-      const parentPosition = getWindowPosition(entry.parentId!);
-      const parentSize = getWindowSize(entry.parentId!);
+      const parentId = assertNotNull(entry.parentId, 'handleMouseUp: undefined behavior');
+      const parentPosition = getWindowPosition(parentId);
+      const parentSize = getWindowSize(parentId);
       for (const id of Object.keys(startingPositions)) {
         if (dropTargetIconId) {
           moveEntry(id, dropTargetIconId);
           setIconPosition(id, { x: 0, y: 0 });
           continue;
         }
-        const pos = getIconPosition(id)!;
+        const pos = assertNotNull(getIconPosition(id), 'handleMouseUp: undefined behavior');
         let targetPosition = parentPosition;
         let targetSize = parentSize;
         if (dropTargetId !== entry.parentId) {
@@ -96,7 +97,7 @@ const UseIconDrag = (entry: FileSystemEntry, dropTargetId: string): ReturnTypes 
           targetSize = getWindowSize(dropTargetId);
         }
         const targetPos = snapToTargetGrid({
-          sourceId: entry.parentId!,
+          sourceId: parentId,
           targetId: dropTargetId,
           position: pos,
           sourceOrigin: parentPosition,

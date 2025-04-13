@@ -3,6 +3,7 @@ import React, { useCallback, useState, useEffect } from 'react';
 import Card from '@/solitaire/components/card';
 import useSolitaireStore from '@/solitaire/store';
 import cn from '@/utils/format';
+import { assertDefined } from '@/utils';
 
 interface FoundationStackProps {
   cards: number[];
@@ -37,7 +38,7 @@ const FoundationStackBase = ({
       if (isEmpty) return;
       setDragStartPos({ x: event.clientX, y: event.clientY });
       setIsDragging(true);
-      setDragCards([cards.at(-1)!]);
+      setDragCards([assertDefined(cards.at(-1))]);
       setFromFoundationIdx(foundationIdx);
     },
     [cards, setDragCards, isEmpty, foundationIdx, setFromFoundationIdx],

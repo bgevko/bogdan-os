@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const useLocaleTimeDate = (date: Date) => {
   const localeDate = date.toLocaleDateString();
@@ -7,7 +7,7 @@ const useLocaleTimeDate = (date: Date) => {
   return { date: localeDate, time: localeTime, dateTime: localeDateTime };
 };
 
-const Clock = (): JSX.Element => {
+const Clock = (): React.JSX.Element => {
   const [now, setNow] = useState(new Date());
   const { time } = useLocaleTimeDate(now);
 

@@ -1,6 +1,3 @@
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable no-continue */
-/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { enableMapSet } from 'immer';
 import { type ComponentType, LazyExoticComponent, CSSProperties } from 'react';
@@ -10,6 +7,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import { applications } from '@/defaults';
 import { TASKBAR_HEIGHT, GRID_CELL_SIZE, DEFAULT_WINDOW_SIZE } from '@/themes';
+import { assertNotNull, assertDefined } from '@/utils';
 
 enableMapSet();
 
@@ -274,7 +272,7 @@ interface StoreActions {
     exclude?: string;
     include?: Set<string>;
   }) => string | null;
-  validateNameAgainst({ name, names }: { name: string; names: Set<string> }): string | null;
+  validateNameAgainst({ name, names }: { name: string; names: Set<string> }): string;
   getClipboard: () => EntryId[];
   getKeyCommand: () => KeyCommand | null;
   getCanPaste: (targetId: EntryId) => boolean;
@@ -595,7 +593,8 @@ const useFileSystemStore = create<FileSystemState>()(
         } else {
           path = `${entry.name}/${path}`;
         }
-        getPathHelper(entry.parentId!);
+        const parentId = assertNotNull(entry.parentId, 'getPath: Undefined behavior');
+        getPathHelper(parentId);
       }
 
       getPathHelper(id);
@@ -857,7 +856,11 @@ const useFileSystemStore = create<FileSystemState>()(
       if (isBlurred || !focused || focused.length === 0) {
         return 'desktop';
       }
-      return focused.at(-1)!;
+      const res = focused.at(-1);
+      if (!res) {
+        throw new Error('getFocusedWindowId: Undefined behavior in focused stack.');
+      }
+      return res;
     },
     getFocusStack: () => {
       return get().focused;
@@ -1040,7 +1043,10 @@ const useFileSystemStore = create<FileSystemState>()(
         return null;
       }
       for (const childId of parent.children) {
-        const child = get().getEntry(childId)!;
+        const child = assertNotNull(
+          get().getEntry(childId),
+          'getIconAtPosition: Undefined behavior',
+        );
         if (child.iconPosition?.x === position.x && child.iconPosition?.y === position.y) {
           return child;
         }
@@ -1124,7 +1130,7 @@ const useFileSystemStore = create<FileSystemState>()(
         index++;
         uniqueName = `${name}(${index.toString()})`;
       }
-      return uniqueName.slice(0, 26); // 26 character limit for names
+      return assertNotNull(uniqueName.slice(0, 26), 'validateNameAgainst: Undefined behavior');
     },
     getClipboard: () => {
       return get().clipboard;
@@ -1159,17 +1165,19 @@ const useFileSystemStore = create<FileSystemState>()(
           return;
         }
 
+        const parentId = assertNotNull(entry.parentId, 'setIconPosition: Undefined behavior');
+
         // Not dragging, and there's an empty position
-        if (get().getIsIconPositionEmpty(entry.parentId!, position)) {
+        if (get().getIsIconPositionEmpty(parentId, position)) {
           entry.iconPosition = position;
           return;
         }
 
         // Otherwise, find an empty position
         const emptyPosition =
-          entry.parentId === 'desktop'
-            ? get().getEmptyIconPosition(entry.parentId, 'column')
-            : get().getEmptyIconPosition(entry.parentId!, 'row');
+          parentId === 'desktop'
+            ? get().getEmptyIconPosition(parentId, 'column')
+            : get().getEmptyIconPosition(parentId, 'row');
 
         if (!emptyPosition) {
           if (DEBUG)
@@ -1519,7 +1527,7 @@ const useFileSystemStore = create<FileSystemState>()(
       }
 
       for (const childId of directory.children) {
-        const child = get().getEntry(childId)!;
+        const child = assertNotNull(get().getEntry(childId), 'printDirectory: Undefined behavior');
         if (child.type === 'file') {
           console.log(`${child.name}.${child.extension}`);
         } else {
@@ -1570,7 +1578,10 @@ const useFileSystemStore = create<FileSystemState>()(
       }
 
       const id = uuidv4();
-      const uniqueName = get().validateName({ parentId, name })!;
+      const uniqueName = assertNotNull(
+        get().validateName({ parentId, name }),
+        'createEntry: Undefined behavior',
+      );
       const common = {
         name: uniqueName,
         id,
@@ -1653,13 +1664,13 @@ const useFileSystemStore = create<FileSystemState>()(
             dir.children = [];
           }
 
+          const parentId = assertNotNull(entry.parentId, 'deleteEntry: Undefined behavior');
+
           // Delete entry from parent table
-          const parent = state.lookup.get(entry.parentId!) as Directory;
+          const parent = state.lookup.get(parentId) as Directory;
           if (!parent) {
             if (DEBUG)
-              console.warn(
-                `FileSystemStore:DeleteEntry: Parent with id ${entry.parentId!} not found`,
-              );
+              console.warn(`FileSystemStore:DeleteEntry: Parent with id ${parentId} not found`);
             return false;
           }
           parent.children = parent.children.filter((childId) => childId !== entryId);
@@ -1700,13 +1711,15 @@ const useFileSystemStore = create<FileSystemState>()(
           state.shouldUpdateName = false;
           return;
         }
+
+        const parentId = assertNotNull(entry.parentId, 'renameEntry: Undefined behavior');
         if (entry.name !== name) {
           const uniqueName = get().validateName({
-            parentId: entry.parentId!,
+            parentId: parentId,
             name,
             exclude: entry.name,
-          })!;
-          entry.name = uniqueName;
+          });
+          entry.name = assertNotNull(uniqueName, 'renameEntry: Undefined behavior');
           entry.updatedAt = new Date();
           newName = uniqueName;
         }
@@ -1782,7 +1795,11 @@ const useFileSystemStore = create<FileSystemState>()(
             );
           return;
         }
-        const oldParent = state.lookup.get(sourceEntry.parentId!) as Directory;
+        const sourceEntryParentId = assertNotNull(
+          sourceEntry.parentId,
+          'moveEntry: Undefined behavior',
+        );
+        const oldParent = state.lookup.get(sourceEntryParentId) as Directory;
         oldParent.children = oldParent.children.filter((childId) => childId !== sourceId);
 
         // Add entry to new parent
@@ -1795,10 +1812,13 @@ const useFileSystemStore = create<FileSystemState>()(
         sourceEntry.iconTransformScale = 1;
 
         // If the name of the entry already exists in the parent id, give the entry a unqiue name
-        sourceEntry.name = get().validateName({
-          parentId: targetParentId,
-          name: sourceEntry.name,
-        })!;
+        sourceEntry.name = assertNotNull(
+          get().validateName({
+            parentId: targetParentId,
+            name: sourceEntry.name,
+          }),
+          'moveEntry: Undefined behavior',
+        );
       });
     },
 
@@ -1857,7 +1877,8 @@ const useFileSystemStore = create<FileSystemState>()(
 
         // Update the state with the collected copies
         for (const [newId, entry] of collectedCopies) {
-          const parent = state.lookup.get(entry.parentId!) as Directory;
+          const parentId = assertNotNull(entry.parentId, 'copyEntry: Undefined behavior');
+          const parent = state.lookup.get(parentId) as Directory;
           if (parent && parent.type === 'directory') {
             parent.children.push(newId);
           }
@@ -1866,7 +1887,7 @@ const useFileSystemStore = create<FileSystemState>()(
 
         // helper to get all the copies
         function gatherCopies(_sourceId: EntryId, _parentId: EntryId): EntryId | null {
-          const source = state.getEntry(_sourceId)!;
+          const source = state.getEntry(_sourceId);
           if (!source) return null;
 
           // Create a shallow copy
@@ -1906,17 +1927,27 @@ const useFileSystemStore = create<FileSystemState>()(
       // directory as the original. Also move the position over so it doesn't copy directly on top of the original
       set((state) => {
         if (!copyEntryId) return;
-        const copyEntry = state.getEntry(copyEntryId)!;
+        const copyEntry = assertNotNull(
+          state.getEntry(copyEntryId),
+          'copyEntry: Undefined behavior',
+        );
 
         // Unique name
         copyEntry.name = get().validateNameAgainst({
           name: copyEntry.name,
           names: priorCopyTargetNames,
-        })!;
+        });
 
         // Move the copy over a bit
-        const shiftDirection = copyEntry.parentId === 'desktop' ? 'column' : 'row';
-        copyEntry.iconPosition = state.getEmptyIconPosition(copyEntry.parentId!, shiftDirection)!;
+        const copyEntryParentId = assertNotNull(
+          copyEntry.parentId,
+          'copyEntry: Undefined behavior',
+        );
+        const shiftDirection = copyEntryParentId === 'desktop' ? 'column' : 'row';
+        copyEntry.iconPosition = assertNotNull(
+          state.getEmptyIconPosition(copyEntryParentId, shiftDirection),
+          'copyEntry: Undefined behavior',
+        );
       });
 
       return copyEntryId;
@@ -1953,7 +1984,7 @@ const useFileSystemStore = create<FileSystemState>()(
             : winWidth / 2 - entry.defaultWindowSize.width / 2 + offset * addOrSubtract,
           y: winHeight / 2 - entry.defaultWindowSize.height / 2 + offset * addOrSubtract,
         };
-        state.lookup.get(id)!.windowPosition = pos;
+        entry.windowPosition = pos;
 
         // Turn off global blur
         state.windowBlur = false;
@@ -2006,7 +2037,10 @@ const useFileSystemStore = create<FileSystemState>()(
             );
           return;
         }
-        const children = parent.children.map((childId) => state.lookup.get(childId)!);
+        // const children = parent.children.map((childId) => state.lookup.get(childId));
+        const children = parent.children.map((childId) => {
+          return assertDefined(state.lookup.get(childId), 'sortIcons: Undefined behavior');
+        });
         if (sortType === 'name') {
           children.sort((a, b) => a.name.localeCompare(b.name));
         } else if (sortType === 'date') {
@@ -2125,7 +2159,10 @@ const useFileSystemStore = create<FileSystemState>()(
               x: winWidth / 2 - defaultSize.width / 2,
               y: winHeight / 2 - defaultSize.height / 2,
             };
-            const maximizedEntry = state.lookup.get(maximized.id)!;
+            const maximizedEntry = assertDefined(
+              state.lookup.get(maximized.id),
+              'toggleMaximize: Undefined behavior',
+            );
             maximizedEntry.windowPosition = center;
             maximizedEntry.windowSize = defaultSize;
             maximizedEntry.windowState = 'normal';
@@ -2330,6 +2367,7 @@ const useFileSystemStore = create<FileSystemState>()(
  *                              *
  ********************************
  */
+
 function generateAppsFromDefaults(): Map<string, FileSystemEntry> {
   const apps = new Map<string, File>();
   for (const [key, value] of applications) {

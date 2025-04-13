@@ -98,7 +98,6 @@ const TableauStack = ({ cards, tableauIdx }: TableauStackProps): React.ReactElem
        * */
 
       // Helper function to create a delay
-      // eslint-disable-next-line no-promise-executor-return
       const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
       if (moveTableauToFirstAvailableFoundation(tabIdx)) {
@@ -108,7 +107,6 @@ const TableauStack = ({ cards, tableauIdx }: TableauStackProps): React.ReactElem
           [0, 1, 2, 3, 4, 5, 6].some((index) => moveTableauToFirstAvailableFoundation(index))
         ) {
           // Add a delay between each loop iteration to create the cascading effect
-          // eslint-disable-next-line no-await-in-loop
           await delay(10);
         }
       }

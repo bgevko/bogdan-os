@@ -12,7 +12,7 @@ import {
   transformPosition,
 } from '@/system/file-system/utils';
 import { GRID_CELL_SIZE, ICON_ANIMATION_DURATION } from '@/themes';
-import { getLazyIcon, getEventTargetDataId } from '@/utils';
+import { getLazyIcon, getEventTargetDataId, assertNotNull, assertDefined } from '@/utils';
 import cn from '@/utils/format';
 
 interface IconProps {
@@ -60,7 +60,9 @@ const FileExplorerIcon: React.FC<IconProps> = ({
   const { handleMouseDownSelect, handleMouseUpSelect, handleFocusSelect, handleToggleSelect } =
     UseIconSelect(entry, selectRectVisible);
   const { handleDragStart, handleMouseMove, handleMouseUp } = UseIconDrag(entry, dropTargetId);
-  const LazyIcon = useMemo(() => getLazyIcon(entry.icon!), [entry.icon]);
+
+  const entryIcon = assertDefined(entry.icon, 'FileExplorerIcon: undefined behavior');
+  const LazyIcon = useMemo(() => getLazyIcon(entryIcon), [entryIcon]);
 
   /*
    ********************************
@@ -184,8 +186,9 @@ const FileExplorerIcon: React.FC<IconProps> = ({
       targetPosition = getWindowPosition(dropTargetId);
       targetSize = getWindowSize(dropTargetId);
     }
+    const parentId = assertNotNull(entry.parentId);
     const pos = snapToTargetGrid({
-      sourceId: entry.parentId!,
+      sourceId: parentId,
       targetId: dropTargetId,
       position: entry.iconPosition,
       sourceOrigin: parentPosition,
@@ -213,7 +216,8 @@ const FileExplorerIcon: React.FC<IconProps> = ({
     let targetOrigin = parentPosition;
     let iconPosition = dropGuidePos;
     if (dropTargetId !== entry.parentId) {
-      const offsets = getOffsetsForContext(entry.parentId!, dropTargetId);
+      const parentId = assertNotNull(entry.parentId, 'Undefined behavior');
+      const offsets = getOffsetsForContext(parentId, dropTargetId);
       targetOrigin = getWindowPosition(dropTargetId);
       iconPosition = transformPosition({
         position: dropGuidePos,
@@ -293,7 +297,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
         data-id={`${entry.type}-icon`}
         className={cn(
           'w-[80px] h-[88px]',
-          'absolute px-2 rounded-md background-transparent cursor-default flex flex-col items-center focus:outline-none',
+          'absolute px-2 rounded-md background-transparent cursor-default flex flex-col items-center focus:outline-hidden',
           isIconSelected && 'bg-black/20',
           !isIconDragging && 'transition-transform duragion 500',
           !isIconSelected && !isAnyIconDragging && 'hover:bg-black/10',
@@ -321,7 +325,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
           if (entry.parentId === 'desktop') {
             blurWindowFocus(true);
           } else {
-            pushFocus(entry.parentId!);
+            pushFocus(assertNotNull(entry.parentId, 'FileSystemIcon: Undefined behavior'));
           }
         }}
         onMouseUp={(event: React.MouseEvent) => {
@@ -372,7 +376,7 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             disabled
             className={cn(
               'absolute no-select resize-none overflow-visible text-base font-bold bg-transparent text-center',
-              'focus:outline-none',
+              'focus:outline-hidden',
             )}
             style={{
               bottom: -20,
@@ -389,12 +393,12 @@ const FileExplorerIcon: React.FC<IconProps> = ({
             maxLength={26}
             className={cn(
               'absolute resize-none overflow-visible text-base font-bold bg-transparent text-center',
-              'focus:outline-none',
             )}
             style={{
               bottom: -20,
               width: '105px',
               overflowWrap: 'break-word',
+              outline: 'none',
             }}
             value={renameInputValue}
             onChange={(event) => {

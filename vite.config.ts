@@ -3,6 +3,7 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 import svgr from 'vite-plugin-svgr';
 import glsl from 'vite-plugin-glsl';
+import tailwindcss from '@tailwindcss/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -12,13 +13,14 @@ export default defineConfig(() => {
     plugins: [
       glsl(),
       react(),
+      tailwindcss(),
       svgr({
         svgrOptions: {
           plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
           svgoConfig: {
             floatPrecision: 2,
             plugins: [
-              { name: 'convertStyleToAttrs' }, // Move inline styles to attributes
+              { name: 'convertStyleToAttrs' },
               {
                 name: 'removeAttributesBySelector',
                 params: {
@@ -38,6 +40,7 @@ export default defineConfig(() => {
       globals: true,
       environment: 'jsdom',
       setupFiles: './tests/setup.ts',
+      threads: false,
     },
     build: {
       outDir: outDir,

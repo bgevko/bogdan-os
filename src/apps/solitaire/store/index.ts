@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
-/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware'; // Added this line
 import { immer } from 'zustand/middleware/immer';
 
-import * as game from '@/solitaire/game';
+import { assertDefined } from '@/utils';
 
 const DEBUG = false;
 
@@ -266,17 +264,18 @@ const useSolitaireStore = create<SolitaireState>()(
             state.waste = [];
             state.score -= 200;
             if (DEBUG) {
-              const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-              const debugShuffledStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+              const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+              const debugShuffledStock = `[${state.stock.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
               const debugStr = `Pop to waste:\n Stock: ${debugShuffledStock}\n Waste: ${debugWaste}`;
               console.log(debugStr);
               console.log('TRANSFERRED WASTE TO STOCK');
             }
             return;
           }
+
           // Grab the top card from stock, flip it, and push it to waste
-          const card = state.stock.pop();
-          state.waste.push(-card!);
+          const card = assertDefined(state.stock.pop());
+          state.waste.push(-card);
 
           state.moveStack.push({
             type: 'popToWaste',
@@ -288,9 +287,9 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           if (DEBUG) {
-            const debugStockTop = game.getCardStr(state.waste.at(-1));
-            const debugStock = `[${state.stock.map((cardVal) => game.getCardStr(-cardVal)).join(', ')}]`;
-            const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+            const debugStockTop = getCardStr(state.waste.at(-1));
+            const debugStock = `[${state.stock.map((cardVal) => getCardStr(-cardVal)).join(', ')}]`;
+            const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
             const debugStr = `Pop to waste: \nStock (Face-down): ${debugStock}, \nWaste: ${debugWaste}`;
             console.log(debugStr);
             console.log(`MOVED ${debugStockTop} TO WASTE`);
@@ -306,8 +305,8 @@ const useSolitaireStore = create<SolitaireState>()(
             state.waste = [];
             state.score -= 200;
             if (DEBUG) {
-              const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-              const debugShuffledStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+              const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+              const debugShuffledStock = `[${state.stock.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
               const debugStr = `Pop to waste:\n Stock: ${debugShuffledStock}\n Waste: ${debugWaste}`;
               console.log(debugStr);
               console.log('TRANSFERRED WASTE TO STOCK');
@@ -327,9 +326,9 @@ const useSolitaireStore = create<SolitaireState>()(
             state.moveStack.shift();
           }
           if (DEBUG) {
-            const debugStockTop = game.getCardStr(state.waste.at(-1));
-            const debugStock = `[${state.stock.map((cardVal) => game.getCardStr(-cardVal)).join(', ')}]`;
-            const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+            const debugStockTop = getCardStr(state.waste.at(-1));
+            const debugStock = `[${state.stock.map((cardVal) => getCardStr(-cardVal)).join(', ')}]`;
+            const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
             const debugStr = `Pop to waste: \nStock (Face-down): ${debugStock}, \nWaste: ${debugWaste}`;
             console.log(debugStr);
             console.log(`MOVED ${debugStockTop} TO WASTE`);
@@ -348,18 +347,18 @@ const useSolitaireStore = create<SolitaireState>()(
         let didFindFoundation = false;
 
         set((state) => {
-          const debugTableauCard = game.getCardStr(state.tableau[tableauIdx].at(-1)!);
-          const debugTableau = `[${state.tableau[tableauIdx].map((card) => game.getCardStr(card)).join(', ')}]`;
-          const debugFoundation = `[${state.foundations.map((foundation) => game.getCardStr(foundation.at(-1))).join(', ')}]`;
+          const debugTableauCard = getCardStr(state.tableau[tableauIdx].at(-1));
+          const debugTableau = `[${state.tableau[tableauIdx].map((card) => getCardStr(card)).join(', ')}]`;
+          const debugFoundation = `[${state.foundations.map((foundation) => getCardStr(foundation.at(-1))).join(', ')}]`;
           const debugStr = `Tableau to First Valid Foundation: \nTableau top: ${debugTableauCard}, \nTableau: ${debugTableau}, \nFoundations: ${debugFoundation}`;
 
           // Find the first foundation that the tableau card can be moved to
 
           for (let i = 0; i < 4; i += 1) {
-            const card = state.tableau[tableauIdx].at(-1)!;
+            const card = assertDefined(state.tableau[tableauIdx].at(-1));
             const foundation = state.foundations[i].at(-1);
-            if (game.aStacksOnB({ a: card, b: foundation, isFoundation: true })) {
-              state.foundations[i].push(state.tableau[tableauIdx].pop()!);
+            if (aStacksOnB({ a: card, b: foundation, isFoundation: true })) {
+              state.foundations[i].push(assertDefined(state.tableau[tableauIdx].pop()));
               state.moveStack.push({
                 type: 'moveTableauToFirstAvailableFoundation',
                 tableauIdx,
@@ -399,14 +398,14 @@ const useSolitaireStore = create<SolitaireState>()(
             return;
           }
 
-          const tableauCard = state.tableau[tableauIdx].at(-1)!;
-          const foundationCard = state.foundations[foundationIdx].at(-1);
+          const tableauCard = assertDefined(state.tableau[tableauIdx].at(-1));
+          const foundationCard = assertDefined(state.foundations[foundationIdx].at(-1));
 
           // Doesn't stack
-          if (!game.aStacksOnB({ a: tableauCard, b: foundationCard, isFoundation: true })) {
+          if (!aStacksOnB({ a: tableauCard, b: foundationCard, isFoundation: true })) {
             if (DEBUG) {
-              const debugTableauCard = game.getCardStr(tableauCard);
-              const debugFoundationCard = game.getCardStr(foundationCard);
+              const debugTableauCard = getCardStr(tableauCard);
+              const debugFoundationCard = getCardStr(foundationCard);
               const debugStr = `Tableau to Foundation: \nTableau top: ${debugTableauCard}, \nFoundation top: ${debugFoundationCard}`;
               console.log(`${debugStr} \nFALSE\n`);
             }
@@ -415,10 +414,10 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           // Move the tableau card to the foundation
-          state.foundations[foundationIdx].push(state.tableau[tableauIdx].pop()!);
+          state.foundations[foundationIdx].push(assertDefined(state.tableau[tableauIdx].pop()));
           if (DEBUG) {
-            const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-            const debugFoundation = `[${state.foundations[foundationIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+            const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+            const debugFoundation = `[${state.foundations[foundationIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
             const debugStr = `Tableau to Foundation: \nTableau: ${debugTableau}, \nFoundation: ${debugFoundation}`;
             console.log(`${debugStr} \nTRUE\n`);
           }
@@ -449,14 +448,14 @@ const useSolitaireStore = create<SolitaireState>()(
             return;
           }
 
-          const wasteCard = state.waste.at(-1)!;
-          const foundationCard = state.foundations[foundationIdx].at(-1);
+          const wasteCard = assertDefined(state.waste.at(-1));
+          const foundationCard = assertDefined(state.foundations[foundationIdx].at(-1));
 
           // Doesn't stack
-          if (!game.aStacksOnB({ a: wasteCard, b: foundationCard, isFoundation: true })) {
+          if (!aStacksOnB({ a: wasteCard, b: foundationCard, isFoundation: true })) {
             if (DEBUG) {
-              const debugWasteCard = game.getCardStr(wasteCard);
-              const debugFoundationCard = game.getCardStr(foundationCard);
+              const debugWasteCard = getCardStr(wasteCard);
+              const debugFoundationCard = getCardStr(foundationCard);
               const debugStr = `Waste to Foundation: \nWaste top: ${debugWasteCard}, \nFoundation top: ${debugFoundationCard}`;
               console.log(`${debugStr} \nFALSE\n`);
             }
@@ -465,10 +464,10 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           // Move the waste card to the foundation
-          state.foundations[foundationIdx].push(state.waste.pop()!);
+          state.foundations[foundationIdx].push(assertDefined(state.waste.pop()));
           if (DEBUG) {
-            const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-            const debugFoundation = `[${state.foundations[foundationIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+            const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+            const debugFoundation = `[${state.foundations[foundationIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
             const debugStr = `Waste to Foundation: \nWaste: ${debugWaste}, \nFoundation: ${debugFoundation}`;
             console.log(`${debugStr} \nTRUE\n`);
           }
@@ -500,20 +499,20 @@ const useSolitaireStore = create<SolitaireState>()(
             return;
           }
 
-          const wasteCard = state.waste.at(-1)!;
-          const tableauCard = state.tableau[tableauIdx].at(-1);
+          const wasteCard = assertDefined(state.waste.at(-1));
+          const tableauCard = assertDefined(state.tableau[tableauIdx].at(-1));
 
           // Doesn't stack
           if (
-            !game.aStacksOnB({
+            !aStacksOnB({
               a: wasteCard,
               b: tableauCard,
               isEasyMode: get().difficulty === 'easy',
             })
           ) {
             if (DEBUG) {
-              const debugWasteCard = game.getCardStr(wasteCard);
-              const debugTableauCard = game.getCardStr(tableauCard);
+              const debugWasteCard = getCardStr(wasteCard);
+              const debugTableauCard = getCardStr(tableauCard);
               const debugStr = `Waste to Tableau: \nWaste top: ${debugWasteCard}, \nTableau top: ${debugTableauCard}`;
               console.log(`${debugStr} \nFALSE\n`);
             }
@@ -522,10 +521,10 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           // Move the waste card to the tableau
-          state.tableau[tableauIdx].push(state.waste.pop()!);
+          state.tableau[tableauIdx].push(assertDefined(state.waste.pop()));
           if (DEBUG) {
-            const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-            const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+            const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+            const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
             const debugStr = `Waste to Tableau: \nWaste: ${debugWaste}, \nTableau: ${debugTableau}`;
             console.log(`${debugStr} \nTRUE\n`);
           }
@@ -562,18 +561,18 @@ const useSolitaireStore = create<SolitaireState>()(
             return;
           }
 
-          const foundationCard = state.foundations[foundationIdx].at(-1)!;
-          const tableauCard = state.tableau[tableauIdx].at(-1);
+          const foundationCard = assertDefined(state.foundations[foundationIdx].at(-1));
+          const tableauCard = assertDefined(state.tableau[tableauIdx].at(-1));
           if (
-            !game.aStacksOnB({
+            !aStacksOnB({
               a: foundationCard,
               b: tableauCard,
               isEasyMode: get().difficulty === 'easy',
             })
           ) {
             if (DEBUG) {
-              const debugFoundationCard = game.getCardStr(foundationCard);
-              const debugTableauCard = game.getCardStr(tableauCard);
+              const debugFoundationCard = getCardStr(foundationCard);
+              const debugTableauCard = getCardStr(tableauCard);
               const debugStr = `Foundation to Tableau: \nFoundation top: ${debugFoundationCard}, \nTableau top: ${debugTableauCard}`;
               console.log(`${debugStr} \nFALSE\n`);
             }
@@ -582,10 +581,10 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           // Move the foundation card to the tableau
-          state.tableau[tableauIdx].push(state.foundations[foundationIdx].pop()!);
+          state.tableau[tableauIdx].push(assertDefined(state.foundations[foundationIdx].pop()));
           if (DEBUG) {
-            const debugFoundation = `[${state.foundations[foundationIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-            const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+            const debugFoundation = `[${state.foundations[foundationIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+            const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
             const debugStr = `Foundation to Tableau: \nFoundation: ${debugFoundation}, \nTableau: ${debugTableau}`;
             console.log(`${debugStr} \nTRUE\n`);
           }
@@ -629,10 +628,10 @@ const useSolitaireStore = create<SolitaireState>()(
           const subStack = fromTableau.slice(-count);
 
           // If substack is not a valid stack, return false
-          if (!game.isCardStackValid(subStack)) {
+          if (!isCardStackValid(subStack)) {
             if (DEBUG) {
-              const debugFromTableau = `[${fromTableau.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-              const debugSubStack = `[${subStack.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+              const debugFromTableau = `[${fromTableau.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+              const debugSubStack = `[${subStack.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
               const debugStr = `Tableau to Tableau: \nFrom Tableau: ${debugFromTableau}, \nSubstack: ${debugSubStack}`;
               console.log(`${debugStr} \nFALSE\n`);
             }
@@ -642,16 +641,16 @@ const useSolitaireStore = create<SolitaireState>()(
 
           // Bottom card of substack doesn't stack on target tableau stack
           if (
-            !game.aStacksOnB({
-              a: subStack.at(0)!,
+            !aStacksOnB({
+              a: assertDefined(subStack.at(0)),
               b: toTableau.at(-1),
               isEasyMode: get().difficulty === 'easy',
             })
           ) {
             if (DEBUG) {
-              const debugSubStack = `[${subStack.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-              const debugToTableau = `[${toTableau.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-              const debugFromTableau = `[${fromTableau.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+              const debugSubStack = `[${subStack.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+              const debugToTableau = `[${toTableau.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+              const debugFromTableau = `[${fromTableau.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
               const debugCount = count.toString();
               const debugStr = `Tableau to Tableau: \nSubstack: ${debugSubStack}, \nTo Tableau: ${debugToTableau}, \nFrom Tableau: ${debugFromTableau}, \nCount: ${debugCount}`;
               console.log(`${debugStr} \nFALSE\n`);
@@ -682,7 +681,7 @@ const useSolitaireStore = create<SolitaireState>()(
       moveWasteToFirstAvailableFoundation: () => {
         let didFindFoundation = false;
         set((state) => {
-          const card = state.waste.at(-1)!;
+          const card = assertDefined(state.waste.at(-1));
 
           let debugStr = '';
 
@@ -690,10 +689,10 @@ const useSolitaireStore = create<SolitaireState>()(
           for (let i = 0; i < 4; i += 1) {
             const isFoundation = state.foundations[i];
             const foundationCard = isFoundation.at(-1);
-            debugStr = `Waste to First Valid Foundation: \nWaste top: ${game.getCardStr(state.waste?.at(-1))}, \nFoundation top: ${game.getCardStr(state.foundations[i]?.at(-1))}`;
+            debugStr = `Waste to First Valid Foundation: \nWaste top: ${getCardStr(state.waste?.at(-1))}, \nFoundation top: ${getCardStr(state.foundations[i]?.at(-1))}`;
 
-            if (game.aStacksOnB({ a: card, b: foundationCard, isFoundation: true })) {
-              state.foundations[i].push(state.waste.pop()!);
+            if (aStacksOnB({ a: card, b: foundationCard, isFoundation: true })) {
+              state.foundations[i].push(assertDefined(state.waste.pop()));
 
               state.moveStack.push({
                 type: 'moveWasteToFirstAvailableFoundation',
@@ -733,12 +732,12 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           // Card is not face down
-          const card = state.tableau[tableauIdx].at(-1)!;
+          const card = assertDefined(state.tableau[tableauIdx].at(-1));
           if (card > 0) {
             if (DEBUG) {
-              const debugCard = game.getCardStr(card);
+              const debugCard = getCardStr(card);
               const debugIdx = tableauIdx;
-              const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+              const debugTableau = `[${state.tableau[tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
               console.log(
                 `Flip Tableau Card: Card ${debugCard} in tableau ${debugIdx.toString()} is already face up. \nFALSE\n`,
               );
@@ -762,7 +761,7 @@ const useSolitaireStore = create<SolitaireState>()(
           }
 
           if (DEBUG) {
-            console.log(`Flip Tableau Card: Flipped ${game.getCardStr(card)} \nTRUE\n`);
+            console.log(`Flip Tableau Card: Flipped ${getCardStr(card)} \nTRUE\n`);
           }
           didFlipCard = true;
           state.score += 50 * get().difficultyMultiplier;
@@ -780,7 +779,7 @@ const useSolitaireStore = create<SolitaireState>()(
           // Apply a 10 point penalty for undoing a move
           state.score -= 100;
 
-          const move = state.moveStack.pop()!;
+          const move = assertDefined(state.moveStack.pop());
           switch (move.type) {
             case 'popToWaste': {
               // If waste is empty, transfer stock to waste
@@ -788,11 +787,11 @@ const useSolitaireStore = create<SolitaireState>()(
                 state.waste = state.stock.map((card) => -card);
                 state.stock = [];
               } else {
-                state.stock.push(-state.waste.pop()!);
+                state.stock.push(-assertDefined(state.waste.pop()));
               }
               if (DEBUG) {
-                const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-                const debugStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+                const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+                const debugStock = `[${state.stock.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
                 const debugStr = `Undo Pop to waste: \nStock: ${debugStock}, \nWaste: ${debugWaste}`;
                 console.log(debugStr);
               }
@@ -809,8 +808,8 @@ const useSolitaireStore = create<SolitaireState>()(
                 state.stock.push(...state.waste.splice(-numPopped));
               }
               if (DEBUG) {
-                const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
-                const debugStock = `[${state.stock.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+                const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
+                const debugStock = `[${state.stock.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
                 const debugStr = `Undo Pop to waste: \nStock: ${debugStock}, \nWaste: ${debugWaste}`;
                 console.log(debugStr);
               }
@@ -818,11 +817,11 @@ const useSolitaireStore = create<SolitaireState>()(
             }
 
             case 'moveWasteToFirstAvailableFoundation': {
-              state.waste.push(state.foundations[move.foundationIdx].pop()!);
+              state.waste.push(assertDefined(state.foundations[move.foundationIdx].pop()));
               if (DEBUG) {
-                const debugWaste = `[${state.waste.map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+                const debugWaste = `[${state.waste.map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
                 const debugFoundation = `[${state.foundations
-                  .map((foundation) => game.getCardStr(foundation.at(-1)))
+                  .map((foundation) => getCardStr(foundation.at(-1)))
                   .join(', ')}]`;
                 const debugStr = `Undo Move Waste to Foundation: \nWaste: ${debugWaste}, \nFoundations: ${debugFoundation}`;
                 console.log(debugStr);
@@ -831,11 +830,13 @@ const useSolitaireStore = create<SolitaireState>()(
             }
 
             case 'moveTableauToFirstAvailableFoundation': {
-              state.tableau[move.tableauIdx].push(state.foundations[move.foundationIdx].pop()!);
+              state.tableau[move.tableauIdx].push(
+                assertDefined(state.foundations[move.foundationIdx].pop()),
+              );
               if (DEBUG) {
-                const debugTableau = `[${state.tableau[move.tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+                const debugTableau = `[${state.tableau[move.tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
                 const debugFoundation = `[${state.foundations
-                  .map((foundation) => game.getCardStr(foundation.at(-1)))
+                  .map((foundation) => getCardStr(foundation.at(-1)))
                   .join(', ')}]`;
                 const debugStr = `Undo Move Tableau to Foundation: \nTableau: ${debugTableau}, \nFoundations: ${debugFoundation}`;
                 console.log(debugStr);
@@ -845,9 +846,9 @@ const useSolitaireStore = create<SolitaireState>()(
 
             case 'flipTableauCard': {
               state.tableau[move.tableauIdx][state.tableau[move.tableauIdx].length - 1] =
-                -state.tableau[move.tableauIdx].at(-1)!;
+                -assertDefined(state.tableau[move.tableauIdx].at(-1));
               if (DEBUG) {
-                const debugTableau = `[${state.tableau[move.tableauIdx].map((cardVal) => game.getCardStr(cardVal)).join(', ')}]`;
+                const debugTableau = `[${state.tableau[move.tableauIdx].map((cardVal) => getCardStr(cardVal)).join(', ')}]`;
                 const debugStr = `Undo Flip Tableau Card: \nTableau: ${debugTableau}`;
                 console.log(debugStr);
               }
@@ -855,22 +856,26 @@ const useSolitaireStore = create<SolitaireState>()(
             }
 
             case 'tableauToFoundation': {
-              state.tableau[move.tableauIdx].push(state.foundations[move.foundationIdx].pop()!);
+              state.tableau[move.tableauIdx].push(
+                assertDefined(state.foundations[move.foundationIdx].pop()),
+              );
               break;
             }
 
             case 'foundationToTableau': {
-              state.foundations[move.foundationIdx].push(state.tableau[move.tableauIdx].pop()!);
+              state.foundations[move.foundationIdx].push(
+                assertDefined(state.tableau[move.tableauIdx].pop()),
+              );
               break;
             }
 
             case 'wasteToFoundation': {
-              state.foundations[move.foundationIdx].push(state.waste.pop()!);
+              state.foundations[move.foundationIdx].push(assertDefined(state.waste.pop()));
               break;
             }
 
             case 'wasteToTableau': {
-              state.waste.push(state.tableau[move.tableauIdx].pop()!);
+              state.waste.push(assertDefined(state.tableau[move.tableauIdx].pop()));
               break;
             }
 
@@ -939,10 +944,10 @@ const useSolitaireStore = create<SolitaireState>()(
 
             // Fill tableau from the stock, starting with the smallest pile
             for (let pileSize = 1; pileSize <= 7; pileSize += 1) {
-              const pile = Array.from({ length: pileSize }, () => state.stock.pop()!).filter(
-                (card) => card !== undefined,
-              );
-              pile[pile.length - 1] = -pile.at(-1)!; // Flip the last card face up
+              const pile = Array.from({ length: pileSize }, () =>
+                assertDefined(state.stock.pop()),
+              ).filter((card) => card !== undefined);
+              pile[pile.length - 1] = -assertDefined(pile.at(-1)); // Flip the last card face up
 
               // Set the pile into the state
               state.tableau[pileSize - 1] = pile;
@@ -971,3 +976,125 @@ const useSolitaireStore = create<SolitaireState>()(
   ),
 );
 export default useSolitaireStore;
+
+/*
+################################
+||                            ||
+||           Helpers          ||
+||                            ||
+################################
+*/
+function getCardStr(val?: number): string {
+  const card = getCard(val);
+  if (card.rank === -1) {
+    return 'Empty';
+  }
+
+  if (!card.isFaceUp) {
+    return '[*]';
+  }
+
+  const { suit, rank } = card;
+  const suits = ['\u2665', '\u2663', '\u2666', '\u2660']; // Hearts, Clubs, Diamonds, Spades
+  const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+  return `${suits[suit]}${ranks[rank]}`;
+}
+
+function getCard(val?: number): { suit: number; rank: number; isFaceUp: boolean } {
+  // If no val, the card might be an empty stack
+  if (val === undefined) {
+    return { suit: -1, rank: -1, isFaceUp: false };
+  }
+
+  let isFaceUp = true;
+  if (val < 0) {
+    isFaceUp = false;
+    val *= -1;
+  }
+  val -= 1; // Adjust for 0-based indexing
+  const suit = Math.floor(val / 13); // 0: Hearts, 1: Clubs, 2: Diamonds, 3: Spades
+  const rank = val % 13; // 0-12: Ace to King
+  return { suit, rank, isFaceUp };
+}
+// Helper function: Determines if card 'a' can be stacked on card 'b'
+// export function aStacksOnB(a: number, b?: number, isFoundation = false): boolean {
+export function aStacksOnB({
+  a,
+  b,
+  isFoundation = false,
+  isEasyMode = false,
+}: {
+  a: number;
+  b?: number;
+  isFoundation?: boolean;
+  isEasyMode?: boolean;
+}): boolean {
+  /**
+   * Determines if card 'a' can be stacked on card 'b'
+   * In the tableau, cards are stacked in descending order and alternating colors.
+   * In the isFoundation, cards are stacked in ascending order and the same suit.
+   * Args:
+   *     a: The card to be moved.
+   *     b: The target card to stack upon.
+   *     isFoundation: True if the target is a isFoundation card, False if it's a tableau card.
+   *     isEasyMode: Allows any card to be stacked on an empty tableau pile.
+   * Returns:
+   *     True if card 'a' can be stacked on card 'b' according to the rules, False otherwise.
+   */
+
+  // Ensure card a is face up
+  const { suit: suitA, rank: rankA, isFaceUp: isFaceUpA } = getCard(a);
+  if (!isFaceUpA) {
+    return false;
+  }
+
+  // Handling stacking on an empty pike (when b is undefined)
+  if (b === undefined) {
+    // For isFoundation, only Aces (rank 0) can start the stack
+    if (isFoundation) {
+      return rankA === 0;
+    }
+    // For tableau, only Kings (rank 12) can start the stack
+    // or any card if it's easy mode
+    return rankA === 12 || isEasyMode;
+  }
+
+  // Continue with b
+  const { suit: suitB, rank: rankB, isFaceUp: isFaceUpB } = getCard(b);
+  if (!isFaceUpB) {
+    return false;
+  }
+
+  // ADJACENCY RULE
+  // For isFoundation: ascending order (a.rank = b.rank + 1)
+  // For tableau: descending order (a.rank = b.rank - 1)
+  const isValidAdjacency = isFoundation ? rankA === rankB + 1 : rankA === rankB - 1;
+
+  // ALTERNATING COLORS
+  // 0: Red Hearts, 1: Black Clubs, 2: Red Diamonds, 3: Black Spades
+  // For isFoundation: same suit
+  // For tableau: alternating colors (a.suit % 2 != b.suit % 2)
+  const isValidColor = isFoundation ? suitA === suitB : suitA % 2 !== suitB % 2;
+
+  return isValidAdjacency && isValidColor;
+}
+
+export function isCardStackValid(stack: number[]): boolean {
+  // stack length 0 not valid
+  if (stack.length === 0) {
+    return false;
+  }
+
+  // stack length 1 is valid if positive
+  if (stack.length === 1) {
+    return stack[0] > 0;
+  }
+
+  for (let i = 1; i < stack.length; i += 1) {
+    if (!aStacksOnB({ a: stack[i], b: stack[i - 1] })) {
+      return false;
+    }
+  }
+  return true;
+}

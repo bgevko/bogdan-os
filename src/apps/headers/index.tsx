@@ -117,7 +117,7 @@ const Headers = (): React.ReactElement => {
 
     // add the wrap if it's not empty
     if (wrapInput !== '') {
-      output = `${wrapInput}\n${output}${[...wrapInput].reverse().join('')}\n`;
+      output = `${wrapInput}\n${output}${Array.from(wrapInput).reverse().join('')}\n`;
     }
     return output;
   }, [center, sides, length, padding, content, wrapInput]);

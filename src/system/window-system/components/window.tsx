@@ -1,6 +1,4 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { type ReactElement, Suspense, useState, useMemo, useEffect } from 'react';
-
 import { getComponent } from '@/defaults';
 import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store';
 import Menubar from '@/system/menubar';

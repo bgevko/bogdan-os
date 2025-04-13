@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import React from 'react';
 import { create } from 'zustand';
@@ -80,7 +79,7 @@ const useEditorStore = create<EditorState>()(
           }
           return;
         }
-        if (!('children' in parent)) {
+        if (!parent.children) {
           if (DEBUG) {
             console.warn(
               `EditorStore:InsertNode: Parent node with id ${parentId} does not support children`,
@@ -88,7 +87,7 @@ const useEditorStore = create<EditorState>()(
           }
           return;
         }
-        const children: AnyNode[] = parent.children!;
+        const children: AnyNode[] = parent.children;
         const insertIndex = index ?? children.length;
         children.splice(insertIndex, 0, newNode);
         didInsert = true;
@@ -112,8 +111,10 @@ const useEditorStore = create<EditorState>()(
           }
           return;
         }
-        const children: AnyNode[] = parent.children!;
-        parent.children = children.filter((child) => child.id !== nodeId);
+        if (parent.children) {
+          const children = parent.children;
+          parent.children = children.filter((child) => child.id !== nodeId);
+        }
         didDelete = true;
       });
       return didDelete;
@@ -146,8 +147,8 @@ const useEditorStore = create<EditorState>()(
       if (order === 'pre') {
         callback(node);
       }
-      if ('children' in node) {
-        for (const child of node.children!) {
+      if (node.children) {
+        for (const child of node.children) {
           get().traverseNodes(child, callback);
         }
       }
@@ -226,8 +227,8 @@ const findNode = (node: AnyNode, targetId: string): AnyNode | null => {
   if (node.id === targetId) {
     return node;
   }
-  if ('children' in node) {
-    for (const child of node.children!) {
+  if (node.children) {
+    for (const child of node.children) {
       const result = findNode(child, targetId);
       if (result) {
         return result;
@@ -238,8 +239,8 @@ const findNode = (node: AnyNode, targetId: string): AnyNode | null => {
 };
 
 const findParentNode = (node: AnyNode, childId: string): AnyNode | null => {
-  if ('children' in node) {
-    for (const child of node.children!) {
+  if (node.children) {
+    for (const child of node.children) {
       if (child.id === childId) {
         return node;
       }

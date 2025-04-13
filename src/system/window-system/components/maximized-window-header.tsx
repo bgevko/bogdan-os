@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { useCallback, useRef, useState, useEffect, Fragment, ReactElement } from 'react';
 
 import useFileSystemStore, { type FileSystemEntry, MenubarItem } from '@/system/file-system/store';
@@ -107,7 +105,7 @@ const MaximizedWindowHeader = (): React.ReactElement => {
   return (
     <header
       className={cn(
-        'sticky top-0 w-full bg-black transition-opacity duration-300 bg-black/50',
+        'sticky top-0 w-full transition-opacity duration-300 bg-black/50',
         'relative flex items-center px-4 text-base font-bold gap-4',
       )}
       style={{
@@ -236,7 +234,7 @@ const DropDownMenu = ({
   menubarItem: MenubarItem;
 }): ReactElement => {
   return (
-    <ul className="window-shadow absolute left-0 z-50 flex w-max flex-col gap-1 rounded border border-stone-200 bg-stone-50 p-1">
+    <ul className="window-shadow absolute left-0 z-50 flex w-max flex-col gap-1 rounded-sm border border-stone-200 bg-stone-50 p-1">
       {[...menubarItem.entries()].map(([label, item]) => {
         let isDisabled = false;
         if (item.disableCallback) {

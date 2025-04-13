@@ -4,11 +4,12 @@ import { useEffect, useRef } from 'react';
 
 import useFileSystemStore, { AppComponent } from '@/system/file-system/store';
 import cn from '@/utils/format';
+import { assertDefined } from '@/utils';
 
 const ExcalidrawWrapper = ({ entry }: AppComponent): React.ReactElement => {
-  entry = entry!;
+  entry = assertDefined(entry);
   const setWindowOnUpdateCallback = useFileSystemStore((state) => state.setWindowOnUpdateCallback);
-  const excalidrawAPI = useRef<ExcalidrawImperativeAPI>();
+  const excalidrawAPI = useRef<ExcalidrawImperativeAPI>(null);
 
   useEffect(() => {
     const updateExcalidraw = () => {
