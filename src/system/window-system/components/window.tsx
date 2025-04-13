@@ -1,6 +1,4 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { type ReactElement, Suspense, useState, useMemo, useEffect } from 'react';
-
 import { getComponent } from '@/defaults';
 import useFileSystemStore, { FileSystemEntry } from '@/system/file-system/store';
 import Menubar from '@/system/menubar';
@@ -34,7 +32,7 @@ const Window = ({ entry }: WindowProperties): ReactElement => {
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging);
 
   const [isReady, setIsReady] = useState(false);
-  const LazyIcon = useMemo(() => getLazyIcon('secret'), [entry.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const LazyIcon = useMemo(() => getLazyIcon('secret'), [entry.id]);
   const Component = useMemo(() => getComponent(entry.id, entry.type), [entry.id, entry.type]);
   /*
    ***********************************

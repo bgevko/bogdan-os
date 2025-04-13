@@ -3,7 +3,7 @@ import React, { useMemo, useEffect, useState, useRef, Suspense } from 'react';
 import useFileSystemsStore, { type FileSystemEntry } from '@/system/file-system/store';
 import UseWindowMove from '@/system/window-system/hooks/use-window-move';
 import { TASKBAR_ENTRY_WIDTH, TASKBAR_ENTRY_HEIGHT } from '@/themes';
-import { getLazyIcon, getEventTargetDataId } from '@/utils';
+import { getLazyIcon, getEventTargetDataId, assertDefined } from '@/utils';
 import cn from '@/utils/format';
 
 interface taskbarEntryProperties {
@@ -30,7 +30,8 @@ const TaskbarEntry = ({ entry }: taskbarEntryProperties): React.JSX.Element => {
   const isMinimized = windowState === 'minimized';
 
   const tabReference = useRef<HTMLButtonElement>(null);
-  const LazyIcon = useMemo(() => getLazyIcon(entry.icon!), [entry.icon]);
+  const entryIcon = assertDefined(entry.icon);
+  const LazyIcon = useMemo(() => getLazyIcon(entryIcon), [entryIcon]);
 
   useEffect(() => {
     const handleMouseUp = () => {

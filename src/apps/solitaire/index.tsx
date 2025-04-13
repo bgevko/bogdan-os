@@ -58,10 +58,8 @@ const Solitaire = (): React.ReactElement => {
       });
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        // eslint-disable-next-line no-console
         console.error('Storage quota exceeded:', error);
         localStorage.clear();
-        // eslint-disable-next-line no-alert
         alert('The game state was too large and has been reset.');
       }
     }

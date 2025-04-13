@@ -1,3 +1,4 @@
+import React from 'react';
 import useFileSystemStore from '@/system/file-system/store';
 import Window from '@/system/window-system/components/window';
 

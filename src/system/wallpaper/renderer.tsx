@@ -1,4 +1,3 @@
-/* eslint-disable no-relative-import-paths/no-relative-import-paths */
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
@@ -58,7 +57,6 @@ const Renderer = ({ children }: { children: React.ReactNode }): React.ReactEleme
       };
       animate();
 
-      // eslint-disable-next-line consistent-return
       return () => {
         renderer.dispose();
         renderer.domElement.remove();

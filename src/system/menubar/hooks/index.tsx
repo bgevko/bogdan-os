@@ -24,7 +24,6 @@ const UseMenubar = (entry?: FileSystemEntry): ReturnTypes => {
           setMenubarItems(actions);
         })
         .catch((error: unknown) => {
-          // eslint-disable-next-line no-console
           console.error('Error loading menu bar options:', error);
           setMenubarItems(null);
         });

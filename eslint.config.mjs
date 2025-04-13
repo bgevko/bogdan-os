@@ -4,7 +4,8 @@ import js from '@eslint/js';
 import reactPlugin from 'eslint-plugin-react';
 import tseslint from 'typescript-eslint';
 
-const ignoreRules = {};
+const ignores = ['react/react-in-jsx-scope', '@typescript-eslint/no-empty-function'];
+const ignoreRules = Object.fromEntries(ignores.map((rule) => [rule, 'off']));
 
 const baseConfig = {
   ...js.configs.recommended,
@@ -22,6 +23,10 @@ const reactConfig = {
   },
 };
 
+const ruleOverrides = {
+  rules: ignoreRules,
+};
+
 const typescriptConfig = tseslint.config(
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
@@ -36,4 +41,4 @@ const typescriptConfig = tseslint.config(
   },
 );
 
-export default defineConfig([baseConfig, reactConfig, ...typescriptConfig]);
+export default defineConfig([baseConfig, reactConfig, ...typescriptConfig, ruleOverrides]);

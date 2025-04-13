@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { Fragment, ReactElement, useEffect, useState, useCallback } from 'react';
 
 import useFileSystemStore, { type FileSystemEntry, MenubarItem } from '@/system/file-system/store';

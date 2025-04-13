@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { Fragment, ReactElement } from 'react';
 
 import UseContextMenu from '@/system/context-menu/hooks';

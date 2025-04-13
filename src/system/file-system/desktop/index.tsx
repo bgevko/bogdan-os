@@ -5,7 +5,7 @@ import FileExplorerIcon from '@/system/file-system/components/icon';
 import SelectRect from '@/system/file-system/components/select-rect';
 import UseDragSelect from '@/system/file-system/hooks/use-drag-select';
 import useFileSystemStore from '@/system/file-system/store';
-import { getEventTargetDataId } from '@/utils';
+import { getEventTargetDataId, assertNotNull } from '@/utils';
 
 const Desktop = (): React.ReactElement => {
   const clearIconSelection = useFileSystemStore((state) => state.clearIconSelection);
@@ -19,7 +19,10 @@ const Desktop = (): React.ReactElement => {
   const clearKeyCommand = useFileSystemStore((state) => state.clearKeyCommand);
   const pasteClipboard = useFileSystemStore((state) => state.pasteClipboard);
   const desktopChildren = useFileSystemStore((state) => state.getDirectory('desktop'));
-  const desktopEntry = useFileSystemStore((state) => state.getEntry('desktop'));
+  const desktopEntry = assertNotNull(
+    useFileSystemStore((state) => state.getEntry('desktop')),
+    'Desktop Component: undefined behavior',
+  );
   const dropTargetId = useFileSystemStore((state) => state.getDropTargetId());
   const isAnyIconDragging = useFileSystemStore((state) => state.getIsAnyIconDragging());
   const windowPosition = useFileSystemStore((state) => state.getWindowPosition('desktop'));
@@ -32,7 +35,7 @@ const Desktop = (): React.ReactElement => {
     selectRectSize,
     handleMouseDown,
     isSelecting: isSelectingOnDesktop,
-  } = UseDragSelect(desktopEntry!);
+  } = UseDragSelect(desktopEntry);
 
   const { isShiftPressed } = UseKeyPresses();
 
