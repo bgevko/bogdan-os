@@ -32,3 +32,8 @@ icons.afdesign
 # other
 .yarn
 .eslint-config-inspector
+.yarnrc.yml
+.editorconfig
+.gitattributes
+.pnp.cjs
+.pnp.loader.mjs
