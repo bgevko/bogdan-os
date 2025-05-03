@@ -94,6 +94,22 @@ export const applications = new Map<string, Omit<AppWithExtras, 'iconPosition'>>
       },
     },
   ],
+  [
+    'nes-emulator',
+    {
+      ...appMetadata,
+      id: 'nes-emulator',
+      icon: 'terminal',
+      name: 'NES Emulator',
+      disableMobile: true,
+      defaultWindowSize: { width: 512, height: 480 },
+      component: lazy(() => import('@/apps/nes-emulator')),
+      menubarOptions: {
+        source: import('@/apps/nes-emulator/menubar').then((module) => module.default),
+        className: 'border-b',
+      },
+    },
+  ],
   // [
   //   'hello-txt',
   //   {
