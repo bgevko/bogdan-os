@@ -4,6 +4,8 @@ import { defineConfig } from 'vitest/config';
 import svgr from 'vite-plugin-svgr';
 import glsl from 'vite-plugin-glsl';
 import tailwindcss from '@tailwindcss/vite';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -13,6 +15,8 @@ export default defineConfig(() => {
     plugins: [
       glsl(),
       react(),
+      wasm(),
+      topLevelAwait(),
       tailwindcss(),
       svgr({
         svgrOptions: {
@@ -33,6 +37,9 @@ export default defineConfig(() => {
         },
       }),
     ],
+    worker: {
+      plugins: () => [wasm(), topLevelAwait()],
+    },
     preview: {
       port: 3000,
     },
@@ -47,6 +54,7 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
+        '@/nes': path.resolve(__dirname, './src/apps/nes-emulator'),
         '@/solitaire': path.resolve(__dirname, './src/apps/solitaire'),
         '@/system': path.resolve(__dirname, './src/system'),
         '@/sounds': path.resolve(__dirname, './src/system/sounds'),
