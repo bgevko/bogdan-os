@@ -136,6 +136,7 @@ interface Metadata {
   disableMaximize?: boolean;
   willTransform?: boolean;
   contentOpacity?: number;
+  lockAspectRatio?: boolean;
 
   // Animation meta
   transformScale?: number; // For window and taskbar entry animations
@@ -240,6 +241,7 @@ interface StoreActions {
   getIconTransformScale: (id: EntryId) => number;
   getWillTransform: (id: EntryId) => boolean;
   getContentOpacity: (id: EntryId) => number;
+  isAspectRatioLocked: (id: EntryId) => boolean;
   getIsDisabledResize: (id: EntryId) => boolean;
   getMaximizedEntry: () => FileSystemEntry | null;
   getIsMaximizedWindowHeaderVisible: () => boolean;
@@ -923,6 +925,11 @@ const useFileSystemStore = create<FileSystemState>()(
         return 1;
       }
       return entry.contentOpacity ?? 0;
+    },
+    isAspectRatioLocked: (id) => {
+      const entry = get().getEntry(id);
+      if (!entry) return false;
+      return entry.lockAspectRatio ?? false;
     },
     getIsDisabledResize: (id) => {
       const entry = get().getEntry(id);

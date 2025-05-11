@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { InputButtonMessage, InputKeyMessage, WorkerMessage } from './nes.worker';
+import { InputButtonMessage, InputKeyMessage, FrameMessage, WorkerMessage } from './nes.worker';
 
 const NES = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -7,8 +7,10 @@ const NES = () => {
   const workerRef = useRef<Worker | null>(null);
   const keysPressedRef = useRef<Set<string>>(new Set());
 
+  const didTransferCanvas = useRef(false);
+
   const onGamepadConnect = useCallback((e: GamepadEvent) => {
-    console.log(
+    console.info(
       'Gamepad connected at index %d: %s. %d buttons, %d axes.',
       e.gamepad.index,
       e.gamepad.id,
@@ -18,7 +20,7 @@ const NES = () => {
   }, []);
 
   const onGamepadDisconnect = useCallback((e: GamepadEvent) => {
-    console.log('Gamepad disconnected from index %d: %s', e.gamepad.index, e.gamepad.id);
+    console.info('Gamepad disconnected from index %d: %s', e.gamepad.index, e.gamepad.id);
   }, []);
 
   //** Listens for gamepad input */
@@ -86,16 +88,47 @@ const NES = () => {
     worker.postMessage({ type: 'init' });
     worker.onmessage = (e: MessageEvent<WorkerMessage>) => {
       if (e.data.type === 'init') {
-        console.log('NES worker ready');
-        animationIdRef.current = requestAnimationFrame(frame);
-      }
-    };
+        console.info('NES worker ready');
 
-    //** Emulation frame*/
-    const frame = () => {
-      pollGamepads();
-      pollKeyboard();
-      animationIdRef.current = requestAnimationFrame(frame);
+        const canvas = canvasRef.current;
+        if (!canvas) {
+          console.error('Canvas null. Aborting');
+          return;
+        }
+
+        // transfer the canvas to the worker. The transfer ref guards it against React's double render in strict mode
+        const offscreen = canvas.transferControlToOffscreen();
+        worker.postMessage(
+          {
+            type: 'transfer-canvas',
+            canvas: offscreen,
+          },
+          [offscreen],
+        );
+        didTransferCanvas.current = true;
+
+        // Intitialize the main loop
+        let startTime = 0;
+        const step = (timestamp: DOMHighResTimeStamp) => {
+          if (!startTime) startTime = timestamp;
+          const elapsed = timestamp - startTime;
+
+          // Notify worker how much time has passed
+          const msg: FrameMessage = {
+            type: 'frame',
+            elapsed,
+          };
+          worker.postMessage(msg);
+
+          // Poll events
+          pollGamepads();
+          pollKeyboard();
+
+          // Queue next frame
+          animationIdRef.current = requestAnimationFrame(step);
+        };
+        animationIdRef.current = requestAnimationFrame(step);
+      }
     };
 
     window.addEventListener('gamepadconnected', onGamepadConnect);
@@ -116,8 +149,8 @@ const NES = () => {
   }, []);
 
   return (
-    <div className="flex items-center justify-center">
-      <canvas ref={canvasRef} width={256} height={240} />
+    <div className="size-full flex items-center justify-center">
+      <canvas ref={canvasRef} className="size-full rounded-b-lg" />
     </div>
   );
 };
