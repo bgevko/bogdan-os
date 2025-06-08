@@ -29,6 +29,7 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
   const setSize = useFileSystemStore((state) => state.setWindowSize);
   const setIsWindowResizing = useFileSystemStore((state) => state.setIsWindowResizing);
   const toggleMaximize = useFileSystemStore((state) => state.toggleMaximize);
+  const isAspectRatioLocked = useFileSystemStore((state) => state.isAspectRatioLocked);
   const executeWindowOnUpdateCallback = useFileSystemStore(
     (state) => state.executeWindowOnUpdateCallback,
   );
@@ -72,6 +73,7 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
       const { clientX, clientY } = event;
       const { x: posX, y: posY } = position;
       const { width: currentWidth, height: currentHeight } = size;
+      const aspect = defaultSize.width / defaultSize.height;
 
       let newWidth = currentWidth;
       let newHeight = currentHeight;
@@ -149,13 +151,39 @@ const UseWindowResize = (entry: FileSystemEntry): ReturnTypes => {
         }
       }
 
+      if (isAspectRatioLocked(entry.id)) {
+        if (['right', 'top-right', 'bottom-right'].includes(resizeDirection)) {
+          newHeight = newWidth / aspect;
+          if (resizeDirection.includes('top')) {
+            // if top edge moved, shift Y down by the excess
+            newY = posY + (currentHeight - newHeight);
+          }
+        } else {
+          // left or bottom edges / corners
+          newWidth = newHeight * aspect;
+          if (resizeDirection.includes('left')) {
+            // if left edge moved, shift X right by the excess
+            newX = posX + (currentWidth - newWidth);
+          }
+        }
+      }
+
       // Ensure the window does not exceed the viewport boundaries
       newWidth = Math.min(newWidth, window.innerWidth - newX);
       newHeight = Math.min(newHeight, window.innerHeight - newY);
       setSize(entry.id, { width: newWidth, height: newHeight });
       setPosition(entry.id, { x: newX, y: newY });
     },
-    [entry.id, position, size, defaultSize, resizeDirection, setPosition, setSize],
+    [
+      entry.id,
+      position,
+      size,
+      defaultSize,
+      resizeDirection,
+      setPosition,
+      setSize,
+      isAspectRatioLocked,
+    ],
   );
 
   /*

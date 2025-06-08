@@ -22,6 +22,10 @@
   text-wrap: balance;
 }
 
+canvas {
+  image-rendering: pixelated !important;
+}
+
 body {
   font-family: 'Sofia Sans Condensed', sans-serif;
 }

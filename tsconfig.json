@@ -1,5 +1,10 @@
 {
-  "include": ["**/*.ts", "**/*.tsx", "eslint.config.mjs"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "eslint.config.mjs",
+    "src/apps/nes-emulator/audio-processor.js"
+  ],
   "exclude": ["node_modules", "dist", "build", "coverage", "public", "vite.config.ts", "tests/*"],
   "references": [{ "path": "./tsconfig.node.json" }],
   "compilerOptions": {
@@ -20,6 +25,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@/nes/*": ["./src/apps/nes-emulator/*"],
       "@/solitaire/*": ["./src/apps/solitaire/*"],
       "@/system/*": ["./src/system/*"],
       "@/sounds/*": ["./src/system/sounds/*"],

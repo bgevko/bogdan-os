@@ -24,6 +24,7 @@ const appMetadata: Omit<File, 'iconPosition' | 'id' | 'name' | 'disableMobile' |
   parentId: 'desktop',
   content: '',
   defaultWindowSize: DEFAULT_WINDOW_SIZE,
+  lockAspectRatio: false,
   iconColor: '#fff',
   iconSize: 64,
   isIconSelected: false,
@@ -90,6 +91,23 @@ export const applications = new Map<string, Omit<AppWithExtras, 'iconPosition'>>
       component: lazy(() => import('@/apps/headers')),
       menubarOptions: {
         source: import('@/apps/headers/menubar').then((module) => module.default),
+        className: 'border-b',
+      },
+    },
+  ],
+  [
+    'nes-emulator',
+    {
+      ...appMetadata,
+      id: 'nes-emulator',
+      icon: 'terminal',
+      name: 'NES Emulator',
+      disableMobile: true,
+      lockAspectRatio: true,
+      defaultWindowSize: { width: 512, height: 545 },
+      component: lazy(() => import('@/apps/nes-emulator')),
+      menubarOptions: {
+        source: import('@/apps/nes-emulator/menubar').then((module) => module.default),
         className: 'border-b',
       },
     },
