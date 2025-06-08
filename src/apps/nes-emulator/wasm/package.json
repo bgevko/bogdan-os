@@ -1,0 +1,15 @@
+{
+  "name": "nes-web",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "tetanes_core_bg.wasm",
+    "tetanes_core.js",
+    "tetanes_core.d.ts"
+  ],
+  "main": "tetanes_core.js",
+  "types": "tetanes_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
