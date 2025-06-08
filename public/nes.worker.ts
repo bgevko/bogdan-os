@@ -1,7 +1,6 @@
 // nes.worker.js
 import init, { WasmControlDeck } from '@/nes/wasm/tetanes_core.js';
 import testRomUrl from '@/nes/roms/mario.nes?url';
-import { getControllerMapping } from './controller_mappings';
 
 let nes: WasmControlDeck;
 let framesRun = 0;
@@ -26,7 +25,6 @@ export interface InputButtonMessage {
   type: 'input-btn';
   gp: number;
   btn: number;
-  controllerId: string;
 }
 
 export interface InputKeyMessage {
@@ -54,13 +52,6 @@ self.onmessage = async (e: MessageEvent) => {
     case 'init': {
       await init();
       nes = new WasmControlDeck();
-
-      // TODO: Handle cartridge loading
-      const res = await fetch(testRomUrl);
-      const buffer = await res.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      nes.loadRomBytes('custom', bytes);
-      console.info('ROM loaded');
 
       // Respond to the main thready that we are ready
       self.postMessage({ type: 'init' });
@@ -98,54 +89,27 @@ self.onmessage = async (e: MessageEvent) => {
         framesRun++;
       }
 
-      // TODO: Grab frame buffer
-      const buffer: Uint8ClampedArray = nes.frameBuffer();
+      // const buffer: Uint8ClampedArray = nes.frameBuffer();
 
       // paint it to OffscreenCanvas
-      const imageData = new ImageData(buffer, 256, 240);
+      // const imageData = new ImageData(buffer, 256, 240);
+      const imageData = new ImageData(256, 240);
       ctx.putImageData(imageData, 0, 0);
 
       break;
     }
 
     case 'input-btn': {
-      const data = e.data as InputButtonMessage;
-      const { gp, btn, controllerId } = data;
-      const mapping = getControllerMapping(controllerId);
-
-      switch (mapping[btn]) {
-        case 'a':
-          nes.processInput(gp, 0, true);
-          break;
-        case 'b':
-          nes.processInput(gp, 1, true);
-          break;
-        case 'select':
-          nes.processInput(gp, 2, true);
-          break;
-        case 'start':
-          nes.processInput(gp, 3, true);
-          break;
-        case 'up':
-          nes.processInput(gp, 4, true);
-          break;
-        case 'down':
-          nes.processInput(gp, 5, true);
-          break;
-        case 'left':
-          nes.processInput(gp, 6, true);
-          break;
-        case 'right':
-          nes.processInput(gp, 7, true);
-          break;
-        default:
-      }
+      console.log('we made it here');
+      // const { gp, btn } = e.data as InputButtonMessage;
+      // console.log('input-btn:', gp, btn);
       break;
     }
 
     case 'input-key': {
-      // const { key } = e.data as InputKeyMessage;
-      // console.log('input-key:', key);
+      console.log('we made it here');
+      const { key } = e.data as InputKeyMessage;
+      console.log('input-key:', key);
       break;
     }
 

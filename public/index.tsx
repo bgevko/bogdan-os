@@ -1,6 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { InputButtonMessage, InputKeyMessage, FrameMessage, WorkerMessage } from '@/nes/nes.worker';
-import workerUrl from '@/nes/nes.worker.ts?url';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { InputButtonMessage, InputKeyMessage, FrameMessage, WorkerMessage } from './nes.worker';
 
 const NES = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -11,14 +10,13 @@ const NES = () => {
   const didTransferCanvas = useRef(false);
 
   const onGamepadConnect = useCallback((e: GamepadEvent) => {
-    console.info(e.gamepad.id);
-    // console.info(
-    //   'Gamepad connected at index %d: %s. %d buttons, %d axes.',
-    //   e.gamepad.index,
-    //   e.gamepad.id,
-    //   e.gamepad.buttons.length,
-    //   e.gamepad.axes.length,
-    // );
+    console.info(
+      'Gamepad connected at index %d: %s. %d buttons, %d axes.',
+      e.gamepad.index,
+      e.gamepad.id,
+      e.gamepad.buttons.length,
+      e.gamepad.axes.length,
+    );
   }, []);
 
   const onGamepadDisconnect = useCallback((e: GamepadEvent) => {
@@ -43,7 +41,6 @@ const NES = () => {
             type: 'input-btn',
             gp: gpIdx,
             btn: btnIdx,
-            controllerId: gp.id,
           };
           workerRef.current.postMessage(msg);
         }
@@ -85,7 +82,7 @@ const NES = () => {
 ################################
 */
   useEffect(() => {
-    const worker = new Worker(workerUrl, { type: 'module' });
+    const worker = new Worker('@/nes/nes.worker.ts', { type: 'module' });
     workerRef.current = worker;
 
     worker.postMessage({ type: 'init' });
