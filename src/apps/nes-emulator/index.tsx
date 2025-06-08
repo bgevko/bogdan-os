@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { InputButtonMessage, FrameMessage, WorkerMessage } from '@/nes/nes.worker';
-import workerUrl from '@/nes/nes.worker.ts?url';
+import { InputButtonMessage, FrameMessage, WorkerMessage, InputKeyMessage } from '@/nes/nes.worker';
+import NESWorker from '@/nes/nes.worker.ts?worker';
 import audioProcessorUrl from '@/nes/audio-processor.js?url';
 
 const NES = () => {
@@ -53,22 +53,24 @@ const NES = () => {
     e.preventDefault();
     e.stopPropagation();
     if (e.repeat || !workerRef.current) return;
-    workerRef.current.postMessage({
+    const msg: InputKeyMessage = {
       type: 'input-key',
       key: e.key,
       pressed: true,
-    });
+    };
+    workerRef.current.postMessage(msg);
   }, []);
 
   const onKeyUp = useCallback((e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!workerRef.current) return;
-    workerRef.current.postMessage({
+    const msg: InputKeyMessage = {
       type: 'input-key',
       key: e.key,
       pressed: false,
-    });
+    };
+    workerRef.current.postMessage(msg);
   }, []);
 
   /*
@@ -77,7 +79,7 @@ const NES = () => {
 ################################
 */
   useEffect(() => {
-    const worker = new Worker(workerUrl, { type: 'module' });
+    const worker = new NESWorker();
     workerRef.current = worker;
 
     worker.postMessage({ type: 'init' });

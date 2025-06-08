@@ -6,7 +6,6 @@ import glsl from 'vite-plugin-glsl';
 import tailwindcss from '@tailwindcss/vite';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
-import crossOriginIsolation from 'vite-plugin-cross-origin-isolation';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -16,10 +15,19 @@ export default defineConfig(() => {
     plugins: [
       glsl(),
       react(),
+      {
+        name: 'cross-origin-isolation-preview',
+        configurePreviewServer(server) {
+          server.middlewares.use((req, res, next) => {
+            res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+            res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+            next();
+          });
+        },
+      },
       wasm(),
       topLevelAwait(),
       tailwindcss(),
-      crossOriginIsolation(),
       svgr({
         svgrOptions: {
           plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
@@ -39,7 +47,14 @@ export default defineConfig(() => {
         },
       }),
     ],
+    server: {
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      },
+    },
     worker: {
+      format: 'es',
       plugins: () => [wasm(), topLevelAwait()],
     },
     preview: {

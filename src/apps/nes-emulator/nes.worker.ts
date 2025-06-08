@@ -1,7 +1,7 @@
 // nes.worker.js
 import init, { WasmControlDeck } from '@/nes/wasm/tetanes_core.js';
 import testRomUrl from '@/nes/roms/mario.nes?url';
-import { getControllerMapping } from './controller_mappings';
+import { getControllerMapping, getKeyboardMapping } from './controller_mappings';
 
 let nes: WasmControlDeck;
 let framesRun = 0;
@@ -180,31 +180,32 @@ self.onmessage = async (e: MessageEvent) => {
 
     case 'input-key': {
       const { key, pressed } = e.data as InputKeyMessage;
-      switch (key) {
-        case 'x':
+      const mapping = getKeyboardMapping('user');
+      switch (mapping[key]) {
+        case 'a':
           nes.processInput(0, 0, pressed);
-          break; // A
-        case 'y':
+          break;
+        case 'b':
           nes.processInput(0, 1, pressed);
-          break; // B
-        case 'Tab':
+          break;
+        case 'select':
           nes.processInput(0, 2, pressed);
-          break; // Select
-        case 'Enter':
+          break;
+        case 'start':
           nes.processInput(0, 3, pressed);
-          break; // Start
-        case 'ArrowUp':
+          break;
+        case 'up':
           nes.processInput(0, 4, pressed);
-          break; // Up
-        case 'ArrowDown':
+          break;
+        case 'down':
           nes.processInput(0, 5, pressed);
-          break; // Down
-        case 'ArrowLeft':
+          break;
+        case 'left':
           nes.processInput(0, 6, pressed);
-          break; // Left
-        case 'ArrowRight':
+          break;
+        case 'right':
           nes.processInput(0, 7, pressed);
-          break; // Right
+          break;
         default:
       }
       break;
