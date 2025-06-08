@@ -24,6 +24,7 @@ export interface TransferCanvasMessage {
 
 export interface InputButtonMessage {
   type: 'input-btn';
+  pressed: boolean;
   gp: number;
   btn: number;
   controllerId: string;
@@ -32,6 +33,7 @@ export interface InputButtonMessage {
 export interface InputKeyMessage {
   type: 'input-key';
   key: string;
+  pressed: boolean;
 }
 
 export interface FrameMessage {
@@ -110,33 +112,33 @@ self.onmessage = async (e: MessageEvent) => {
 
     case 'input-btn': {
       const data = e.data as InputButtonMessage;
-      const { gp, btn, controllerId } = data;
+      const { gp, btn, pressed, controllerId } = data;
       const mapping = getControllerMapping(controllerId);
 
       switch (mapping[btn]) {
         case 'a':
-          nes.processInput(gp, 0, true);
+          nes.processInput(gp, 0, pressed);
           break;
         case 'b':
-          nes.processInput(gp, 1, true);
+          nes.processInput(gp, 1, pressed);
           break;
         case 'select':
-          nes.processInput(gp, 2, true);
+          nes.processInput(gp, 2, pressed);
           break;
         case 'start':
-          nes.processInput(gp, 3, true);
+          nes.processInput(gp, 3, pressed);
           break;
         case 'up':
-          nes.processInput(gp, 4, true);
+          nes.processInput(gp, 4, pressed);
           break;
         case 'down':
-          nes.processInput(gp, 5, true);
+          nes.processInput(gp, 5, pressed);
           break;
         case 'left':
-          nes.processInput(gp, 6, true);
+          nes.processInput(gp, 6, pressed);
           break;
         case 'right':
-          nes.processInput(gp, 7, true);
+          nes.processInput(gp, 7, pressed);
           break;
         default:
       }
@@ -144,8 +146,34 @@ self.onmessage = async (e: MessageEvent) => {
     }
 
     case 'input-key': {
-      // const { key } = e.data as InputKeyMessage;
-      // console.log('input-key:', key);
+      const { key, pressed } = e.data as InputKeyMessage;
+      switch (key) {
+        case 'x':
+          nes.processInput(0, 0, pressed);
+          break; // A
+        case 'y':
+          nes.processInput(0, 1, pressed);
+          break; // B
+        case 'Tab':
+          nes.processInput(0, 2, pressed);
+          break; // Select
+        case 'Enter':
+          nes.processInput(0, 3, pressed);
+          break; // Start
+        case 'ArrowUp':
+          nes.processInput(0, 4, pressed);
+          break; // Up
+        case 'ArrowDown':
+          nes.processInput(0, 5, pressed);
+          break; // Down
+        case 'ArrowLeft':
+          nes.processInput(0, 6, pressed);
+          break; // Left
+        case 'ArrowRight':
+          nes.processInput(0, 7, pressed);
+          break; // Right
+        default:
+      }
       break;
     }
 

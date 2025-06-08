@@ -1,24 +1,22 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { InputButtonMessage, InputKeyMessage, FrameMessage, WorkerMessage } from '@/nes/nes.worker';
+import { InputButtonMessage, FrameMessage, WorkerMessage } from '@/nes/nes.worker';
 import workerUrl from '@/nes/nes.worker.ts?url';
 
 const NES = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationIdRef = useRef<number | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const keysPressedRef = useRef<Set<string>>(new Set());
 
   const didTransferCanvas = useRef(false);
 
   const onGamepadConnect = useCallback((e: GamepadEvent) => {
-    console.info(e.gamepad.id);
-    // console.info(
-    //   'Gamepad connected at index %d: %s. %d buttons, %d axes.',
-    //   e.gamepad.index,
-    //   e.gamepad.id,
-    //   e.gamepad.buttons.length,
-    //   e.gamepad.axes.length,
-    // );
+    console.info(
+      'Gamepad connected at index %d: %s. %d buttons, %d axes.',
+      e.gamepad.index,
+      e.gamepad.id,
+      e.gamepad.buttons.length,
+      e.gamepad.axes.length,
+    );
   }, []);
 
   const onGamepadDisconnect = useCallback((e: GamepadEvent) => {
@@ -38,45 +36,38 @@ const NES = () => {
 
       // Poll which buttons are pressed
       for (let btnIdx = 0; btnIdx < gp.buttons.length; btnIdx++) {
-        if (gp.buttons[btnIdx].pressed) {
-          const msg: InputButtonMessage = {
-            type: 'input-btn',
-            gp: gpIdx,
-            btn: btnIdx,
-            controllerId: gp.id,
-          };
-          workerRef.current.postMessage(msg);
-        }
+        const msg: InputButtonMessage = {
+          type: 'input-btn',
+          pressed: gp.buttons[btnIdx].pressed,
+          gp: gpIdx,
+          btn: btnIdx,
+          controllerId: gp.id,
+        };
+        workerRef.current.postMessage(msg);
       }
     }
   }, []);
 
-  //** Sends pressed keys to the nes worker*/
-  const pollKeyboard = useCallback(() => {
-    if (!workerRef.current || keysPressedRef.current.size === 0) return;
-
-    for (const key of keysPressedRef.current) {
-      const msg: InputKeyMessage = {
-        type: 'input-key',
-        key: key,
-      };
-      workerRef.current.postMessage(msg);
-    }
-  }, []);
-
-  //** Any key down key triggers this */
   const onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.repeat) return;
-    if (!keysPressedRef.current.has(e.code)) {
-      keysPressedRef.current.add(e.code);
-    }
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.repeat || !workerRef.current) return;
+    workerRef.current.postMessage({
+      type: 'input-key',
+      key: e.key,
+      pressed: true,
+    });
   }, []);
 
-  //** Clears key down state */
   const onKeyUp = useCallback((e: KeyboardEvent) => {
-    if (keysPressedRef.current.has(e.code)) {
-      keysPressedRef.current.delete(e.code);
-    }
+    e.preventDefault();
+    e.stopPropagation();
+    if (!workerRef.current) return;
+    workerRef.current.postMessage({
+      type: 'input-key',
+      key: e.key,
+      pressed: false,
+    });
   }, []);
 
   /*
@@ -123,9 +114,8 @@ const NES = () => {
           };
           worker.postMessage(msg);
 
-          // Poll events
+          // Poll controller input
           pollGamepads();
-          pollKeyboard();
 
           // Queue next frame
           animationIdRef.current = requestAnimationFrame(step);
