@@ -2343,6 +2343,7 @@ __metadata:
     typescript-eslint: "npm:^8.29.1"
     uuid: "npm:^11.1.0"
     vite: "npm:^6.2.5"
+    vite-plugin-cross-origin-isolation: "npm:^0.1.6"
     vite-plugin-glsl: "npm:^1.4.0"
     vite-plugin-svgr: "npm:^4.3.0"
     vite-plugin-top-level-await: "npm:^1.5.0"
@@ -7167,6 +7168,13 @@ __metadata:
   bin:
     vite-node: vite-node.mjs
   checksum: 10c0/15ee73c472ae00f042a7cee09a31355d2c0efbb2dab160377545be9ba4b980a5f4cb2841b98319d87bedf630bbbb075e6b40796b39f65610920cf3fde66fdf8d
+  languageName: node
+  linkType: hard
+
+"vite-plugin-cross-origin-isolation@npm:^0.1.6":
+  version: 0.1.6
+  resolution: "vite-plugin-cross-origin-isolation@npm:0.1.6"
+  checksum: 10c0/ab4995a95d7d692b1a2ff26163f862d53aa8f9c9fe918eaf0abfcc37cf758bfbc684be534afe05afe5b7c2083325c430b4cf5f5c2efeea6d6b1636991ff7524f
   languageName: node
   linkType: hard
 

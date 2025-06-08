@@ -10,11 +10,33 @@ let framesRun = 0;
 const NES_HZ = (1789772.5 * 3) / (341 * 262 - 0.5);
 const FRAME_INTERVAL = 1000 / NES_HZ; // ms per NES frame
 
+// Graphics
 let canvas: OffscreenCanvas | null = null;
 let ctx: OffscreenCanvasRenderingContext2D | null = null;
 
+// Audio
+let audioBufferSize: number;
+let audioBuf: Float32Array;
+let ctrl: Int32Array;
+
+function pushAudio(samples: Float32Array) {
+  const writeIdx = Atomics.load(ctrl, 1);
+  for (let i = 0; i < samples.length; i++) {
+    const bufIdx = (writeIdx + i) % audioBufferSize;
+    audioBuf[bufIdx] = samples[i];
+  }
+  Atomics.store(ctrl, 1, (writeIdx + samples.length) % audioBufferSize);
+}
+
 export interface InitMessage {
   type: 'init';
+}
+
+export interface InitAudio {
+  type: 'init-audio';
+  audioSAB: SharedArrayBuffer;
+  ctrlSAB: SharedArrayBuffer;
+  bufferSize: number;
 }
 
 export interface TransferCanvasMessage {
@@ -46,7 +68,8 @@ export type WorkerMessage =
   | InputKeyMessage
   | FrameMessage
   | InitMessage
-  | TransferCanvasMessage;
+  | TransferCanvasMessage
+  | InitAudio;
 
 self.onmessage = async (e: MessageEvent) => {
   const { type } = e.data as WorkerMessage;
@@ -66,6 +89,14 @@ self.onmessage = async (e: MessageEvent) => {
 
       // Respond to the main thready that we are ready
       self.postMessage({ type: 'init' });
+      break;
+    }
+
+    case 'init-audio': {
+      const data = e.data as InitAudio;
+      audioBufferSize = data.bufferSize;
+      audioBuf = new Float32Array(data.audioSAB);
+      ctrl = new Int32Array(data.ctrlSAB);
       break;
     }
 
@@ -95,17 +126,19 @@ self.onmessage = async (e: MessageEvent) => {
       // How many frames should have run by now
       const { elapsed } = e.data as FrameMessage;
       const target = Math.floor(elapsed / FRAME_INTERVAL);
+      const audioSamples = nes.audioSampes();
+      pushAudio(audioSamples);
+      nes.clearAudioSamples();
       while (framesRun < target) {
         nes.clockFrame();
         framesRun++;
+
+        const buffer: Uint8ClampedArray = nes.frameBuffer();
+
+        // paint it to OffscreenCanvas
+        const imageData = new ImageData(buffer, 256, 240);
+        ctx.putImageData(imageData, 0, 0);
       }
-
-      // TODO: Grab frame buffer
-      const buffer: Uint8ClampedArray = nes.frameBuffer();
-
-      // paint it to OffscreenCanvas
-      const imageData = new ImageData(buffer, 256, 240);
-      ctx.putImageData(imageData, 0, 0);
 
       break;
     }

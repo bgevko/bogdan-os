@@ -1,13 +1,14 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { InputButtonMessage, FrameMessage, WorkerMessage } from '@/nes/nes.worker';
 import workerUrl from '@/nes/nes.worker.ts?url';
+import audioProcessorUrl from '@/nes/audio-processor.js?url';
 
 const NES = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationIdRef = useRef<number | null>(null);
   const workerRef = useRef<Worker | null>(null);
-
   const didTransferCanvas = useRef(false);
+  const audioNodeRef = useRef<AudioWorkletNode>(null);
 
   const onGamepadConnect = useCallback((e: GamepadEvent) => {
     console.info(
@@ -100,6 +101,48 @@ const NES = () => {
           [offscreen],
         );
         didTransferCanvas.current = true;
+
+        // Initialize audio
+        const initAudio = async () => {
+          const audioCtx = new AudioContext({ latencyHint: 'playback', sampleRate: 44100 });
+          const sampleRate = audioCtx.sampleRate;
+          console.log('AudioContext sampleRate:', audioCtx.sampleRate);
+          const channelCount = 1;
+          const durationSec = 1;
+          const bufferSize = sampleRate * channelCount * durationSec;
+
+          // Allocate a SharedArrayBuffers
+          //    - ctrlSAB holds two Int32 slots: [ readIndex, writeIndex ]
+          const ctrlSAB = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 2);
+          const ctrl = new Int32Array(ctrlSAB);
+          Atomics.store(ctrl, 0, 0);
+          Atomics.store(ctrl, 1, 0);
+
+          //    - audioSAB holds your Float32 samples interleaved [L,R,L,R…]
+          const audioSAB = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * bufferSize);
+
+          // Spin up the AudioWorkletNode, passing SABs in processorOptions
+          await audioCtx.audioWorklet.addModule(audioProcessorUrl);
+          const audioNode = new AudioWorkletNode(audioCtx, 'audio-processor', {
+            numberOfOutputs: 1,
+            outputChannelCount: [channelCount],
+            processorOptions: { audioSAB, ctrlSAB, bufferSize, channelCount },
+          });
+
+          audioNode.connect(audioCtx.destination);
+          audioNodeRef.current = audioNode;
+
+          worker.postMessage({
+            type: 'init-audio',
+            audioSAB,
+            ctrlSAB,
+            bufferSize,
+          });
+        };
+
+        initAudio().catch((err: unknown) => {
+          console.error('Error initializing audio:', err);
+        });
 
         // Intitialize the main loop
         let startTime = 0;
