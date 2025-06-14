@@ -2,6 +2,7 @@
 import init, { WasmControlDeck } from '@/nes/wasm/tetanes_core.js';
 import testRomUrl from '@/nes/roms/mario.nes?url';
 import { getControllerMapping, getKeyboardMapping } from './controller_mappings';
+import useNesStore from '@/nes/store/';
 
 let nes: WasmControlDeck;
 let framesRun = 0;
@@ -63,13 +64,25 @@ export interface FrameMessage {
   elapsed: number;
 }
 
+export interface SaveState {
+  type: 'save-state';
+  slot: number;
+}
+
+export interface LoadState {
+  type: 'load-state';
+  slot: number;
+}
+
 export type WorkerMessage =
   | InputButtonMessage
   | InputKeyMessage
   | FrameMessage
   | InitMessage
   | TransferCanvasMessage
-  | InitAudio;
+  | InitAudio
+  | SaveState
+  | LoadState;
 
 self.onmessage = async (e: MessageEvent) => {
   const { type } = e.data as WorkerMessage;
@@ -208,6 +221,25 @@ self.onmessage = async (e: MessageEvent) => {
           break;
         default:
       }
+      break;
+    }
+
+    case 'save-state': {
+      const { slot } = e.data as SaveState;
+      const bytes: Uint8ClampedArray = nes.saveStateOut();
+      useNesStore.getState().saveState(slot, bytes);
+      console.info('State saved to slot', slot);
+      break;
+    }
+
+    case 'load-state': {
+      const { slot } = e.data as LoadState;
+      const bytes = useNesStore.getState().getState(slot);
+      if (bytes) {
+        nes.loadStateIn(bytes);
+        console.info('State loaded from slot', slot);
+      }
+
       break;
     }
 

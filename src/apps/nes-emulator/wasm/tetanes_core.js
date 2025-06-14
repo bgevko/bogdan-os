@@ -290,6 +290,27 @@ export class WasmControlDeck {
     return ret;
   }
   /**
+   * Save gamestate out as a byte array.
+   * @returns {Uint8ClampedArray}
+   */
+  saveStateOut() {
+    const ret = wasm.wasmcontroldeck_saveStateOut(this.__wbg_ptr);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
+  }
+  /**
+   * Load gamestate from a byte array.
+   * @param {Uint8ClampedArray} data
+   */
+  loadStateIn(data) {
+    const ret = wasm.wasmcontroldeck_loadStateIn(this.__wbg_ptr, data);
+    if (ret[1]) {
+      throw takeFromExternrefTable0(ret[0]);
+    }
+  }
+  /**
    * Process input
    * @param {number} player
    * @param {number} button
@@ -383,11 +404,19 @@ function __wbg_get_imports() {
     const ret = result;
     return ret;
   };
+  imports.wbg.__wbg_length_238152a0aedbb6e7 = function (arg0) {
+    const ret = arg0.length;
+    return ret;
+  };
   imports.wbg.__wbg_localStorage_1406c99c39728187 = function () {
     return handleError(function (arg0) {
       const ret = arg0.localStorage;
       return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
     }, arguments);
+  };
+  imports.wbg.__wbg_new_7a91e41fe43b3c92 = function (arg0) {
+    const ret = new Uint8ClampedArray(arg0);
+    return ret;
   };
   imports.wbg.__wbg_newnoargs_105ed471475aaf50 = function (arg0, arg1) {
     const ret = new Function(getStringFromWasm0(arg0, arg1));
@@ -405,6 +434,9 @@ function __wbg_get_imports() {
     return handleError(function (arg0, arg1, arg2, arg3, arg4) {
       arg0.setItem(getStringFromWasm0(arg1, arg2), getStringFromWasm0(arg3, arg4));
     }, arguments);
+  };
+  imports.wbg.__wbg_set_6775f73144c2ef27 = function (arg0, arg1, arg2) {
+    arg0.set(arg1, arg2 >>> 0);
   };
   imports.wbg.__wbg_static_accessor_GLOBAL_88a902d13a557d07 = function () {
     const ret = typeof global === 'undefined' ? null : global;

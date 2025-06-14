@@ -3,30 +3,43 @@ import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 export interface State {
-  isOpen: boolean;
+  slot1Save: Uint8ClampedArray | null;
 }
 
 interface Actions {
-  getIsOpen: () => boolean;
+  saveState(slot: number, bytes: Uint8ClampedArray): void;
+  getState(slot: number): Uint8ClampedArray | null;
 }
 
 interface HeaderState extends State, Actions {}
 
 const initialState: State = {
-  isOpen: false,
+  slot1Save: new Uint8ClampedArray(0),
 };
 
 const useNesStore = create<HeaderState>()(
   persist(
     immer((set, get) => ({
       ...initialState,
-
-      // getters
-      getIsOpen: () => get().isOpen,
-      reset: () => {
+      saveState: (slot, bytes) => {
         set((state) => {
-          state.isOpen = initialState.isOpen;
+          switch (slot) {
+            case 1:
+              state.slot1Save = bytes;
+              break;
+            default:
+              return;
+          }
         });
+      },
+      getState: (slot) => {
+        const state = get();
+        switch (slot) {
+          case 1:
+            return state.slot1Save;
+          default:
+            return new Uint8ClampedArray(0);
+        }
       },
     })),
     {

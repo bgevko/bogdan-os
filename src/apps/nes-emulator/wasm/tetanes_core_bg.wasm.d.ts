@@ -14,6 +14,8 @@ export const wasmcontroldeck_clockFrame: (a: number) => [number, number];
 export const wasmcontroldeck_audioSampes: (a: number) => any;
 export const wasmcontroldeck_clearAudioSamples: (a: number) => void;
 export const wasmcontroldeck_frameBuffer: (a: number) => any;
+export const wasmcontroldeck_saveStateOut: (a: number) => [number, number, number];
+export const wasmcontroldeck_loadStateIn: (a: number, b: any) => [number, number];
 export const wasmcontroldeck_processInput: (
   a: number,
   b: number,

@@ -1,7 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { InputButtonMessage, FrameMessage, WorkerMessage, InputKeyMessage } from '@/nes/nes.worker';
+import {
+  InputButtonMessage,
+  FrameMessage,
+  WorkerMessage,
+  InputKeyMessage,
+  SaveState,
+  LoadState,
+} from '@/nes/nes.worker';
 import NESWorker from '@/nes/nes.worker.ts?worker';
 import audioProcessorUrl from '@/nes/audio-processor.js?url';
+import { NESStateEvent } from '@/nes/events';
+import { processShortcut } from '@/nes/shortcuts';
 
 const NES = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,6 +62,7 @@ const NES = () => {
     e.preventDefault();
     e.stopPropagation();
     if (e.repeat || !workerRef.current) return;
+    processShortcut(e);
     const msg: InputKeyMessage = {
       type: 'input-key',
       key: e.key,
@@ -72,6 +82,28 @@ const NES = () => {
     };
     workerRef.current.postMessage(msg);
   }, []);
+
+  const handleSaveState = (e: NESStateEvent) => {
+    if (!workerRef.current) {
+      return;
+    }
+    const msg: SaveState = {
+      type: 'save-state',
+      slot: e.detail.slot,
+    };
+    workerRef.current.postMessage(msg);
+  };
+
+  const handleLoadState = (e: NESStateEvent) => {
+    if (!workerRef.current) {
+      return;
+    }
+    const msg: LoadState = {
+      type: 'load-state',
+      slot: e.detail.slot,
+    };
+    workerRef.current.postMessage(msg);
+  };
 
   /*
 ################################
@@ -171,12 +203,16 @@ const NES = () => {
 
     window.addEventListener('gamepadconnected', onGamepadConnect);
     window.addEventListener('gamepaddisconnected', onGamepadDisconnect);
+    window.addEventListener('nessave', handleSaveState);
+    window.addEventListener('nesload', handleLoadState);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
     return () => {
       window.removeEventListener('gamepadconnected', onGamepadConnect);
       window.removeEventListener('gamepaddisconnected', onGamepadDisconnect);
+      window.removeEventListener('nessave', handleSaveState);
+      window.removeEventListener('nesload', handleLoadState);
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keyup', onKeyUp);
       if (animationIdRef.current != null) {
