@@ -251,14 +251,20 @@ self.onmessage = async (e: MessageEvent) => {
     case 'load-state': {
       const { slot } = e.data as LoadState;
       const bytes = useNesStore.getState().getState(slot);
-      if (bytes) {
-        nes.loadStateIn(bytes);
-        self.postMessage({ type: 'notify', message: `State loaded from slot ${slot.toString()}` });
-      } else {
+      try {
+        if (bytes) {
+          nes.loadStateIn(bytes);
+          self.postMessage({
+            type: 'notify',
+            message: `State loaded from slot ${slot.toString()}`,
+          });
+        }
+      } catch (err: unknown) {
         self.postMessage({
           type: 'notify',
           message: `Could not load state from slot ${slot.toString()}`,
         });
+        console.error('Error loading state:', err);
       }
 
       break;

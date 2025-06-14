@@ -2,7 +2,6 @@ import { triggerSave, triggerLoad } from '@/nes/events';
 import useFilesystemStore from '@/system/file-system/store';
 
 export function processShortcut(e: KeyboardEvent): void {
-  console.log('Processing shortcut:', e.key);
   // cmd/ctrl + s -> Save
   if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
     triggerSave(1);

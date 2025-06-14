@@ -47,7 +47,7 @@ const NES = () => {
       switch (e.data.type) {
         case 'notify': {
           const data = e.data;
-          triggerToast(data.message);
+          triggerToast(data.message, 'info', 2000);
         }
       }
     };
@@ -136,7 +136,7 @@ const NES = () => {
     // Hide toast after 3 seconds
     setTimeout(() => {
       setToastState((prev) => ({ ...prev, isVisible: false }));
-    }, 3000);
+    }, e.detail.duration);
   };
 
   /*
@@ -260,7 +260,7 @@ const NES = () => {
   }, []);
 
   return (
-    <div className="size-full flex items-center justify-center">
+    <div className="size-full flex items-center justify-center relative overflow-hidden">
       <Toast isVisible={toastState.isVisible} message={toastState.message} type={toastState.type} />
       <canvas ref={canvasRef} className="size-full rounded-b-lg" width={256} height={240} />
     </div>
