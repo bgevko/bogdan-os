@@ -2,6 +2,7 @@
 import init, { WasmControlDeck } from '@/nes/wasm/tetanes_core.js';
 import testRomUrl from '@/nes/roms/mario.nes?url';
 import { getControllerMapping, getKeyboardMapping } from './controller_mappings';
+import useNesStore from '@/nes/store/';
 
 let nes: WasmControlDeck;
 let framesRun = 0;
@@ -26,6 +27,11 @@ function pushAudio(samples: Float32Array) {
     audioBuf[bufIdx] = samples[i];
   }
   Atomics.store(ctrl, 1, (writeIdx + samples.length) % audioBufferSize);
+}
+
+export interface NotifyMessage {
+  type: 'notify';
+  message: string;
 }
 
 export interface InitMessage {
@@ -63,13 +69,26 @@ export interface FrameMessage {
   elapsed: number;
 }
 
+export interface SaveState {
+  type: 'save-state';
+  slot: number;
+}
+
+export interface LoadState {
+  type: 'load-state';
+  slot: number;
+}
+
 export type WorkerMessage =
+  | NotifyMessage
   | InputButtonMessage
   | InputKeyMessage
   | FrameMessage
   | InitMessage
   | TransferCanvasMessage
-  | InitAudio;
+  | InitAudio
+  | SaveState
+  | LoadState;
 
 self.onmessage = async (e: MessageEvent) => {
   const { type } = e.data as WorkerMessage;
@@ -208,6 +227,46 @@ self.onmessage = async (e: MessageEvent) => {
           break;
         default:
       }
+      break;
+    }
+
+    case 'save-state': {
+      const { slot } = e.data as SaveState;
+      try {
+        const bytes: Uint8ClampedArray = nes.saveStateOut();
+        useNesStore.getState().saveState(slot, bytes);
+        self.postMessage({
+          type: 'notify',
+          message: `State saved to slot ${slot.toString()}`,
+        });
+      } catch {
+        self.postMessage({
+          type: 'notify',
+          message: `Could not save state to slot ${slot.toString()}`,
+        });
+      }
+      break;
+    }
+
+    case 'load-state': {
+      const { slot } = e.data as LoadState;
+      const bytes = useNesStore.getState().getState(slot);
+      try {
+        if (bytes) {
+          nes.loadStateIn(bytes);
+          self.postMessage({
+            type: 'notify',
+            message: `State loaded from slot ${slot.toString()}`,
+          });
+        }
+      } catch (err: unknown) {
+        self.postMessage({
+          type: 'notify',
+          message: `Could not load state from slot ${slot.toString()}`,
+        });
+        console.error('Error loading state:', err);
+      }
+
       break;
     }
 

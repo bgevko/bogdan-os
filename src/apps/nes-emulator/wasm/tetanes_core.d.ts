@@ -33,6 +33,14 @@ export class WasmControlDeck {
    */
   frameBuffer(): Uint8ClampedArray;
   /**
+   * Save gamestate out as a byte array.
+   */
+  saveStateOut(): Uint8ClampedArray;
+  /**
+   * Load gamestate from a byte array.
+   */
+  loadStateIn(data: Uint8ClampedArray): void;
+  /**
    * Process input
    */
   processInput(player: number, button: number, pressed: boolean): void;
@@ -60,6 +68,8 @@ export interface InitOutput {
   readonly wasmcontroldeck_audioSampes: (a: number) => any;
   readonly wasmcontroldeck_clearAudioSamples: (a: number) => void;
   readonly wasmcontroldeck_frameBuffer: (a: number) => any;
+  readonly wasmcontroldeck_saveStateOut: (a: number) => [number, number, number];
+  readonly wasmcontroldeck_loadStateIn: (a: number, b: any) => [number, number];
   readonly wasmcontroldeck_processInput: (
     a: number,
     b: number,
