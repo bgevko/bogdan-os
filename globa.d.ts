@@ -1,8 +1,9 @@
-import { NESStateEvent } from '@/nes/events';
+import { NESStateEvent, NESToast } from '@/nes/events';
 
 declare global {
   interface WindowEventMap {
     nessave: NESStateEvent;
     nesload: NESStateEvent;
+    nestoast: NESToast;
   }
 }

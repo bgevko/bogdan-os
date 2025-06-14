@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   InputButtonMessage,
   FrameMessage,
@@ -9,8 +9,9 @@ import {
 } from '@/nes/nes.worker';
 import NESWorker from '@/nes/nes.worker.ts?worker';
 import audioProcessorUrl from '@/nes/audio-processor.js?url';
-import { NESStateEvent } from '@/nes/events';
+import { NESStateEvent, NESToast, triggerToast } from '@/nes/events';
 import { processShortcut } from '@/nes/shortcuts';
+import Toast from './toast';
 
 const NES = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,6 +19,13 @@ const NES = () => {
   const workerRef = useRef<Worker | null>(null);
   const didTransferCanvas = useRef(false);
   const audioNodeRef = useRef<AudioWorkletNode>(null);
+
+  // toast state
+  const [toastState, setToastState] = useState({
+    isVisible: false,
+    message: 'My toast notification',
+    type: 'info',
+  });
 
   const onGamepadConnect = useCallback((e: GamepadEvent) => {
     console.info(
@@ -32,6 +40,18 @@ const NES = () => {
   const onGamepadDisconnect = useCallback((e: GamepadEvent) => {
     console.info('Gamepad disconnected from index %d: %s', e.gamepad.index, e.gamepad.id);
   }, []);
+
+  const pollWorkerResponses = () => {
+    if (!workerRef.current) return;
+    workerRef.current.onmessage = (e: MessageEvent<WorkerMessage>) => {
+      switch (e.data.type) {
+        case 'notify': {
+          const data = e.data;
+          triggerToast(data.message);
+        }
+      }
+    };
+  };
 
   //** Listens for gamepad input */
   const pollGamepads = useCallback(() => {
@@ -103,6 +123,20 @@ const NES = () => {
       slot: e.detail.slot,
     };
     workerRef.current.postMessage(msg);
+  };
+
+  const handleToast = (e: NESToast) => {
+    const message = e.detail.message;
+    setToastState({
+      isVisible: true,
+      message: message,
+      type: 'info',
+    });
+
+    // Hide toast after 3 seconds
+    setTimeout(() => {
+      setToastState((prev) => ({ ...prev, isVisible: false }));
+    }, 3000);
   };
 
   /*
@@ -191,8 +225,9 @@ const NES = () => {
           };
           worker.postMessage(msg);
 
-          // Poll controller input
+          // Polling
           pollGamepads();
+          pollWorkerResponses();
 
           // Queue next frame
           animationIdRef.current = requestAnimationFrame(step);
@@ -205,6 +240,7 @@ const NES = () => {
     window.addEventListener('gamepaddisconnected', onGamepadDisconnect);
     window.addEventListener('nessave', handleSaveState);
     window.addEventListener('nesload', handleLoadState);
+    window.addEventListener('nestoast', handleToast);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
@@ -213,6 +249,7 @@ const NES = () => {
       window.removeEventListener('gamepaddisconnected', onGamepadDisconnect);
       window.removeEventListener('nessave', handleSaveState);
       window.removeEventListener('nesload', handleLoadState);
+      window.removeEventListener('nestoast', handleToast);
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keyup', onKeyUp);
       if (animationIdRef.current != null) {
@@ -224,6 +261,7 @@ const NES = () => {
 
   return (
     <div className="size-full flex items-center justify-center">
+      <Toast isVisible={toastState.isVisible} message={toastState.message} type={toastState.type} />
       <canvas ref={canvasRef} className="size-full rounded-b-lg" width={256} height={240} />
     </div>
   );

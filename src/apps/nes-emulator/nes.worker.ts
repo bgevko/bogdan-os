@@ -29,6 +29,11 @@ function pushAudio(samples: Float32Array) {
   Atomics.store(ctrl, 1, (writeIdx + samples.length) % audioBufferSize);
 }
 
+export interface NotifyMessage {
+  type: 'notify';
+  message: string;
+}
+
 export interface InitMessage {
   type: 'init';
 }
@@ -75,6 +80,7 @@ export interface LoadState {
 }
 
 export type WorkerMessage =
+  | NotifyMessage
   | InputButtonMessage
   | InputKeyMessage
   | FrameMessage
@@ -226,9 +232,19 @@ self.onmessage = async (e: MessageEvent) => {
 
     case 'save-state': {
       const { slot } = e.data as SaveState;
-      const bytes: Uint8ClampedArray = nes.saveStateOut();
-      useNesStore.getState().saveState(slot, bytes);
-      console.info('State saved to slot', slot);
+      try {
+        const bytes: Uint8ClampedArray = nes.saveStateOut();
+        useNesStore.getState().saveState(slot, bytes);
+        self.postMessage({
+          type: 'notify',
+          message: `State saved to slot ${slot.toString()}`,
+        });
+      } catch {
+        self.postMessage({
+          type: 'notify',
+          message: `Could not save state to slot ${slot.toString()}`,
+        });
+      }
       break;
     }
 
@@ -237,7 +253,12 @@ self.onmessage = async (e: MessageEvent) => {
       const bytes = useNesStore.getState().getState(slot);
       if (bytes) {
         nes.loadStateIn(bytes);
-        console.info('State loaded from slot', slot);
+        self.postMessage({ type: 'notify', message: `State loaded from slot ${slot.toString()}` });
+      } else {
+        self.postMessage({
+          type: 'notify',
+          message: `Could not load state from slot ${slot.toString()}`,
+        });
       }
 
       break;
