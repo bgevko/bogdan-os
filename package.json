@@ -32,6 +32,9 @@
     "test:current": "vitest file-system.test.tsx",
     "test:ui": "vitest --ui"
   },
+  "widget": {
+    "entry": "dist/index.html"
+  },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write"
   },

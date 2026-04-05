@@ -12,6 +12,7 @@ export default defineConfig(() => {
   const isProductionBuild = process.env.BUILD_ENV === 'production';
   const outDir = isProductionBuild ? '/var/www/bogdan-os' : 'dist';
   return {
+    base: './',
     plugins: [
       glsl(),
       react(),
